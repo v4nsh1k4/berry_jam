@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://chpi0c00ellde"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6w3oj"]
+size = Vector2(1280, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_im37l"]
+size = Vector2(1280, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4adyp"]
+size = Vector2(20, 720)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h8avn"]
+size = Vector2(20, 720)
+
+[node name="TestRoom" type="Node2D" unique_id=216380338]
+
+[node name="Floor" type="ColorRect" parent="." unique_id=736594309]
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.06666667, 0.06666667, 0.08627451, 1)
+
+[node name="WallTop" type="StaticBody2D" parent="." unique_id=945145689]
+position = Vector2(640, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallTop" unique_id=436382176]
+shape = SubResource("RectangleShape2D_6w3oj")
+
+[node name="WallBottom" type="StaticBody2D" parent="." unique_id=1994384115]
+position = Vector2(640, 730)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottom" unique_id=327068288]
+shape = SubResource("RectangleShape2D_im37l")
+
+[node name="WallLeft" type="StaticBody2D" parent="." unique_id=836913007]
+position = Vector2(-10, 360)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft" unique_id=1075876555]
+shape = SubResource("RectangleShape2D_4adyp")
+
+[node name="WallRight" type="StaticBody2D" parent="." unique_id=401889490]
+position = Vector2(1290, 360)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight" unique_id=550265122]
+shape = SubResource("RectangleShape2D_h8avn")
+
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=818656553]
+color = Color(0.101960786, 0.101960786, 0.14117648, 1)
+
+[node name="PlayerSpawn" type="Marker2D" parent="." unique_id=555931064]
+position = Vector2(640, 360)
