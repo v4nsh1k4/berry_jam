@@ -1,7 +1,7 @@
 # INK-BLEED: handoff for Claude Code
 
-This repo (`v4nsh1k4/berry_jam`, branch **`ink-bleed`**) holds a game-jam
-entry. **The game lives in `game_jam/`.** Ignore `berry-jam/` (an old, unrelated
+This repo (`v4nsh1k4/berry_jam`; the work is on **`main`**, mirrored on branch
+`ink-bleed`) holds a game-jam entry. **The game lives in `game_jam/`.** Ignore `berry-jam/` (an old, unrelated
 first attempt) and `ink-bleed-(4.3)/` (a stale editor backup the user should
 delete; never commit it). `proposal.pdf` is the original proposal.
 
@@ -40,8 +40,8 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 - **Ask before architecture-changing decisions.** Small structural moves that
   keep behaviour (splitting a long script, a subclass) are fine to do and
   mention.
-- **Commit or push only when asked**, never to `main` directly (work is on
-  `ink-bleed`). Attribution: end commit messages with
+- **Commit or push only when asked.** The team works from `main` (the user asked
+  for the game to be on `main` so others can start from it). Attribution: end commit messages with
   `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - They paste long staged briefs ("Stage N"). Each brief repeats the standing
   rules below; follow them strictly.
@@ -282,24 +282,11 @@ Glitch per frame: 0.35 / 0.12 / 0.5 / 0.75.
 
 ## 8. Open issues and next steps
 
-1. **User report (unresolved):** "I'm not able to give back the words in the
-   Returning Room." Scripted tests (`ch3_play.gd`) succeed there, but they
-   teleport the player and set the selection directly. Reproduce with **real
-   input**: walk with move_* actions, select with `bubble_slot_N` / `word_prev` /
-   `word_next`, hold `interact`. Suspects to check:
-   - Number keys **toggle**: pressing the selected slot again deselects it, and
-     the prompt then says "Pick a word". Maybe hold-to-return should work
-     without a toggle trap.
-   - The player has none of Arthur's words (they're Mrs. Vane's or the
-     Portrait's, which go back on the Torn Page or at the Gallery). The prompt
-     and "?" may not make the owner clear enough; consider naming the owner in
-     the prompt and tooltip.
-   - Two of Arthur's bubbles are within 120 px of each other horizontally
-     (spots at x−195/−305 and +195/+305), so the target may flip as the player
-     walks.
-   - `can_return()` depends on `current_chapter` being ch3. Check that the
-     Continue and handoff paths always set it.
-   - Is the "Hold E: give back" prompt appearing at all?
+1. **UX note (resolved, but worth improving):** the user first thought words
+   could only be given back at the Gallery portraits, not to the characters
+   themselves (both work). Make it clearer: e.g. name the owner in the prompt
+   and tooltip ("give back to Arthur"), and have the Torn Page / Returning Room
+   captions say you can give words straight to the person.
 2. **Stage 4B** (not started): Chapter 3 climax, Artist's-hand reveal, final
    word, intro animation, ending, epilogue. Hooks: `TODO(later)` in
    `GameState.return_bubble`, `InkShadow`, `ink_hand_event.gd`, `crawler_art.gd`,
