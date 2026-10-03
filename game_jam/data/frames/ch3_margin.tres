@@ -8,9 +8,9 @@
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_exit_data")
 area = Rect2(1080, 396, 104, 112)
-target_frame_id = &"ch3_heart_card"
+target_frame_id = &"ch3_ink_heart"
 transition_style = 1
-target_spawn = Vector2(170, 466)
+target_spawn = Vector2(160, 466)
 
 [sub_resource type="Resource" id="Resource_2"]
 script = ExtResource("3_interactable_data")

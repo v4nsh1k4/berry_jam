@@ -1,8 +1,8 @@
 class_name Interactor
 extends Node2D
 ## Child of the Player. Picks what E would act on and publishes a prompt.
-## Bubbles in reach win (stealable ones, and in Chapter 3 the broken ones a
-## word can go back to): the one the player stands nearest to along the
+## Bubbles in reach win (stealable ones, and after the twist the broken ones
+## a word can go back to): the one the player stands nearest to along the
 ## floor, ties going to the side they face. The mouse is not used, so it stays
 ## free to aim the flashlight.
 ## Hold E on a whole bubble: steal. Hold E on a broken bubble: give the
@@ -18,6 +18,8 @@ const UNDER_REACH: float = 120.0
 const TIE: float = 10.0
 const STEAL_TIME: float = 0.5
 const RETURN_TIME: float = 0.7
+## Giving the last word back is a longer, heavier hold.
+const FINAL_RETURN_TIME: float = 1.4
 
 var _target: Node2D
 var _hold: float = 0.0
@@ -52,7 +54,9 @@ func _process(delta: float) -> void:
 	var returning: bool = bubble.is_returnable()
 	if Input.is_action_pressed("interact") and (not returning or GameState.selected_bubble() != null):
 		_hold += delta
-		var needed: float = RETURN_TIME if returning else STEAL_TIME
+		var needed: float = STEAL_TIME
+		if returning:
+			needed = FINAL_RETURN_TIME if bubble.data.story_final else RETURN_TIME
 		bubble.steal_progress = _hold / needed
 		if _hold >= needed:
 			if returning:
@@ -128,6 +132,11 @@ func _give_back(bubble: SpeechBubble) -> void:
 	if word == null or word.id != bubble.data.id:
 		bubble.refuse()
 		EventBus.ability_failed.emit(word, &"")
+		return
+	if word.story_final and GameState.normal_words_held() > 0:
+		# The last word goes back last: everyone else first.
+		bubble.refuse()
+		EventBus.caption_requested.emit("Not yet. You are still holding their words.", 3.0)
 		return
 	_target = null
 	GameState.return_bubble(word, bubble.get_global_transform_with_canvas().origin)

@@ -19,10 +19,12 @@ black-and-white comic. They **steal words** (speech bubbles) from characters
 and **speak** them as abilities (OPEN a door, PUSH a cabinet...). Light (a
 flashlight from the end of Chapter 1) reveals the house but draws the **Ink
 Crawler**. Every stolen word **damages the comic** (cracks, ink bleed, wobble,
-glitch). **Twist (Stage 4B, not built yet):** the Crawler and the Ink Shadow are
-secretly the **Comic Artist's hand** (long jointed fingers with pen-nib tips),
-the player is an anomaly rather than a victim, and the way out is **giving every
-word back**.
+glitch). **Twist (built in Stage 4B):** stealing the last word (ERASE) from the
+Ink Shadow plays the reveal: the Crawler and the Shadow are the **Comic
+Artist's hand** (long jointed fingers with pen-nib tips), the player is the
+mistake on the page, and the way out is **giving every word back**. Only after
+the reveal can words be returned. Then the comic repairs, the player walks out
+through the border, and an epilogue plays in the real world.
 
 Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip).
 
@@ -31,8 +33,14 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 - The user is new to Godot and on a **Mac**. Explain how to run and test in
   plain steps. In the Godot editor: ▶ (top right), **⌘B**, or fn+F5. The editor
   canvas looks empty because everything is drawn by code at runtime.
-- Godot binary on this machine: `/Users/vanshikar/Downloads/Godot.app/Contents/MacOS/Godot`
-  (4.7.2). Export templates for 4.7.2 are installed.
+- Godot binaries differ per machine. On the original machine:
+  `/Users/vanshikar/Downloads/Godot.app/Contents/MacOS/Godot` (4.7.2). On the
+  machine used for Stage 4B: `~/Downloads/Godot_mono.app/Contents/MacOS/Godot`
+  (4.7.2 **.NET**). The .NET editor runs and tests the game fine but **refuses
+  Web export** ("not supported when using C#/.NET"), even for a GDScript-only
+  project. Export with a standard (non-.NET) 4.7.2 editor; its web templates
+  go in `~/Library/Application Support/Godot/export_templates/4.7.2.stable/`
+  (`web_nothreads_release.zip`, `web_nothreads_debug.zip`).
 - **Working style they chose:** carry on through all items of a stage without
   stopping after each one, **test everything yourself** (scripted runs plus
   screenshots), and give **one report at the end** with per-system test
@@ -72,38 +80,51 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 | 2 | Ability system, Chapter 1 (6 rooms), light rework, foreshadowing, polish (shake, FX, procedural audio), menus, pause, saves |
 | 3 | Inventory bug fix (no cap, paging), stand-under targeting, red art direction, Crawler redesign (state machine, stop-motion), WAIT and HIDE, hiding spots, light-revealed objects, Chapter 2 (7 frames), chapter chaining |
 | 4A | Return-the-words mechanic, Chapter 3 frames 1-4, glitch/breakdown visuals, Ink Shadow v1, damage recalibrated to 9 words, debug room jump |
-| **4B (next)** | Chapter 3 climax: Artist's-hand reveal, the final word, intro animation, ending, epilogue |
+| 4B | Story reorder (no returning before the reveal), Gallery ability puzzle, the Ink Heart and the final steal (ERASE), the reveal, the return phase with the Artist's hand, the final word and repair, the Last Page, epilogue, intro cinematic, save v2 migration, F9 debug jump |
 
 Git history on `ink-bleed`: commit 1 = Chapters 1-2, commit 2 = Stage 4A.
+Stage 4B is uncommitted until the user asks.
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
-Stage 2. It does **not** cover Stages 3-4A; this file is the up-to-date source.
+Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
 ## 5. How to run, test and export
 
 ```
 cd game_jam
-GODOT=/Users/vanshikar/Downloads/Godot.app/Contents/MacOS/Godot
-$GODOT --headless --path . --import            # re-import after adding files (catches parse errors)
+GODOT=/Users/vanshikar/Downloads/Godot.app/Contents/MacOS/Godot   # see §2 for other machines
+$GODOT --headless --path . --import            # re-import after adding files
+$GODOT --headless --path . --script res://tests/compile_check.gd               # loads every script: parse/type errors
 $GODOT --path .                                 # play
 $GODOT --headless --path . res://tests/inventory_test.tscn                       # prints INVENTORY TEST PASSED
-SHOT_DIR=/some/dir $GODOT --path . --resolution 1280x720 --script res://tests/playthroughs/ch3_play.gd
-$GODOT --headless --path . --export-release "Web" build/web/index.html           # web export
+SHOT_DIR=/some/dir $GODOT --path . --resolution 1280x720 --script res://tests/playthroughs/ch3_story.gd
+$GODOT --headless --path . --export-release "Web" build/web/index.html           # web export (non-.NET editor)
 $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://tests/playthroughs/ch2_play.gd
 ```
 
 - `tests/playthroughs/*.gd` are SceneTree scripts that drive the real game:
-  `ch1_play`, `ch1_flows` (drawer, continue, restart), `ch2_play`, `ch2_caught`
-  (telegraph, catch, restart), `save_check`, `ch3_play`, `ch3_margin` (Shadow
-  chase), `ch3_minimal` (nothing optional stolen), `menu_clicks`, `exit_grace`.
+  `intro_play` (cinematic), `ch1_play`, `ch1_flows` (drawer, continue,
+  restart), `ch2_play`, `ch2_caught` (telegraph, catch, restart), `save_check`,
+  `ch3_margin` (Shadow chase), `ch3_story` (all of Chapter 3 in story order:
+  no returns before the reveal, Gallery puzzle, the Heart, the reveal, the
+  return phase, repair, Last Page, epilogue, end card; `MINIMAL=1` carries only
+  OPEN, PUSH, REMEMBER), `ch3_systems` (save v1 migration, resuming mid-reveal,
+  Restart after the reveal, the hand's telegraph/catch/hiding/WAIT/weakening,
+  lost-word fallback, the Heart's listening), `menu_clicks`, `exit_grace`.
   They print a log and save screenshots to `$SHOT_DIR`. Read the screenshots,
   because visual bugs (cyan glitch blocks, a pink vignette flood) only showed
-  up there.
+  up there. `tests/visual/art_preview.gd` renders any drawing call to a PNG.
+- **Run tests one at a time:** they share `user://ink_bleed_save.json`. A test
+  that errors never quits (the window stays open): kill it. Long runs can have
+  their window shrunk by the desktop, so `_shot` resets it to 1280x720 first.
 - **Always run the playthroughs against the exported pack too** (`--main-pack`).
   It runs the same compiled scripts as the web build, and two export-only bugs
   were caught only this way (§9).
-- Debug builds only: **jump to any room**. On the web add `?frame=ch3_margin`;
-  on desktop run with `-- --frame=ch3_margin`. `scripts/systems/debug_jump.gd`
-  adds the words a player would carry into that chapter.
+- Debug builds only: **jump to any room**. On the web add `?frame=ch3_margin`
+  (optionally `&words=arthur_open,vane_hide` and `&twist=1`); on desktop run
+  with `-- --frame=ch3_margin [--words=...] [--twist=1]`. **In game, F9** jumps
+  to the next Chapter 3 room (works from the editor's ▶). `DebugJump` adds the
+  words a player would carry; return-phase rooms also get ERASE and
+  `twist_revealed`.
 - Web check in a browser: serve `build/web` with `python3 -m http.server`. The
   Claude Code sandbox blocks local servers, so that needs
   `dangerouslyDisableSandbox` (it worked with the user's approval). The in-app
@@ -123,10 +144,10 @@ box). Don't name test methods after `SceneTree` methods.
 ### Autoloads (`game_jam/autoload/`, in load order)
 | Autoload | Owns |
 | --- | --- |
-| `EventBus` | ~45 signals, no logic. Each signal has `@warning_ignore("unused_signal")` (per line, for 4.3 compatibility) |
+| `EventBus` | ~52 signals, no logic. Each signal has `@warning_ignore("unused_signal")` (per line, for 4.3 compatibility) |
 | `AudioManager` | Builds every sound on the first click (`SfxSynth`), SFX voices, drone, Crawler dread (heartbeat speeding with notice, rumble, skitter, growl), volume and mute in `user://settings.cfg` |
 | `ShakeManager` | Trauma shake (trauma squared, decays) on the viewport canvas transform; also holds the frame's **base tilt** (`FrameData.panel_tilt`, rotated about the panel centre) |
-| `GameState` | `inventory` (uncapped, single source of truth), `selected_index`, `flags`, `stolen_bubble_ids`, `returned_bubble_ids`, `stolen_bubble_count`, `comic_damage`, `current_chapter`, `chapter_start` snapshot, `is_playing`, `modal_open`; save/restore (`to_dict` / `from_dict`) |
+| `GameState` | `inventory` (uncapped, single source of truth), `selected_index`, `flags`, `stolen_bubble_ids`, `returned_bubble_ids`, `stolen_bubble_count`, `comic_damage` (+ eased `shown_damage`), **`twist_revealed`**, `current_chapter`, `chapter_start` snapshot, `is_playing`, `modal_open`; `return_bubble`, `reveal_twist`, `normal_words_held`, `held_share`, `glitch_of`; save/restore (`to_dict` / `from_dict`, built by `StateSnapshot`) |
 | `LightingSystem` | Flashlight on/off (F / left click), only with flag `has_flashlight` |
 | `FrameManager` | Loads `data/frames/<id>.tres`, builds the `Frame`, places the player, exits, reload on `player_caught` |
 | `TransitionManager` | SLIDE (page sheet) and INK_SPLASH (shader) wipes around a swap |
@@ -139,37 +160,59 @@ the viewport so it shakes and tilts with the world: `GlitchOverlay`,
 `InkBleed`, `PageOverlay` = white gutter, border, cracks, captions) → HUDLayer
 20 (`InventoryStrip`, `NoticeMeter`, `InteractPrompt`) → FXLayer 25
 (`DangerVignette`, `FeedbackFx`) → LockLayer 40 → TransitionManager 50 →
-MenuLayer 60 (Intro, EndCard, MainMenu, PauseMenu) → StartLayer 100. The panel
+MenuLayer 60 (IntroCinematic, IntroSequence, RevealSequence,
+EpilogueSequence, EndCard, MainMenu, PauseMenu) → StartLayer 100. The panel
 is the fixed `Frame.PANEL_RECT` = (48, 32, 1184×528) on a 1280×720 page. All
 room data is in **panel coordinates**. The floor is y ≈ 380 and feet walk in
 y 400-504.
 
 ### Flow (`scripts/main.gd`)
-Title (click or key; browsers need that gesture before audio) → menu → chapter
-intro (`ChapterData.intro_lines`) → `_start_chapter` (sets `current_chapter`,
-takes the `chapter_start` snapshot, applies `line_jitter`) → frames → a frame
-with **`next_chapter`** hands off after 1.5 s to the next chapter's intro → ... →
-a frame with **`ending_card`** shows the end card → menu. **Restart Chapter**
-restores `chapter_start`: words carried in stay, this chapter's thefts and
-returns are undone. **Autosave** (`user://ink_bleed_save.json`, IndexedDB on
-the web) happens on every frame change, theft, solved object and quit to menu.
+Title (click or key; browsers need that gesture before audio) → menu → **New
+Game: `IntroCinematic`** (19 s, Space/click skips) → chapter intro
+(`ChapterData.intro_lines`) → `_start_chapter` (sets `current_chapter`, takes
+the `chapter_start` snapshot, applies `line_jitter`) → frames → a frame with
+**`next_chapter`** hands off after 1.5 s to the next chapter's intro → ... →
+Chapter 3: stealing the `story_final` word plays **`RevealSequence`**, which
+sets `twist_revealed`, **retakes `chapter_start` at
+`ChapterData.return_frame_id`** and lands the player there → return phase →
+repair → the Last Page → walking out of the border reaches `ch3_outside`
+(`FrameData.epilogue`): **`EpilogueSequence`** (emits `game_completed`: save
+cleared, progress flag `completed`) → `EndCard` ("THE END", credits, Back to
+Menu). **Restart Chapter** restores `chapter_start` and goes to its frame:
+words carried in stay, this chapter's (or this phase's) thefts and returns are
+undone. **Autosave** (`user://ink_bleed_save.json`, IndexedDB on the web)
+happens on every frame change, theft, solved object and quit to menu.
+
+**Save format v2** (`SaveSystem.VERSION`): adds `twist_revealed`.
+`SaveSystem.migrate()` upgrades v1 (Stage 4A) saves: Chapters 1-2 as they are;
+a save inside Chapter 3 restarts at Chapter 3's `chapter_start` (so the reveal
+is never skipped); unusable or future-version saves count as "no save". A save
+naming a frame that no longer exists falls back to its chapter's first frame.
+`user://progress.cfg` (`SaveSystem.get_progress/set_progress`) survives new
+games: `seen_reveal` (the reveal is skippable only after one full viewing) and
+`completed`.
 
 ### Data model (`scripts/data/`, files in `data/`)
 - `FrameData`: id, display_name, ambient_light, background_style,
   player_spawn, walk_area, captions, exits (`ExitData`), interactables
   (`InteractableData`), npcs (`NpcData`), crawler_spawn, crawler_patrol,
-  crawler_kind (`&"crawler"` or `&"shadow"`), lights (`LightSpotData`), events
-  (ids in `Frame.EVENT_SCRIPTS`), hint (for HELP), ending_card, next_chapter,
-  glitch, panel_tilt, sketch.
+  crawler_kind (`&"crawler"`, `&"shadow"` or `&"heart"`), lights
+  (`LightSpotData`), events (ids in `Frame.EVENT_SCRIPTS`, incl.
+  `artist_hand`), hint (for HELP), ending_card, next_chapter, glitch,
+  panel_tilt, sketch, **border_gap** (the lit way out in the right border once
+  repaired), **epilogue** (arriving plays the epilogue).
 - `BubbleData`: id, text, ability_id, stolen_from (an owner id: `arthur`,
-  `mrs_vane`, `portrait_lady`, `drawer`), consumable (always false so words are
+  `mrs_vane`, `portrait_lady`, `drawer`, `hand`), **owner_name** (for "give
+  back to Arthur"), **story_final** (ERASE: stealing it plays the reveal,
+  returning it repairs the comic), consumable (always false so words are
   never used up and nothing soft-locks). **Each word is its own file named
   `<id>.tres`**, because saves store the paths and fall back to
   `data/bubbles/<id>.tres`.
 - `NpcData`: bubbles plus `lines` (with `{word}`), `broken_lines`,
-  `reactions` (when robbed), `relief_lines` (when given back),
-  `words_stealable` (false in Chapter 3), `visual_style` (`butler`, `portrait`,
-  `housekeeper`), bubble_offsets, scale, reach_y.
+  `reactions` (when robbed), `relief_lines` (when given back), **plea_lines**
+  (Chapter 3 before the reveal, one per approach), `words_stealable` (false in
+  Chapter 3 except the Shadow's ERASE), `visual_style` (`butler`, `portrait`,
+  `housekeeper`, `none` = only the bubble), bubble_offsets, scale, reach_y.
 - `InteractableData.kind`: word targets `door`, `drawer` (`reward_bubble`),
   `latch`, `pushable`. Plain E: `inspect`, `pickup`, `symbol_lock` (text
   `"panel"` = wall box), `hiding_spot` (text: wardrobe, curtain or table).
@@ -178,7 +221,10 @@ the web) happens on every frame change, theft, solved object and quit to menu.
   or drawer). Plus `revealed_by_light` (only visible and usable inside the
   flashlight cone).
 - `ChapterData`: title, intro_lines, first_frame_id, damage_visual_scale,
-  line_jitter, allows_return.
+  line_jitter, allows_return, **return_frame_id** (where the reveal lands).
+- `HandPressureData` (`data/hand/hand_pressure.tres`): the Artist's hand
+  tuning as strong/weak pairs (interval, telegraph, width, speed) plus
+  rub_time and first_delay. Edit the `.tres` to tune it.
 - `AbilityData`: id, display_name, description, icon_word, target_type
   (INTERACTABLE / ROOM), cooldown, duration, handler script.
 
@@ -206,15 +252,55 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   slots window over an uncapped list. **1-6** pick a visible slot, **Q / R** or
   the wheel cycle (`GameState.cycle`). E was not used for cycling because E is
   interact. "+N" arrows show hidden words.
-- **Return mechanic (Stage 4A)**: `GameState.return_bubble(bubble, pos)` removes
-  the word, updates stolen/returned ids, count and damage, and emits
-  **`EventBus.bubble_returned`** plus `comic_damage_changed`. Give a word back by
-  holding E 0.7 s under the owner's **broken** bubble (group `returnable`), or
-  press E at a `ReturnSpot` (painting or drawer). Only allowed when
-  `current_chapter.allows_return` (Chapter 3). **Why:** a returned word is gone
-  for good, so returning OPEN in Chapter 1 would soft-lock the doors. Returned
-  bubbles show their full line and are never stealable again. Owners who were
-  never robbed are whole from the start, so they never block progress.
+- **Return mechanic**: `GameState.return_bubble(bubble, pos)` removes the
+  word, updates stolen/returned ids, count and damage, and emits
+  **`EventBus.bubble_returned`**. Give a word back by holding E 0.7 s under the
+  owner's **broken** bubble (group `returnable`), or press E at a `ReturnSpot`
+  (painting or drawer). **Only after the reveal** (`GameState.can_return()` =
+  `twist_revealed` and `allows_return`); before it, broken bubbles are not
+  targetable, return spots are scenery, and owners plead (`plea_lines`).
+  **Why:** the story order is damage → chase → final steal → reveal → return.
+  Prompts name the owner ("Hold E: give "OPEN" back to Arthur"; "Arthur is
+  missing "PUSH". Select it..."), and so does the inventory tooltip. Returned
+  bubbles show their full line and are never stealable again. Owners never
+  robbed are whole from the start. ERASE goes back last (1.4 s hold; refused
+  while any ordinary word is held). Fallback: a word marked stolen that is no
+  longer in the inventory goes home by itself when the player nears its owner
+  (`GameState.restore_lost_word`). Return FX: warm two-note chime, THANK YOU,
+  red-to-white drops, relief caption, the comic heals smoothly
+  (`shown_damage` eases at 0.8 words/s).
+- **The reveal** (`ui/reveal_sequence.gd` + `ui/reveal_art.gd`, ~22 s): on
+  stealing a `story_final` word (or resuming a save holding it with the twist
+  unseen) it emits `reveal_started`, pauses the tree, and draws: the Shadow
+  resolving into the hand with a pen (HandArt, `shadow` fading) → pull back to
+  the page on the Artist's desk (eraser beside it) → push in on the red figure,
+  rubbed by eraser smudges → "the cost" (each robbed character, unfinished,
+  with their broken line from frame data). Captions: "I was never the
+  victim." / "I was the mistake on the page." / "And look what I took." Then
+  `GameState.reveal_twist()` (emits **`twist_revealed`**), `chapter_start` is
+  retaken, and the player lands in `return_frame_id`.
+- **The Artist's hand** (`scripts/enemy/artist_hand.gd`, drawn by `HandArt`
+  and `HandFloorArt`; a frame lists it as the `artist_hand` event). States:
+  HOVER → AIM (the eraser's hatched shadow darkens a strip of floor + growl;
+  ≥ 0.6 s, 1.1-1.6 s by default) → RUB (0.55 s; the only time it catches:
+  in the strip and not hidden) → LIFT → HOVER; WATCH once no ordinary word is
+  held (no attacks); OFFER (Ink Heart, ERASE selected nearby: eraser set down,
+  grip open); WITHDRAW after ERASE is back. Weaker with every return via
+  `GameState.held_share()` and `HandPressureData`. HUSH pauses attempts, WAIT
+  freezes it (group `freezable`), hiding is safe. Caught → room reloads,
+  returns kept.
+- **Heart Shadow** (`heart_shadow.gd`, `crawler_kind = &"heart"`): an Ink
+  Shadow without the ink wall that paces `LAIR` (panel x 960-1110) beside the
+  word and every 4.5 s LISTENS: 0.9 s warning (stops, eyes go wide and white,
+  growl, first time a caption) then 1.8 s where any movement within 700 px
+  (not concealed) wakes it hunting (scent 4 s, faster). It leaves the lair to
+  hunt and sinks back after losing you (not relentless); it scribbles out
+  hiding spots only while after you. Freezes for good on `reveal_started`.
+- **Repair** (`GameState.return_bubble` of the `story_final` word sets flag
+  `comic_repaired` and emits **`comic_repaired`**): glitch fades to 0, the
+  halftone rebuilds and the panel lightens (`Frame`), line wobble calms to 1.0
+  (`main.gd`), the hand withdraws, and frames with `border_gap` open a lit gap
+  in the right border (`PageOverlay`). The exit to the Last Page needs the flag.
 - **Light**: Chapter 1 rooms use fixed `LightSpot`s (candle, moon, glow). The
   flashlight cone texture is generated in code; `Flashlight.illuminates(_rect)`
   does cone tests for `revealed_by_light` objects. The player's red aura is
@@ -237,12 +323,12 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   visible scribble plus sound). **It freezes while scribbling and can't lunge for
   2.5 s after**, so a player pushed out of a hiding spot has a fair head start.
   That was added after a test showed being pushed out meant instant death.
-- **Comic damage** = stolen words / **9** (all stealable words: 6 in Chapter 1,
-  3 in Chapter 2; Chapter 3 has none). `GameState.damage_visual()` scales it by
+- **Comic damage** = stolen words / **10** (all stealable words: 6 in Chapter 1,
+  3 in Chapter 2, ERASE in Chapter 3), eased (`shown_damage`). `GameState.damage_visual()` scales it by
   the chapter. It drives the border wobble, red inner edge, cracks, ink bleed
   shader, characters drawn "unfinished" (`InkDraw.gap_ratio`), and in Chapter 3
   the glitch shader (`ui/glitch_overlay.gd`, strength = frame.glitch × (0.3 +
-  0.7 × damage)). Returning words heals all of it.
+  0.7 × damage), zero once repaired). Returning words heals all of it.
 - **Drawing**: everything uses `scripts/ink/ink_draw.gd` (jittered lines that
   re-roll every 140 ms, the "line boil"; `jitter_scale` per chapter;
   `gap_ratio` for unfinished lines; `fill()` survives self-intersecting
@@ -252,7 +338,9 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
 ### Split precedents (for the 250-line rule)
 `InventoryArt` (strip drawing), `InteractableArt` / `InteractableArt2`, the
 `HidingSpot` / `ReturnSpot` subclasses chosen by `Frame.KIND_CLASSES`, the
-Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`.
+Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
+(GameState serialisation), `HandArt` / `HandFloorArt`, `RevealArt`,
+`RealWorldArt` (intro + epilogue), `BgCh3End`.
 
 ## 7. Content, chapter by chapter
 
@@ -273,28 +361,31 @@ light the clock face to read **spiral, hand, house**) → cellar stair (dials,
 then OPEN, then a short chase) → `ch2_end` hands off to Chapter 3. Only OPEN,
 REMEMBER and the flashlight are required.
 
-**Chapter 3, The Ink Heart** (`ch3_*`, frames 1-4 only): torn page (Mrs. Vane
-and the Portrait plead for exactly the stolen words) → returning room (safe;
-Arthur, plus the drawer for HUSH) → gallery of words (three `ReturnSpot`
-portraits; the `gallery_gate` event opens the wall when all are whole) → margin
-(Ink Shadow chase) → `ch3_heart_card` placeholder "THE INK HEART: COMING NEXT".
-Glitch per frame: 0.35 / 0.12 / 0.5 / 0.75.
+**Chapter 3, The Ink Heart** (`ch3_*`). *Before the reveal:* torn page
+(Vane and the Portrait plead; nothing can be given back) → gallery of words
+(ghost bubbles over the portraits show the damage; puzzle: **PUSH** the
+fallen frame, **REMEMBER** at the wall behind it shows **nib, eye, hand**, set
+the dial box, **OPEN** the door; light-revealed writing hints at it) → margin
+(Ink Shadow chase) → **ink heart** (the Shadow paces its lair holding
+**ERASE** out; move between its listens, steal ERASE → reveal). *After the
+reveal:* returning room (Arthur, the drawer; the hand at full strength; hide
+behind the curtain on the far left) → torn page (Vane, Portrait; curtain on the
+right) → gallery (three portraits plus the drawer as `ReturnSpot`s;
+`gallery_gate` opens the way when every owner is whole) → ink heart (the hand
+WATCHes; give ERASE back → repair, lit gap in the border) → **the Last Page**
+(everyone whole, speaking full lines; walk out through the border) →
+`ch3_outside` (epilogue, THE END, credits). Minimum words for the whole game:
+OPEN, PUSH, REMEMBER (+ ERASE in Chapter 3); every other word is optional.
 
 ## 8. Open issues and next steps
 
-1. **UX note (resolved, but worth improving):** the user first thought words
-   could only be given back at the Gallery portraits, not to the characters
-   themselves (both work). Make it clearer: e.g. name the owner in the prompt
-   and tooltip ("give back to Arthur"), and have the Torn Page / Returning Room
-   captions say you can give words straight to the person.
-2. **Stage 4B** (not started): Chapter 3 climax, Artist's-hand reveal, final
-   word, intro animation, ending, epilogue. Hooks: `TODO(later)` in
-   `GameState.return_bubble`, `InkShadow`, `ink_hand_event.gd`, `crawler_art.gd`,
-   `AbilityRegistry._ready`. If 4B adds stealable words, raise
-   `GameState.DAMAGE_FOR_FULL_EFFECT`.
-3. **Not built:** "erasing platforms" (the game has no jumping, so the Shadow
-   erases hiding spots instead), the full intro cinematic, and screen distortion
-   near the Crawler (that is border warp plus shake, not a screen shader).
+1. Stage 4B is complete; nothing is stubbed. Tuning knobs: the hand
+   (`data/hand/hand_pressure.tres`), the Heart's listen cycle (consts in
+   `heart_shadow.gd`), the reveal timeline (consts in `reveal_sequence.gd`).
+   If new stealable words are added, raise `GameState.DAMAGE_FOR_FULL_EFFECT`.
+2. **Not built:** "erasing platforms" (the game has no jumping, so the Shadow
+   erases hiding spots instead) and screen distortion near the Crawler (that
+   is border warp plus shake, not a screen shader).
 4. Credits say "the Berry Jam team"; real names go in `ui/main_menu.gd`.
 5. The user should delete `ink-bleed-(4.3)/` (deleting it from here was blocked).
 
@@ -324,6 +415,16 @@ Glitch per frame: 0.35 / 0.12 / 0.5 / 0.75.
   (`ExitZone` watches the flag change) so the door is seen opening. A spawn
   must never sit inside an exit or inside an enemy's lunge range (the Margin
   spawn moved to x 320 for that reason).
+- **Bubbles beat objects for E.** A hiding spot or return spot whose interact
+  point is within 120 px (along the floor) of a bubble that is stealable or
+  returnable can't be used while that bubble is: keep hiding spots clear of
+  characters' bubbles (two return-phase curtains were moved for this).
+- **Holding ERASE without `twist_revealed` plays the reveal** (it pauses the
+  tree). Anything that builds state by hand (debug jumps, tests) must set
+  `twist_revealed` *before* adding the word.
+- The reveal pauses the tree; it and the screens around it use
+  `PROCESS_MODE_ALWAYS`. Timers that must run while paused need
+  `create_timer(t, true)`.
 - Red is reserved: the player, the steal ring, the selected slot, the prompt
   key, SNATCH!/SPLAT!, the steal splash, cracks, the damage edge, the notice
   blot, hunting eyes, the danger vignette (edges only, capped). Anything else

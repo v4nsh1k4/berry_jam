@@ -14,6 +14,8 @@ var _unlocked_last: bool = true
 var _grace_left: float = 0.0
 var _player_inside: bool = false
 var _sent: bool = false
+## Seconds before the "it won't open" caption may show again.
+var _locked_note: float = 0.0
 var _tick: int = -1
 
 
@@ -38,6 +40,9 @@ func _on_body_entered(body: Node2D) -> void:
 	if body is Player:
 		_player = body as Player
 		_player_inside = true
+		if not _is_unlocked() and _locked_note <= 0.0:
+			_locked_note = 6.0
+			EventBus.caption_requested.emit("The way on is shut. Not yet.", 1.8)
 		_try_leave()
 
 
@@ -56,6 +61,7 @@ func _physics_process(delta: float) -> void:
 	if unlocked and not _unlocked_last and _player_inside:
 		_grace_left = UNLOCK_GRACE
 	_unlocked_last = unlocked
+	_locked_note = maxf(0.0, _locked_note - delta)
 	if _grace_left > 0.0:
 		_grace_left -= delta
 		return

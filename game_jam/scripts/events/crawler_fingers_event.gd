@@ -2,7 +2,7 @@ extends Node2D
 ## Chapter 2's one scare: the first time a word is stolen from Mrs. Vane, long
 ## jointed fingers curl round the pantry doorframe behind her, hold, and
 ## withdraw. Nothing chases you. Nothing explains it.
-# TODO(later): the same fingers are the Artist's hand in Chapter 3.
+## (They are the Artist's fingers: HandArt draws the same ones in the reveal.)
 
 const FLAG: StringName = &"seen_pantry_fingers"
 const OWNER_ID: StringName = &"mrs_vane"

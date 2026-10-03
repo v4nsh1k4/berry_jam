@@ -32,6 +32,9 @@ static func draw(ci: CanvasItem, style: StringName, tick: int) -> void:
 			_portrait(ci, tick * 23)
 		&"housekeeper":
 			_housekeeper(ci, tick * 29)
+		&"none":
+			# Only a bubble: the word the Shadow (later the hand) holds.
+			pass
 		_:
 			InkDraw.ellipse(ci, Vector2(0, -90), Vector2(24, 90), 3.0, tick)
 

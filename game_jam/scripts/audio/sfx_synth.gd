@@ -178,3 +178,26 @@ static func scribble() -> AudioStreamWAV:
 		var strokes: float = 0.5 + 0.5 * sin(TAU * 9.0 * t)
 		out[i] = smooth * strokes * (1.0 - t / 0.8) * 0.6
 	return _to_wav(out)
+
+
+## Rubber dragged hard across paper: the Artist's eraser coming down.
+static func rub() -> AudioStreamWAV:
+	var out: PackedFloat32Array = _buffer(0.6)
+	var smooth: float = 0.0
+	for i in out.size():
+		var t: float = float(i) / RATE
+		smooth = lerpf(smooth, randf_range(-1.0, 1.0), 0.18)
+		var strokes: float = 0.55 + 0.45 * sin(TAU * 13.0 * t)
+		out[i] = smooth * strokes * minf(t * 20.0, 1.0) * (1.0 - t / 0.6) * 1.4
+	return _to_wav(out)
+
+
+## A book slammed shut: a deep thump with a papery slap on top.
+static func slam() -> AudioStreamWAV:
+	var out: PackedFloat32Array = _buffer(0.7)
+	for i in out.size():
+		var t: float = float(i) / RATE
+		var thump: float = sin(TAU * 55.0 * t) * exp(-t * 9.0)
+		var slap: float = randf_range(-1.0, 1.0) * exp(-t * 45.0)
+		out[i] = (thump * 0.9 + slap * 0.5) * 0.8
+	return _to_wav(out)

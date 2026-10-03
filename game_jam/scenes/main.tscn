@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
@@ -18,6 +18,9 @@
 [ext_resource type="Resource" path="res://data/chapters/ch1.tres" id="16_ch1"]
 [ext_resource type="Script" path="res://ui/danger_vignette.gd" id="17_vignette"]
 [ext_resource type="Script" path="res://ui/glitch_overlay.gd" id="18_glitch"]
+[ext_resource type="Script" path="res://ui/intro_cinematic.gd" id="19_cinematic"]
+[ext_resource type="Script" path="res://ui/reveal_sequence.gd" id="20_reveal"]
+[ext_resource type="Script" path="res://ui/epilogue_sequence.gd" id="21_epilogue"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -97,6 +100,27 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("14_intro")
+
+[node name="IntroCinematic" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("19_cinematic")
+
+[node name="RevealSequence" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("20_reveal")
+
+[node name="EpilogueSequence" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("21_epilogue")
 
 [node name="EndCard" type="Control" parent="MenuLayer"]
 layout_mode = 3

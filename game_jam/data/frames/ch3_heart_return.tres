@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="3_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/bubble_data.gd" id="4_bubble_data"]
+[ext_resource type="Resource" path="res://data/bubbles/hand_erase.tres" id="5_hand_erase"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="6_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch3_escape"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+required_flag = &"comic_repaired"
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("3_npc_data")
+id = &"the_hand"
+display_name = "The Hand"
+position = Vector2(860, 404)
+visual_style = &"none"
+bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("5_hand_erase")])
+lines = PackedStringArray("{word} the mistake.")
+broken_lines = PackedStringArray("... the mistake.")
+bubble_offsets = PackedVector2Array(0, -236)
+words_stealable = true
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("6_light_spot_data")
+kind = &"glow"
+position = Vector2(860, 170)
+radius = 220.0
+energy = 0.6
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("6_light_spot_data")
+kind = &"glow"
+position = Vector2(300, 300)
+radius = 260.0
+energy = 0.35
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch3_heart_return"
+display_name = "The Ink Heart"
+ambient_light = 0.2
+background_style = &"ink_heart"
+player_spawn = Vector2(160, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("The hand is waiting. It has stopped hunting.", "One word left. It was never yours.")
+hint = "Select ERASE, stand under the hand's empty bubble and hold E."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
+npcs = Array[ExtResource("3_npc_data")]([SubResource("Resource_2")])
+lights = Array[ExtResource("6_light_spot_data")]([SubResource("Resource_3"), SubResource("Resource_4")])
+events = Array[StringName]([&"artist_hand"])
+glitch = 0.45
+panel_tilt = -1.5
+sketch = 0.3
+border_gap = true

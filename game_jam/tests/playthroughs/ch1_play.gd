@@ -67,6 +67,8 @@ func _run() -> void:
 	await _wait(0.3)
 	await _shot("00_menu.png")
 	root.get_node("/root/EventBus").menu_new_game.emit()
+	# New Game opens with the intro cinematic: skip it like a click would.
+	current_scene.get_node("MenuLayer/IntroCinematic").call("_finish")
 	current_scene.get_node("MenuLayer/MainMenu").hide()
 	await _wait(0.8)
 	await _shot("01_intro.png")
@@ -136,7 +138,8 @@ func _run() -> void:
 	await _at(1075)
 	await _tap("interact")
 	await _wait(0.2)
-	for a in ["move_up", "move_up", "move_right", "move_up", "move_right", "move_up", "move_up"]:
+	# Dials start on "house" (5 of 7 symbols): eye = up 3, moon = up 2, key = up 4 (the last one below).
+	for a in ["move_up", "move_up", "move_up", "move_right", "move_up", "move_up", "move_right", "move_up", "move_up", "move_up"]:
 		await _tap(a)
 	await _shot("11_lock.png")
 	await _tap("move_up")

@@ -38,6 +38,8 @@ func _ready() -> void:
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.bubble_returned.connect(_on_bubble_returned)
 	EventBus.hiding_spot_erased.connect(play.bind(&"scribble", -6.0, 0.1).unbind(1))
+	EventBus.hand_erase.connect(play.bind(&"rub", -4.0, 0.1).unbind(1))
+	EventBus.reveal_started.connect(_on_frame_changed.bind(null))
 
 
 func start() -> void:
@@ -48,7 +50,8 @@ func start() -> void:
 		&"step": SfxSynth.footstep(), &"steal": SfxSynth.steal(), &"creak": SfxSynth.creak(),
 		&"thud": SfxSynth.thud(), &"chime": SfxSynth.chime(), &"click": SfxSynth.click(),
 		&"splat": SfxSynth.splat(), &"heartbeat": SfxSynth.heartbeat(), &"skitter": SfxSynth.skitter(),
-		&"growl": SfxSynth.growl(), &"scribble": SfxSynth.scribble(),
+		&"growl": SfxSynth.growl(), &"scribble": SfxSynth.scribble(), &"rub": SfxSynth.rub(),
+		&"slam": SfxSynth.slam(),
 	}
 	for i in VOICES:
 		var voice: AudioStreamPlayer = AudioStreamPlayer.new()
@@ -135,10 +138,17 @@ func _on_bubble_stolen(_bubble: BubbleData, _from: Vector2) -> void:
 	play(&"steal", -7.0)
 
 
-## Softer and lower than the "word worked" chime.
-func _on_bubble_returned(_bubble: BubbleData, _pos: Vector2) -> void:
+## Softer and lower than the "word worked" chime: a warm two-note chime. The
+## last word gets a slower, deeper one.
+func _on_bubble_returned(bubble: BubbleData, _pos: Vector2) -> void:
+	if not _started:
+		return
+	var low: float = 0.5 if bubble.story_final else 0.75
 	play(&"chime", -8.0, 0.0)
-	_voices[(_next_voice + VOICES - 1) % VOICES].pitch_scale = 0.75
+	_voices[(_next_voice + VOICES - 1) % VOICES].pitch_scale = low
+	await get_tree().create_timer(0.16).timeout
+	play(&"chime", -10.0, 0.0)
+	_voices[(_next_voice + VOICES - 1) % VOICES].pitch_scale = low * 1.26
 
 
 func _on_ability_used(_bubble: BubbleData, _target_id: StringName) -> void:

@@ -14,12 +14,13 @@ func _draw() -> void:
 	var rise: float = brain.rise
 	var f: float = brain.facing
 	# The wall of ink behind it, reaching back past the panel's left edge.
-	var wall: PackedVector2Array = PackedVector2Array([Vector2(-2000, 60), Vector2(-40, 60)])
-	for i in 9:
-		var y: float = 60.0 - i * 64.0
-		wall.append(Vector2(-20 + rng.randf_range(-30, 30), y))
-	wall.append(Vector2(-2000, -560))
-	InkDraw.fill(self, wall, InkDraw.INK)
+	if (brain as InkShadow).draws_wall:
+		var wall: PackedVector2Array = PackedVector2Array([Vector2(-2000, 60), Vector2(-40, 60)])
+		for i in 9:
+			var y: float = 60.0 - i * 64.0
+			wall.append(Vector2(-20 + rng.randf_range(-30, 30), y))
+		wall.append(Vector2(-2000, -560))
+		InkDraw.fill(self, wall, InkDraw.INK)
 	if rise <= 0.05:
 		return
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(SCALE, SCALE))
@@ -40,9 +41,11 @@ func _draw() -> void:
 	InkDraw.polyline(self, nib, 6.0, _pose_seed, true, InkDraw.INK, 3.0)
 	draw_line(top + Vector2(0, -60), top + Vector2(0, 10), CrawlerArt.PALE, 2.0, true)
 	draw_circle(top + Vector2(0, 14), 5.0, CrawlerArt.PALE)
-	# A crowd of uneven eyes over the nib and palm.
-	var eye: Color = InkDraw.RED if brain.is_hunting() else CrawlerArt.PALE
+	# A crowd of uneven eyes over the nib and palm. Listening (the lair
+	# variant): they open wide and white.
+	var listen: float = (brain as HeartShadow).listening if brain is HeartShadow else 0.0
+	var eye: Color = InkDraw.RED if brain.is_hunting() else CrawlerArt.PALE.lerp(InkDraw.WHITE, listen)
 	for i in 11:
 		var at: Vector2 = Vector2(rng.randf_range(-60, 60) * f, -h * rng.randf_range(0.2, 0.9))
-		draw_circle(at, rng.randf_range(1.6, 4.5), eye)
+		draw_circle(at, rng.randf_range(1.6, 4.5) * (1.0 + listen * 0.9), eye)
 	draw_set_transform(Vector2.ZERO)

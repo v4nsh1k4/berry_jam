@@ -13,7 +13,7 @@
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_exit_data")
 area = Rect2(1080, 396, 104, 112)
-target_frame_id = &"ch3_returning_room"
+target_frame_id = &"ch3_gallery_words"
 transition_style = 0
 target_spawn = Vector2(170, 466)
 
@@ -27,6 +27,7 @@ bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("5_vane_hide"), ExtRe
 lines = PackedStringArray("Don't {word} from me, child.", "{word}, the page is tearing.", "{word}. Don't leave us like this.")
 broken_lines = PackedStringArray("Don't... from me. P-please.", "..., the page is t-tearing...", "... Don't leave us. Please.")
 relief_lines = PackedStringArray("Bless you, child.", "It sounds right again.", "There. That's my voice.")
+plea_lines = PackedStringArray("You took it... I can't finish my sentences.", "Every word you took left a hole in me.", "I keep reaching for it and it isn't there.")
 words_stealable = false
 
 [sub_resource type="Resource" id="Resource_3"]
@@ -39,6 +40,7 @@ bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("8_portrait_remember"
 lines = PackedStringArray("Help me {word} who I was.")
 broken_lines = PackedStringArray("Help me... who I... was?")
 relief_lines = PackedStringArray("I remember now. Thank you.")
+plea_lines = PackedStringArray("I can't... who was I? You took it.", "There is a hole where my words were.")
 words_stealable = false
 reach_y = 270.0
 bubble_offsets = PackedVector2Array(-230, -60)
@@ -73,8 +75,8 @@ ambient_light = 0.14
 background_style = &"torn_page"
 player_spawn = Vector2(150, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("The page is tearing. Everyone here is missing something.", "Pick a stolen word, stand under its owner's broken bubble, hold E to give it back.")
-hint = "Give each word back to the one you took it from. Arthur is further on."
+captions = PackedStringArray("The page is tearing. Everyone here is missing something.", "They are missing what you took.")
+hint = "Nothing here can be mended yet. The way on is to the right."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
 npcs = Array[ExtResource("3_npc_data")]([SubResource("Resource_2"), SubResource("Resource_3"), SubResource("Resource_4")])
 lights = Array[ExtResource("9_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])

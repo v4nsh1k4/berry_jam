@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch3_outside"
+display_name = ""
+ambient_light = 1.0
+background_style = &"plain"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray()
+hint = ""
+ending_card = "THE END"
+epilogue = true

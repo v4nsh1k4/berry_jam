@@ -2,7 +2,9 @@ class_name Npc
 extends Node2D
 ## A comic character built from NpcData. Speaks one SpeechBubble per bubble.
 ## The more of their words are stolen, the more "unfinished" they are drawn,
-## and they react (a caption) when the player comes close again.
+## and they react (a caption) when the player comes close again. In Chapter 3
+## before the twist they plead (plea_lines); after it, a word of theirs that
+## was somehow lost goes home by itself when the player comes near.
 
 const REACT_DISTANCE: float = 220.0
 ## Outline share left out when every word is gone.
@@ -12,6 +14,7 @@ var data: NpcData
 
 var _reacted_count: int = 0
 var _player_near: bool = false
+var _pleas: int = 0
 var _tick: int = -1
 
 
@@ -19,6 +22,9 @@ func setup(npc: NpcData) -> void:
 	data = npc
 	position = npc.position
 	scale = Vector2.ONE * npc.scale
+	if npc.visual_style == &"none":
+		# A word held by an enemy is drawn over it, so it reads as gripped.
+		z_index = 3
 	_reacted_count = GameState.stolen_from_count(npc.id)
 	var spots: PackedVector2Array = npc.bubble_offsets if not npc.bubble_offsets.is_empty() else NpcArt.default_bubble_spots(npc.visual_style)
 	var mouth: Vector2 = NpcArt.mouth(npc.visual_style)
@@ -63,9 +69,10 @@ func _process(_delta: float) -> void:
 		queue_redraw()
 
 
-## "Stolen-from" line: one caption per theft, shown when the player comes near.
+## On coming near: a "stolen-from" line once per theft, or (Chapter 3,
+## before the twist) a plea for what was taken.
 func _check_reaction() -> void:
-	if data == null or data.reactions.is_empty():
+	if data == null:
 		return
 	var player: Node2D = get_tree().get_first_node_in_group(&"player") as Node2D
 	if player == null:
@@ -73,11 +80,26 @@ func _check_reaction() -> void:
 	var near: bool = player.global_position.distance_to(global_position + Vector2(0, data.reach_y)) < REACT_DISTANCE
 	if near and not _player_near:
 		var stolen: int = GameState.stolen_from_count(data.id)
-		if stolen > _reacted_count:
+		if stolen > _reacted_count and not data.reactions.is_empty():
 			_reacted_count = stolen
 			var line: String = data.reactions[mini(stolen, data.reactions.size()) - 1]
 			EventBus.caption_requested.emit("%s: \"%s\"" % [data.display_name, line], 3.5)
+		elif stolen > 0 and not GameState.twist_revealed and not data.plea_lines.is_empty():
+			var plea: String = data.plea_lines[_pleas % data.plea_lines.size()]
+			_pleas += 1
+			EventBus.caption_requested.emit("%s: \"%s\"" % [data.display_name, plea], 3.5)
+		if GameState.can_return():
+			_restore_lost_words()
 	_player_near = near
+
+
+## A word marked stolen that the player no longer has can never come back by
+## hand, so it finds its own way home (no owner stays broken forever).
+func _restore_lost_words() -> void:
+	for word in data.bubbles:
+		if GameState.is_bubble_stolen(word.id) and not GameState.inventory.has(word):
+			GameState.restore_lost_word(word)
+			EventBus.caption_requested.emit("%s's lost word found its own way home." % data.display_name, 3.5)
 
 
 func _draw() -> void:

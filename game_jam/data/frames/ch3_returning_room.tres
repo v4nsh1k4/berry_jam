@@ -13,19 +13,12 @@
 
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_exit_data")
-area = Rect2(0, 396, 96, 112)
-target_frame_id = &"ch3_torn_page"
-transition_style = 0
-target_spawn = Vector2(980, 466)
-
-[sub_resource type="Resource" id="Resource_2"]
-script = ExtResource("2_exit_data")
 area = Rect2(1080, 396, 104, 112)
-target_frame_id = &"ch3_gallery_words"
+target_frame_id = &"ch3_torn_return"
 transition_style = 0
 target_spawn = Vector2(170, 466)
 
-[sub_resource type="Resource" id="Resource_3"]
+[sub_resource type="Resource" id="Resource_2"]
 script = ExtResource("3_interactable_data")
 id = &"ch3_drawer"
 kind = &"return_spot"
@@ -34,7 +27,15 @@ size = Vector2(110, 82)
 owner_id = &"drawer"
 text = "drawer"
 sets_flag = &"whole_drawer"
-caption = "The old drawer"
+caption = "the old drawer"
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"returning_curtain"
+kind = &"hiding_spot"
+position = Vector2(30, 110)
+size = Vector2(100, 272)
+text = "curtain"
 
 [sub_resource type="Resource" id="Resource_4"]
 script = ExtResource("4_npc_data")
@@ -46,6 +47,7 @@ bubbles = Array[ExtResource("5_bubble_data")]([ExtResource("6_arthur_open"), Ext
 lines = PackedStringArray("I used to {word} every door in this house.", "{word} the chairs in, I always said.", "{word} for me, sir. Please.", "Can you {word} me find my words?")
 broken_lines = PackedStringArray("I used to... every d-door. Please.", "...the chairs in. Something's m-missing.", "...for me. P-please, give it back.", "Can you... me? Please.")
 relief_lines = PackedStringArray("Oh... thank you, sir.", "That's mine. I remember it.", "I can nearly speak again.", "I'm whole. Thank you.")
+plea_lines = PackedStringArray()
 words_stealable = false
 
 [sub_resource type="Resource" id="Resource_5"]
@@ -70,11 +72,13 @@ ambient_light = 0.2
 background_style = &"returning_room"
 player_spawn = Vector2(170, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("A quiet room. Nothing hunts here.", "Arthur is waiting for his words.")
-hint = "Select one of Arthur's words and hold E under its broken bubble. The drawer takes back what you found in it."
-exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
-interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
+captions = PackedStringArray("Now you know what you are. Give back what you took.", "Select a word (1-6, Q / R), stand under its owner's broken bubble, hold E.")
+hint = "Give Arthur his words, and the drawer its HUSH. When the eraser's shadow falls on the floor, step out of it or hide."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2"), SubResource("Resource_3")])
 npcs = Array[ExtResource("4_npc_data")]([SubResource("Resource_4")])
 lights = Array[ExtResource("10_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
-glitch = 0.12
-panel_tilt = 0.4
+events = Array[StringName]([&"artist_hand"])
+glitch = 0.6
+panel_tilt = 0.6
+sketch = 0.15

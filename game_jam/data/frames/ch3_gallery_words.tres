@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="FrameData" load_steps=14 format=3]
+[gd_resource type="Resource" script_class="FrameData" load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
 [ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
@@ -8,7 +8,7 @@
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_exit_data")
 area = Rect2(0, 396, 96, 112)
-target_frame_id = &"ch3_returning_room"
+target_frame_id = &"ch3_torn_page"
 transition_style = 0
 target_spawn = Vector2(980, 466)
 
@@ -24,62 +24,101 @@ required_flag = &"gallery_open"
 script = ExtResource("3_interactable_data")
 id = &"paint_arthur"
 kind = &"return_spot"
-position = Vector2(150, 140)
+position = Vector2(115, 140)
 size = Vector2(160, 200)
 owner_id = &"arthur"
 text = "painting"
-sets_flag = &"whole_arthur"
 caption = "Arthur"
 
 [sub_resource type="Resource" id="Resource_4"]
 script = ExtResource("3_interactable_data")
 id = &"paint_vane"
 kind = &"return_spot"
-position = Vector2(512, 140)
+position = Vector2(515, 140)
 size = Vector2(160, 200)
 owner_id = &"mrs_vane"
 text = "painting"
-sets_flag = &"whole_vane"
 caption = "Mrs. Vane"
 
 [sub_resource type="Resource" id="Resource_5"]
 script = ExtResource("3_interactable_data")
 id = &"paint_lady"
 kind = &"return_spot"
-position = Vector2(874, 140)
+position = Vector2(855, 140)
 size = Vector2(160, 200)
 owner_id = &"portrait_lady"
 text = "painting"
-sets_flag = &"whole_lady"
 caption = "The Lady"
 
 [sub_resource type="Resource" id="Resource_6"]
 script = ExtResource("3_interactable_data")
-id = &"gallery_wall"
-kind = &"secret_door"
-position = Vector2(1060, 120)
-size = Vector2(100, 262)
-requires_flag = &"gallery_open"
-sets_flag = &"gallery_door"
+id = &"gallery_memory"
+kind = &"memory"
+position = Vector2(300, 220)
+size = Vector2(190, 110)
+symbols = PackedStringArray("nib", "eye", "hand")
+requires_flag = &"gallery_frame_moved"
 
 [sub_resource type="Resource" id="Resource_7"]
-script = ExtResource("4_light_spot_data")
-kind = &"glow"
-position = Vector2(230, 360)
-radius = 200.0
-energy = 0.35
+script = ExtResource("3_interactable_data")
+id = &"gallery_fallen"
+kind = &"pushable"
+position = Vector2(310, 252)
+size = Vector2(170, 130)
+accepted_ability_ids = Array[StringName]([&"push"])
+sets_flag = &"gallery_frame_moved"
+push_offset = Vector2(-190, 0)
+prompt = "A fallen frame, far too heavy to lift."
 
 [sub_resource type="Resource" id="Resource_8"]
+script = ExtResource("3_interactable_data")
+id = &"gallery_writing"
+kind = &"writing"
+position = Vector2(560, 20)
+size = Vector2(440, 90)
+revealed_by_light = true
+text = "what fell hides what it saw
+move it. REMEMBER."
+
+[sub_resource type="Resource" id="Resource_9"]
+script = ExtResource("3_interactable_data")
+id = &"gallery_dials"
+kind = &"symbol_lock"
+position = Vector2(705, 262)
+size = Vector2(120, 70)
+text = "panel"
+symbols = PackedStringArray("nib", "eye", "hand")
+sets_flag = &"gallery_dials"
+
+[sub_resource type="Resource" id="Resource_10"]
+script = ExtResource("3_interactable_data")
+id = &"gallery_door"
+kind = &"door"
+position = Vector2(1066, 150)
+size = Vector2(96, 232)
+accepted_ability_ids = Array[StringName]([&"open"])
+requires_flag = &"gallery_dials"
+sets_flag = &"gallery_open"
+prompt = "Sealed. The dial box beside the portraits isn't set."
+
+[sub_resource type="Resource" id="Resource_11"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
-position = Vector2(592, 360)
+position = Vector2(195, 360)
 radius = 200.0
 energy = 0.35
 
-[sub_resource type="Resource" id="Resource_9"]
+[sub_resource type="Resource" id="Resource_12"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
-position = Vector2(954, 360)
+position = Vector2(595, 360)
+radius = 200.0
+energy = 0.35
+
+[sub_resource type="Resource" id="Resource_13"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(935, 360)
 radius = 200.0
 energy = 0.35
 
@@ -91,12 +130,11 @@ ambient_light = 0.12
 background_style = &"gallery_words"
 player_spawn = Vector2(170, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("Three portraits. The way on opens when everyone is whole.", "Give their words back here, or where you met them.")
-hint = "A lit portrait is whole. Give back every word you took from the dark ones."
+captions = PackedStringArray("Three portraits, and ghost bubbles where their words should be. Yours now.", "The way on is sealed.")
+hint = "PUSH the fallen frame, say REMEMBER at the wall behind it, set the dial box to those marks, then say OPEN at the door."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
-interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6")])
-lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_7"), SubResource("Resource_8"), SubResource("Resource_9")])
-events = Array[StringName]([&"gallery_gate"])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6"), SubResource("Resource_7"), SubResource("Resource_8"), SubResource("Resource_9"), SubResource("Resource_10")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_11"), SubResource("Resource_12"), SubResource("Resource_13")])
 glitch = 0.5
 panel_tilt = 1.5
 sketch = 0.25

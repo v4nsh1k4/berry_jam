@@ -112,3 +112,25 @@ signal bubble_returned(bubble: BubbleData, screen_pos: Vector2)
 ## The Ink Shadow scribbled out a hiding spot.
 @warning_ignore("unused_signal")
 signal hiding_spot_erased(spot_id: StringName)
+
+# The twist and the ending (Chapter 3 climax)
+## The last word (ERASE) was stolen: the reveal starts and the world freezes.
+@warning_ignore("unused_signal")
+signal reveal_started
+## The reveal has played: GameState.twist_revealed is now true and words can
+## be given back.
+@warning_ignore("unused_signal")
+signal twist_revealed
+## The Artist's hand rubs its eraser across the floor at `screen_pos`.
+@warning_ignore("unused_signal")
+signal hand_erase(screen_pos: Vector2)
+## ERASE went back to the hand: cracks seal, the glitch fades, the way out opens.
+@warning_ignore("unused_signal")
+signal comic_repaired
+@warning_ignore("unused_signal")
+signal intro_cinematic_finished
+@warning_ignore("unused_signal")
+signal epilogue_finished
+## The player walked out of the page: the save is cleared.
+@warning_ignore("unused_signal")
+signal game_completed

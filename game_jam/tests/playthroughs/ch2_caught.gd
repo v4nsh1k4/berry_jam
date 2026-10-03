@@ -24,6 +24,8 @@ func _run() -> void:
 	await _wait(0.3)
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
+	# New Game opens with the intro cinematic: skip it like a click would.
+	current_scene.get_node("MenuLayer/IntroCinematic").call("_finish")
 	var main = current_scene
 	main.get_node("MenuLayer/MainMenu").hide()
 	gs.add_bubble(load("res://data/bubbles/arthur_open.tres"))

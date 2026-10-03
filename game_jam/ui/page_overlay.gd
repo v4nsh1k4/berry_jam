@@ -2,6 +2,8 @@ extends Node2D
 ## Drawn on a CanvasLayer above the world so darkness never touches it: the
 ## white page gutter, the thick panel border, caption boxes, and the comic
 ## damage (a shakier border with cracks) that grows with every stolen word.
+## Once the comic is repaired, frames marked border_gap show the way out: a
+## gap in the right border with the lit real-world page behind it.
 
 const CAPTION_FONT_SIZE: int = 18
 const TITLE_FONT_SIZE: int = 20
@@ -17,6 +19,9 @@ var _damage: float = 0.0
 var _crawler_near: float = 0.0
 ## FrameData.glitch of the current panel (Chapter 3 breakdown).
 var _glitch: float = 0.0
+## 0..1 how far the way-out gap in the right border has opened.
+var _gap: float = 0.0
+var _gap_frame: bool = false
 var _tick: int = -1
 
 
@@ -26,17 +31,28 @@ func _ready() -> void:
 	EventBus.comic_damage_changed.connect(_on_damage_changed)
 	EventBus.returned_to_menu.connect(hide)
 	EventBus.crawler_proximity.connect(_on_crawler_proximity)
+	EventBus.comic_repaired.connect(_on_comic_repaired)
 	hide()
 
 
 func _on_frame_changed(data: FrameData) -> void:
-	_glitch = data.glitch
+	_glitch = GameState.glitch_of(data)
+	_gap_frame = data.border_gap
+	_gap = 1.0 if _gap_frame and GameState.has_flag(&"comic_repaired") else 0.0
 	_title = data.display_name.to_upper()
 	_captions = data.captions
 	_toast = ""
 	_toast_left = 0.0
 	show()
 	queue_redraw()
+
+
+## The last word went home: the breakdown calms, then the way out opens.
+func _on_comic_repaired() -> void:
+	var tween: Tween = create_tween()
+	tween.tween_property(self, "_glitch", 0.0, 2.5)
+	if _gap_frame:
+		tween.tween_property(self, "_gap", 1.0, 1.5).set_trans(Tween.TRANS_SINE)
 
 
 func _on_caption_requested(text: String, duration: float) -> void:
@@ -84,6 +100,8 @@ func _draw() -> void:
 		# Thin red edge just inside the border: comic damage made visible.
 		InkDraw.rect(self, panel.grow(-5.0 - _damage * 2.0), 0.6 + _damage * 3.0, _tick * 7 + 3, Color.TRANSPARENT, Color(InkDraw.RED, 0.85), 1.2 + _damage * 2.0)
 	_draw_cracks(panel)
+	if _gap > 0.0:
+		_draw_gap(panel)
 
 	var font: Font = ThemeDB.fallback_font
 	if _title != "":
@@ -153,3 +171,18 @@ func _draw_caption(font: Font, text: String, top_left: Vector2, font_size: int, 
 	var box: Rect2 = Rect2(top_left, size + Vector2(28, 14))
 	InkDraw.rect(self, box, 3.0, _tick * 5 + seed_offset, fill)
 	draw_string(font, top_left + Vector2(14, 7 + font.get_ascent(font_size)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, InkDraw.INK)
+
+
+## A tear in the right border, lit from outside: the real page, a lamp-lit
+## desk beyond the comic. Warm white, never red.
+func _draw_gap(panel: Rect2) -> void:
+	var bottom: float = panel.position.y + 508.0
+	var height: float = 128.0 * _gap
+	var gap: Rect2 = Rect2(panel.end.x - 14.0, bottom - height, 60.0, height)
+	var light: Color = Color(1.0, 0.97, 0.86)
+	draw_rect(gap, light)
+	for i in 5:
+		var y: float = gap.position.y + gap.size.y * (i + 0.5) / 5.0
+		draw_line(Vector2(gap.position.x, y), Vector2(gap.position.x - 70.0 * _gap, y + (i - 2) * 14.0), Color(light, 0.45), 6.0, true)
+	draw_line(gap.position + Vector2(18, 10), Vector2(gap.end.x, gap.position.y + 10), Color(0.5, 0.44, 0.36, 0.4), 3.0, true)
+	InkDraw.line(self, gap.position, Vector2(gap.position.x, gap.end.y), 3.0, _tick * 3)

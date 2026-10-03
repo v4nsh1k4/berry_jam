@@ -31,6 +31,8 @@ func _run() -> void:
 	await get_tree().process_frame
 	EventBus.game_started.emit()
 	EventBus.menu_new_game.emit()
+	# New Game opens with the intro cinematic: skip it like a click would.
+	main.get_node("MenuLayer/IntroCinematic").call("_finish")
 	EventBus.intro_finished.emit()
 	await get_tree().process_frame
 	var strip: Control = main.get_node("HUDLayer/InventoryStrip")

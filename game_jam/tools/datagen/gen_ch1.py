@@ -4,13 +4,14 @@ from gen_lib import *
 LOCK_SYMBOLS = ["eye", "moon", "key"]
 
 # ---- Bubbles -------------------------------------------------------------
+OWNER_NAMES = {"arthur": "Arthur", "portrait_lady": "the Portrait", "drawer": "the old drawer"}
 for bid, text, ability, owner in [
     ("arthur_open", "OPEN", "open", "arthur"), ("arthur_push", "PUSH", "push", "arthur"),
     ("arthur_wait", "WAIT", "wait", "arthur"), ("arthur_help", "HELP", "help", "arthur"),
     ("portrait_remember", "REMEMBER", "remember", "portrait_lady"), ("drawer_hush", "HUSH", "hush", "drawer"),
 ]:
     write(f"data/bubbles/{bid}.tres", "bubble_data",
-          dict(id=SN(bid), text=text, ability_id=SN(ability), stolen_from=SN(owner)))
+          dict(id=SN(bid), text=text, ability_id=SN(ability), stolen_from=SN(owner), owner_name=OWNER_NAMES[owner]))
 
 # ---- Frames ----------------------------------------------------------------
 frame("ch1_awakening", "Awakening", "awakening", 0.1, (230, 470),

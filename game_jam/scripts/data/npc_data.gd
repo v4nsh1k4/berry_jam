@@ -20,6 +20,9 @@ extends Resource
 @export var relief_lines: PackedStringArray = PackedStringArray()
 ## False: words this character still has can't be taken (Chapter 3).
 @export var words_stealable: bool = true
+## Captions while they are missing words and nothing can be given back yet
+## (Chapter 3 before the reveal), one per approach, in turn.
+@export var plea_lines: PackedStringArray = PackedStringArray()
 @export var scale: float = 1.0
 ## Pushes the reach point down to the floor for NPCs on the wall (portraits).
 @export var reach_y: float = 0.0

@@ -7,7 +7,7 @@ BACK = (0, 396, 96, 112)
 
 for bid, text, ability in [("vane_hide", "HIDE", "hide"), ("vane_hush", "HUSH", "hush"), ("vane_wait", "WAIT", "wait")]:
     write(f"data/bubbles/{bid}.tres", "bubble_data",
-          dict(id=SN(bid), text=text, ability_id=SN(ability), stolen_from=SN("mrs_vane")))
+          dict(id=SN(bid), text=text, ability_id=SN(ability), stolen_from=SN("mrs_vane"), owner_name="Mrs. Vane"))
 
 frame("ch2_long_hallway", "The Long Hallway", "long_hallway", 0.045, (150, 466),
       ["The house is darker here. Your torch is all you have.",

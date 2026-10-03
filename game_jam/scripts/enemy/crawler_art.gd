@@ -2,8 +2,7 @@ class_name CrawlerArt
 extends RefCounted
 ## Drawing for the Ink Crawler, shared by the enemy and scripted scares.
 ## Origin = where it stands. Its limbs are long jointed fingers with pen-nib
-## tips (never explained in game: it is the Artist's hand).
-# TODO(later): Chapter 3 reveal reuses finger() for the Artist's hand.
+## tips: it is the Artist's hand (HandArt draws the same shapes for the reveal).
 
 const HEIGHT: float = 240.0
 const LINE: float = 6.5
@@ -67,16 +66,17 @@ static func finger(ci: CanvasItem, base: Vector2, angle: float, length: float, j
 	InkDraw.polyline(ci, pts, width, seed_value, false, InkDraw.INK, JITTER * 0.7)
 	for j in range(1, pts.size() - 1):
 		ci.draw_circle(pts[j], width * 0.75, InkDraw.INK)
-	_nib(ci, p, a, width)
+	nib(ci, p, a, width)
 	return p
 
 
-static func _nib(ci: CanvasItem, tip: Vector2, angle: float, width: float) -> void:
+## A split pen nib at `tip` pointing along `angle` (also the Artist's fingertips).
+static func nib(ci: CanvasItem, tip: Vector2, angle: float, width: float) -> void:
 	var d: Vector2 = Vector2(cos(angle), sin(angle))
 	var side: Vector2 = Vector2(-d.y, d.x)
-	var nib: PackedVector2Array = PackedVector2Array([
+	var points: PackedVector2Array = PackedVector2Array([
 		tip - side * width * 1.3, tip + d * width * 3.6, tip + side * width * 1.3, tip - d * width * 0.6])
-	InkDraw.fill(ci, nib, InkDraw.INK)
+	InkDraw.fill(ci, points, InkDraw.INK)
 	ci.draw_line(tip + d * width * 0.4, tip + d * width * 2.8, PALE, 1.2, true)
 
 

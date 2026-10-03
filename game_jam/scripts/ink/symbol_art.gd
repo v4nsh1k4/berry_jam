@@ -2,7 +2,7 @@ class_name SymbolArt
 extends RefCounted
 ## The small set of ink symbols used by memory sketches and symbol locks.
 
-const ALL: PackedStringArray = ["moon", "eye", "key", "hand", "spiral", "house"]
+const ALL: PackedStringArray = ["moon", "eye", "key", "hand", "spiral", "house", "nib"]
 
 
 static func draw(ci: CanvasItem, symbol: StringName, c: Vector2, r: float, seed_value: int, color: Color = InkDraw.INK, width: float = 3.0) -> void:
@@ -46,5 +46,12 @@ static func draw(ci: CanvasItem, symbol: StringName, c: Vector2, r: float, seed_
 		&"house":
 			InkDraw.polyline(ci, PackedVector2Array([c + Vector2(-r, -r * 0.1), c + Vector2(0, -r), c + Vector2(r, -r * 0.1)]), width, seed_value, false, color, 0.6)
 			InkDraw.rect(ci, Rect2(c + Vector2(-r * 0.75, -r * 0.1), Vector2(r * 1.5, r)), width, seed_value + 1, Color.TRANSPARENT, color, 0.6)
+		&"nib":
+			# A pen nib, point down: the Artist's mark.
+			var nib: PackedVector2Array = PackedVector2Array([c + Vector2(0, r), c + Vector2(-r * 0.55, -r * 0.1),
+				c + Vector2(-r * 0.4, -r * 0.8), c + Vector2(r * 0.4, -r * 0.8), c + Vector2(r * 0.55, -r * 0.1)])
+			InkDraw.polyline(ci, nib, width, seed_value, true, color, 0.6)
+			InkDraw.line(ci, c + Vector2(0, r * 0.95), c + Vector2(0, -r * 0.05), width * 0.7, seed_value + 1, color, 0.4)
+			ci.draw_circle(c + Vector2(0, -r * 0.18), r * 0.13, color)
 		_:
 			InkDraw.ellipse(ci, c, Vector2(r, r), width, seed_value, Color.TRANSPARENT, color)

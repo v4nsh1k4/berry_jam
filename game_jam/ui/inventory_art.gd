@@ -52,6 +52,12 @@ static func draw_tooltip(ci: Control, slot: Rect2, bubble: BubbleData, tick: int
 	var ability: AbilityData = AbilityRegistry.get_ability(bubble.ability_id)
 	var title: String = "\"%s\"  -  %s" % [bubble.text, ability.display_name if ability != null else "?"]
 	var body: String = ability.description if ability != null else ""
+	if ability == null and bubble.story_final:
+		title = "\"%s\"" % bubble.text
+		body = "The Shadow's last word. It does nothing in your hands."
+	if GameState.can_return() and bubble.owner_name != "":
+		# After the twist every word says whose it is and how to give it back.
+		body = "Taken from %s. Hold E under their broken bubble to give it back." % bubble.owner_name
 	var font: Font = ThemeDB.fallback_font
 	var width: float = maxf(font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 17).x, font.get_string_size(body, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x) + 28.0
 	var box: Rect2 = Rect2(Vector2(clampf(slot.get_center().x - width * 0.5, -40.0, ci.size.x - width), -64), Vector2(width, 58))

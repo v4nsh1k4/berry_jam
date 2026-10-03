@@ -4,14 +4,17 @@ extends InkCrawler
 ## signals; slower but relentless, a longer reach, and a wall of ink behind it
 ## that blocks the panel as it advances. If the player lingers, it scribbles
 ## out the hiding spot ahead of it: a visible scribble and a sound first.
-# TODO(later): Stage 4B climax. The Shadow is the Artist's hand; the final
-# confrontation, its reveal and its defeat by giving the last word back.
+## (It is the Artist's hand; the reveal in the Ink Heart shows it. HeartShadow
+## is the lair variant that guards the last word.)
 
 ## Seconds between erasing hiding spots.
 const ERASE_EVERY: float = 7.0
 ## Warning (scribble + sound) before a spot is gone. The Shadow holds still
 ## while it scribbles, plus a beat after.
 const ERASE_WARNING: float = 0.9
+
+## The wall of ink flooding the panel behind it (off in the lair).
+var draws_wall: bool = true
 
 var _erase_timer: float = ERASE_EVERY
 
@@ -29,12 +32,17 @@ func _make_view() -> Node2D:
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	if state == State.DORMANT or is_frozen():
+	if state == State.DORMANT or is_frozen() or not _erases():
 		return
 	_erase_timer -= delta
 	if _erase_timer <= 0.0:
 		_erase_timer = ERASE_EVERY
 		_erase_next_spot()
+
+
+## Whether it is scribbling out hiding spots right now.
+func _erases() -> bool:
+	return true
 
 
 ## The nearest hiding spot still standing, ahead of it or close behind.

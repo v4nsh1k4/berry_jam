@@ -36,7 +36,13 @@ extends Resource
 @export var panel_tilt: float = 0.0
 ## 0..1 share of the background left as unfinished sketch (missing strokes).
 @export_range(0.0, 1.0) var sketch: float = 0.0
-## Which enemy sits at crawler_spawn: &"crawler" or &"shadow" (Ink Shadow).
+## Which enemy sits at crawler_spawn: &"crawler", &"shadow" (Ink Shadow) or
+## &"heart" (the Shadow guarding the last word in the Ink Heart).
 @export var crawler_kind: StringName = &"crawler"
 ## Non-null: arriving here ends the chapter and starts this one (intro first).
 @export var next_chapter: ChapterData
+## Once the comic is repaired, a gap opens in the right border showing the
+## lit real-world page (the way out).
+@export var border_gap: bool = false
+## Arriving here plays the epilogue before the ending card.
+@export var epilogue: bool = false

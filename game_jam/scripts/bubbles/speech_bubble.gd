@@ -2,8 +2,8 @@ class_name SpeechBubble
 extends Node2D
 ## A character's line hanging in the world. Three states:
 ## - whole: the word sits in an ink box; hold E to steal it (if allowed);
-## - stolen: what is left of the line, drawn unfinished. In chapters that
-##   allow it, hold E with the right word selected to give it back;
+## - stolen: what is left of the line, drawn unfinished. Once the twist has
+##   played (Chapter 3), hold E with the right word selected to give it back;
 ## - returned: the full line again, for good. It can never be stolen again.
 ## Position is the bubble centre.
 
@@ -48,6 +48,7 @@ func setup(bubble: BubbleData, line: String, broken_line: String, tip: Vector2, 
 	returned = GameState.is_bubble_returned(bubble.id)
 	_update_groups()
 	EventBus.bubble_returned.connect(_on_bubble_returned)
+	EventBus.twist_revealed.connect(_update_groups)
 
 
 func _update_groups() -> void:
@@ -73,7 +74,11 @@ func get_interact_point() -> Vector2:
 func get_prompt() -> String:
 	if is_returnable():
 		var word: BubbleData = GameState.selected_bubble()
-		return "Hold E: give back \"%s\"" % word.text if word != null else "Pick a word (1-6, Q / R) to give back"
+		var owner: String = data.owner_name if data.owner_name != "" else "them"
+		if word != null and word.id == data.id:
+			return "Hold E: give \"%s\" back to %s" % [word.text, owner]
+		# Sentence start: "the Portrait" -> "The Portrait".
+		return "%s is missing \"%s\". Select it (1-6, Q / R), then hold E" % [owner.left(1).to_upper() + owner.substr(1), data.text]
 	return "Hold E: steal \"%s\"" % data.text
 
 

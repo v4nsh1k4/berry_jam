@@ -1,7 +1,7 @@
 extends Control
 ## Text-only intro: chapter captions one at a time on a dark page. Click,
 ## Space or E advances; each line also moves on by itself.
-# TODO(later): replace with the full intro cinematic.
+## (A New Game plays IntroCinematic first, then these captions for Chapter 1.)
 
 const AUTO_ADVANCE: float = 4.5
 

@@ -28,6 +28,7 @@ const STALK_AT_NOTICE: float = 0.35
 ## Panel-space rect it can move in (the room's floor band); set by Frame.
 var walk_area: Rect2 = Rect2(40, 400, 1104, 104)
 var patrol: bool = false
+var patrol_span: Vector2 = Vector2.INF ## Patrolled panel-x range (INF = whole walk area).
 # Tuning a bigger subclass (InkShadow) can change.
 var speed_scale: float = 1.0
 var catch_radius: float = CATCH_RADIUS
@@ -195,7 +196,8 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.PATROL:
 			if up:
-				var end_x: float = walk_area.end.x if _patrol_dir > 0.0 else walk_area.position.x
+				var span: Vector2 = patrol_span if patrol_span != Vector2.INF else Vector2(walk_area.position.x, walk_area.end.x)
+				var end_x: float = span.y if _patrol_dir > 0.0 else span.x
 				if _move_toward(Vector2(end_x, _pos.y), PATROL_SPEED, delta):
 					_patrol_dir = -_patrol_dir
 			if _can_see():

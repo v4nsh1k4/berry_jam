@@ -1,8 +1,7 @@
 extends Node2D
 ## A huge shadow of a hand holding a pen sweeps across the panel once, then
 ## is gone. Nothing explains it.
-# TODO(later): Chapter 3 twist. This is the Comic Artist's hand, the real
-# "monster", trying to erase the player. Reuse it there.
+## (It is the Comic Artist's hand; the Chapter 3 reveal shows it plainly.)
 
 const FLAG: StringName = &"seen_ink_hand"
 ## Fires when the player passes this share of the panel width.

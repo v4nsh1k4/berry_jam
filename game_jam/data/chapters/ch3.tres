@@ -10,4 +10,5 @@ first_frame_id = &"ch3_torn_page"
 damage_visual_scale = 1.6
 line_jitter = 1.6
 allows_return = true
+return_frame_id = &"ch3_returning_room"
 intro_lines = PackedStringArray("Issue #3.", "The ink is running. The panels won't hold.", "Everyone you took from is still here. Waiting.")

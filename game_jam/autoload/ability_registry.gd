@@ -21,8 +21,6 @@ func _ready() -> void:
 	for path in ABILITY_PATHS:
 		register(load(path) as AbilityData)
 	EventBus.game_reset.connect(reset_cooldowns)
-	# TODO(later): Chapter 3 abilities register here, e.g. RETURN for the
-	# return-the-bubble mechanic (speaking a word back to its owner).
 
 
 func reset_cooldowns() -> void:

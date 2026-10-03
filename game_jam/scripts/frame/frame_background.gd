@@ -69,6 +69,10 @@ func _draw_style() -> void:
 			BgCh3.gallery_words(self, _tick)
 		&"margin":
 			BgCh3.margin(self, _tick)
+		&"ink_heart":
+			BgCh3End.ink_heart(self, _tick)
+		&"escape":
+			BgCh3End.escape(self, _tick)
 
 
 ## Floor, floorboards in perspective, skirting shadow and wallpaper stripes.

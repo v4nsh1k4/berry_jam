@@ -7,8 +7,7 @@ extends Node2D
 ## free for the inventory.
 const PANEL_RECT: Rect2 = Rect2(48, 32, 1184, 528)
 
-## Scripted moments a frame can list in FrameData.events.
-# TODO(later): Chapter 2 and 3 scripted events register here.
+## Scripted moments (and scripted presences) a frame can list in FrameData.events.
 const EVENT_SCRIPTS: Dictionary = {
 	&"ink_hand": preload("res://scripts/events/ink_hand_event.gd"),
 	&"crawler_window": preload("res://scripts/events/crawler_window_event.gd"),
@@ -17,6 +16,7 @@ const EVENT_SCRIPTS: Dictionary = {
 	&"cellar_chase": preload("res://scripts/events/cellar_chase_event.gd"),
 	&"gallery_gate": preload("res://scripts/events/gallery_gate_event.gd"),
 	&"margin_chase": preload("res://scripts/events/margin_chase_event.gd"),
+	&"artist_hand": preload("res://scripts/enemy/artist_hand.gd"),
 }
 
 ## Interactable kinds with their own behaviour; everything else is the base class.
@@ -38,14 +38,14 @@ func setup(frame_data: FrameData) -> void:
 	data = frame_data
 	var a: float = data.ambient_light
 	_darkness.color = Color(a, a, minf(a * 1.15, 1.0)) if a < 0.8 else Color(1, 1, 1)
+	if GameState.has_flag(&"comic_repaired") and a < 0.78:
+		_darkness.color = Color(0.78, 0.78, 0.82)
 	_paper.size = PANEL_RECT.size
 	_background.panel_size = PANEL_RECT.size
 	_background.style = data.background_style
 	_background.sketch = data.sketch
-	# Collapsing halftone: coarser, heavier dots as the panel breaks down.
-	var paper: ShaderMaterial = _paper.material as ShaderMaterial
-	paper.set_shader_parameter("dot_spacing", 7.0 + data.glitch * 6.0)
-	paper.set_shader_parameter("shade_bottom", 0.22 + data.glitch * 0.25)
+	_set_halftone(GameState.glitch_of(data))
+	EventBus.comic_repaired.connect(_on_comic_repaired)
 	for spot in data.lights:
 		var light: LightSpot = LightSpot.new()
 		_props.add_child(light)
@@ -63,8 +63,14 @@ func setup(frame_data: FrameData) -> void:
 		_props.add_child(npc)
 		npc.setup(npc_data)
 	if data.crawler_spawn != Vector2.INF:
-		# TODO(later): new enemy types are placed per frame here.
-		var crawler: InkCrawler = InkShadow.new() if data.crawler_kind == &"shadow" else InkCrawler.new()
+		var crawler: InkCrawler
+		match data.crawler_kind:
+			&"shadow":
+				crawler = InkShadow.new()
+			&"heart":
+				crawler = HeartShadow.new()
+			_:
+				crawler = InkCrawler.new()
 		crawler.position = data.crawler_spawn
 		crawler.walk_area = data.walk_area
 		crawler.patrol = data.crawler_patrol
@@ -76,3 +82,17 @@ func setup(frame_data: FrameData) -> void:
 		var event: Node2D = Node2D.new()
 		event.set_script(EVENT_SCRIPTS[event_id])
 		_props.add_child(event)
+
+
+## Collapsing halftone: coarser, heavier dots as the panel breaks down.
+func _set_halftone(glitch: float) -> void:
+	var paper: ShaderMaterial = _paper.material as ShaderMaterial
+	paper.set_shader_parameter("dot_spacing", 7.0 + glitch * 6.0)
+	paper.set_shader_parameter("shade_bottom", 0.22 + glitch * 0.25)
+
+
+## The last word went home: the halftone rebuilds itself and the panel lightens.
+func _on_comic_repaired() -> void:
+	var tween: Tween = create_tween().set_parallel()
+	tween.tween_method(_set_halftone, data.glitch, 0.0, 2.5)
+	tween.tween_property(_darkness, "color", Color(0.78, 0.78, 0.82), 3.0)

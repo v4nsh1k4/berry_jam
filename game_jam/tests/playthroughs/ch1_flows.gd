@@ -46,6 +46,8 @@ func _run() -> void:
 	bus.game_started.emit()
 	await _wait(0.2)
 	bus.menu_new_game.emit()
+	# New Game opens with the intro cinematic: skip it like a click would.
+	current_scene.get_node("MenuLayer/IntroCinematic").call("_finish")
 	current_scene.get_node("MenuLayer/MainMenu").hide()
 	await _wait(0.2)
 	bus.intro_finished.emit()

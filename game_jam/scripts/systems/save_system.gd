@@ -2,9 +2,14 @@ class_name SaveSystem
 extends RefCounted
 ## One save slot in user:// (IndexedDB on the web). Every call fails soft:
 ## a missing or broken file just means "no save".
+## Version 2 (Stage 4B) adds twist_revealed and reorders Chapter 3; older
+## saves are migrated by migrate().
 
 const SAVE_PATH: String = "user://ink_bleed_save.json"
-const VERSION: int = 1
+const VERSION: int = 2
+## Survives new games: things the player has already seen (the reveal can be
+## skipped on later viewings) and whether they finished the game.
+const PROGRESS_PATH: String = "user://progress.cfg"
 
 
 static func save_game(snapshot: Dictionary) -> bool:
@@ -30,11 +35,50 @@ static func load_game() -> Dictionary:
 		return {}
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
-	if typeof(parsed) != TYPE_DICTIONARY or int(parsed.get("version", 0)) != VERSION:
+	if typeof(parsed) != TYPE_DICTIONARY:
 		return {}
-	return parsed
+	return migrate(parsed)
+
+
+## Brings an older save up to VERSION, or returns {} (no save) when it can't
+## be used safely. Unknown future versions are ignored too.
+static func migrate(data: Dictionary) -> Dictionary:
+	var version: int = int(data.get("version", 0))
+	if version == VERSION:
+		return data
+	if version != 1:
+		return {}
+	# Version 1 (Stage 4A) let words be given back before the reveal, and its
+	# Chapter 3 rooms are in a different order. Chapters 1-2 carry over as
+	# they are; a save inside Chapter 3 goes back to the start of Chapter 3
+	# (its chapter_start snapshot), so the reveal is never skipped.
+	var migrated: Dictionary = data
+	if String(data.get("chapter", "")).ends_with("/ch3.tres"):
+		var start: Variant = data.get("chapter_start", {})
+		if typeof(start) != TYPE_DICTIONARY or not (start as Dictionary).has("frame"):
+			return {}
+		migrated = (start as Dictionary).duplicate(true)
+		migrated["chapter_start"] = (start as Dictionary).duplicate(true)
+	migrated["twist_revealed"] = false
+	migrated["returned_ids"] = []
+	migrated["version"] = VERSION
+	return migrated
 
 
 static func clear() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
+
+
+static func get_progress(key: String) -> bool:
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(PROGRESS_PATH) != OK:
+		return false
+	return bool(config.get_value("progress", key, false))
+
+
+static func set_progress(key: String) -> void:
+	var config: ConfigFile = ConfigFile.new()
+	config.load(PROGRESS_PATH)
+	config.set_value("progress", key, true)
+	config.save(PROGRESS_PATH)

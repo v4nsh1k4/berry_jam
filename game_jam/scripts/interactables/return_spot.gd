@@ -1,7 +1,8 @@
 class_name ReturnSpot
 extends Interactable
-## Where an owner's words can go back (Chapter 3): a painting of them or the
-## old drawer (data.text). Takes any word whose stolen_from is data.owner_id.
+## Where an owner's words can go back (Chapter 3, after the twist): a painting
+## of them or the old drawer (data.text). Before the twist it only shows the
+## damage (dashed ghost bubbles for the missing words). Takes any word whose stolen_from is data.owner_id.
 ## Lights up and sets data.sets_flag once its owner is whole again; owners the
 ## player never robbed are whole from the start, so they never block anything.
 
@@ -16,11 +17,15 @@ func setup(interactable: InteractableData) -> void:
 	_glow.color = Color(1.0, 0.95, 0.85)
 	add_child(_glow)
 	EventBus.bubble_returned.connect(_on_word_returned)
+	EventBus.twist_revealed.connect(_update_group)
 	_check_owner_whole(false)
 
 
 func get_prompt(bubble: BubbleData) -> String:
-	return "E: give back \"%s\"" % bubble.text if bubble != null else "Pick a word (1-6, Q / R) to give back"
+	var owner: String = data.caption if data.caption != "" else "them"
+	if bubble == null:
+		return "Select a word (1-6, Q / R) to give back to %s" % owner
+	return "E: give \"%s\" back to %s" % [bubble.text, owner]
 
 
 func _update_group() -> void:

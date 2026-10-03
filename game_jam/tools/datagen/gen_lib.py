@@ -86,7 +86,8 @@ def item(**p):
     if "reward_bubble" in p and isinstance(p["reward_bubble"], str): p["reward_bubble"] = bubble_ext(p["reward_bubble"])
     return Sub("interactable_data", **p)
 def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(), items=(), npcs=(), events=(), ending="",
-          next_chapter="", crawler=None, patrol=False, glitch=0.0, tilt=0.0, sketch=0.0, crawler_kind=""):
+          next_chapter="", crawler=None, patrol=False, glitch=0.0, tilt=0.0, sketch=0.0, crawler_kind="",
+          border_gap=False, epilogue=False):
     p = dict(id=SN(fid), display_name=name, ambient_light=float(ambient), background_style=SN(style),
              player_spawn=V2(spawn), walk_area=R2((40, 400, 1104, 104)), captions=PSA(captions), hint=hint)
     if exits: p["exits"] = TypedArr("exit_data", list(exits))
@@ -102,6 +103,8 @@ def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(),
     if tilt: p["panel_tilt"] = float(tilt)
     if sketch: p["sketch"] = float(sketch)
     if crawler_kind: p["crawler_kind"] = SN(crawler_kind)
+    if border_gap: p["border_gap"] = True
+    if epilogue: p["epilogue"] = True
     write(f"data/frames/{fid}.tres", "frame_data", p)
 
 SLIDE, SPLASH = 0, 1

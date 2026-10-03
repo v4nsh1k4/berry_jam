@@ -16,6 +16,8 @@ func _run() -> void:
 	await _wait(0.3)
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
+	# New Game opens with the intro cinematic: skip it like a click would.
+	current_scene.get_node("MenuLayer/IntroCinematic").call("_finish")
 	bus.intro_finished.emit()
 	current_scene.get_node("MenuLayer/IntroSequence").hide()
 	current_scene.get_node("MenuLayer/MainMenu").hide()
@@ -30,7 +32,7 @@ func _run() -> void:
 	for z in fm.current_frame.get_node("Exits").get_children():
 		if z.exit_data.required_flag == &"study_door_open":
 			zone = z
-	print("inside=", zone._player_inside, " was_locked=", zone._was_locked)
+	print("inside=", zone._player_inside, " was_locked=", not zone._unlocked_last)
 	gs.select(0, false)
 	var ev := InputEventAction.new()
 	ev.action = "interact"
@@ -42,5 +44,5 @@ func _run() -> void:
 	Input.parse_input_event(up)
 	for i in 10:
 		await _wait(0.25)
-		print("t=", (i + 1) * 0.25, " frame=", fm.current_frame.data.id, " grace=", zone._grace_left if is_instance_valid(zone) else -1.0, " open=", gs.has_flag(&"study_door_open"), " locked=", zone._was_locked if is_instance_valid(zone) else false)
+		print("t=", (i + 1) * 0.25, " frame=", fm.current_frame.data.id, " grace=", zone._grace_left if is_instance_valid(zone) else -1.0, " open=", gs.has_flag(&"study_door_open"), " locked=", (not zone._unlocked_last) if is_instance_valid(zone) else false)
 	quit()

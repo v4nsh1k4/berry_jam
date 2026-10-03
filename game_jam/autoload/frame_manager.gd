@@ -77,8 +77,8 @@ func clear() -> void:
 
 
 func _on_exit_entered(exit: ExitData) -> void:
+	# ExitZone only reports open exits (and gives the locked-exit caption).
 	if exit.required_flag != &"" and not GameState.has_flag(exit.required_flag):
-		# TODO(later): feedback for a locked exit (caption or door rattle).
 		return
 	go_to(exit.target_frame_id, exit.target_spawn, exit.transition_style)
 

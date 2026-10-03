@@ -18,12 +18,20 @@ func _ready() -> void:
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.comic_damage_changed.connect(_on_damage_changed)
 	EventBus.returned_to_menu.connect(hide)
+	EventBus.comic_repaired.connect(_on_comic_repaired)
 	hide()
 
 
 func _on_frame_changed(data: FrameData) -> void:
-	_frame_glitch = data.glitch
+	_frame_glitch = GameState.glitch_of(data)
 	_apply()
+
+
+## The last word went home: the glitch fades to nothing.
+func _on_comic_repaired() -> void:
+	create_tween().tween_method(func(value: float) -> void:
+		_frame_glitch = value
+		_apply(), _frame_glitch, 0.0, 2.5)
 
 
 func _on_damage_changed(_value: float) -> void:
