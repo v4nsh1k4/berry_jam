@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="4_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch1_study"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch1_end"
+transition_style = 1
+target_spawn = Vector2(170, 466)
+required_flag = &"has_flashlight"
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"flashlight"
+kind = &"pickup"
+position = Vector2(530, 290)
+size = Vector2(130, 90)
+sets_flag = &"has_flashlight"
+caption = "Light. Use it carefully.   (F or click)"
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("4_light_spot_data")
+kind = &"moon"
+position = Vector2(600, 30)
+radius = 380.0
+energy = 0.55
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch1_exit"
+display_name = "The Back Stair"
+ambient_light = 0.08
+background_style = &"exit_room"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("Something lies on the table.")
+hint = "Take the torch from the table. Then leave by the far door."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_4")])

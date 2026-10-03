@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ability_data"]
+[ext_resource type="Script" path="res://scripts/abilities/help_ability.gd" id="2_handler"]
+
+[resource]
+script = ExtResource("1_ability_data")
+id = &"help"
+display_name = "Help"
+description = "The comic whispers a hint about this panel."
+icon_word = "HELP"
+target_type = 1
+cooldown = 8.0
+duration = 0.0
+handler = ExtResource("2_handler")

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ability_data"]
+[ext_resource type="Script" path="res://scripts/abilities/wait_ability.gd" id="2_handler"]
+
+[resource]
+script = ExtResource("1_ability_data")
+id = &"wait"
+display_name = "Wait"
+description = "Freezes one moving thing nearby for a few seconds."
+icon_word = "WAIT"
+target_type = 1
+cooldown = 15.0
+duration = 5.0
+handler = ExtResource("2_handler")

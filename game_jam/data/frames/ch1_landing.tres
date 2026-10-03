@@ -1,0 +1,84 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="4_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/bubble_data.gd" id="5_bubble_data"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_open.tres" id="6_arthur_open"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_push.tres" id="7_arthur_push"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_wait.tres" id="8_arthur_wait"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_help.tres" id="9_arthur_help"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="10_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch1_bedchamber"
+transition_style = 0
+target_spawn = Vector2(1000, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1060, 396, 124, 112)
+target_frame_id = &"ch1_study_corridor"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+required_flag = &"study_door_open"
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"study_door"
+kind = &"door"
+position = Vector2(1010, 120)
+size = Vector2(130, 262)
+accepted_ability_ids = Array[StringName]([&"open"])
+sets_flag = &"study_door_open"
+prompt = "The study door is locked. Say a word (pick one with 1-6 or Q / R)."
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("4_npc_data")
+id = &"arthur"
+display_name = "Arthur"
+position = Vector2(560, 404)
+visual_style = &"butler"
+bubbles = Array[ExtResource("5_bubble_data")]([ExtResource("6_arthur_open"), ExtResource("7_arthur_push"), ExtResource("8_arthur_wait"), ExtResource("9_arthur_help")])
+lines = PackedStringArray("Do not {word} the study, sir.", "{word} nothing. Touch nothing.", "{word} here until morning.", "If you need {word}, ring.")
+broken_lines = PackedStringArray("Do not... the s-study, sir.", "...nothing. T-touch nothing?", "...here. Until. Um.", "If you need... if you...")
+reactions = PackedStringArray("Odd. I had a word for that.", "My mouth feels... emptier.", "Sir? Is someone taking my words?", "...", "I... I...")
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("10_light_spot_data")
+kind = &"candle"
+position = Vector2(360, 120)
+radius = 230.0
+energy = 0.75
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("10_light_spot_data")
+kind = &"candle"
+position = Vector2(580, 120)
+radius = 230.0
+energy = 0.75
+
+[sub_resource type="Resource" id="Resource_7"]
+script = ExtResource("10_light_spot_data")
+kind = &"candle"
+position = Vector2(800, 120)
+radius = 230.0
+energy = 0.75
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch1_landing"
+display_name = "The Landing"
+ambient_light = 0.1
+background_style = &"landing"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("Arthur the Butler. He is full of words.", "Stand under a word and hold E to take it.")
+hint = "Take OPEN from Arthur. Pick it with 1-6 or Q / R, stand at the study door and press E."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
+npcs = Array[ExtResource("4_npc_data")]([SubResource("Resource_4")])
+lights = Array[ExtResource("10_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6"), SubResource("Resource_7")])

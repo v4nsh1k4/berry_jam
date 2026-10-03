@@ -1,0 +1,30 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/player/flashlight.gd" id="2_flashlight"]
+[ext_resource type="Script" path="res://scripts/player/aura.gd" id="3_aura"]
+[ext_resource type="Script" path="res://scripts/player/interactor.gd" id="4_interactor"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_feet"]
+size = Vector2(26, 12)
+
+[node name="Player" type="CharacterBody2D"]
+motion_mode = 1
+script = ExtResource("1_player")
+
+[node name="Feet" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_feet")
+
+[node name="Aura" type="PointLight2D" parent="."]
+position = Vector2(0, -80)
+energy = 0.35
+texture_scale = 1.8
+script = ExtResource("3_aura")
+
+[node name="Flashlight" type="PointLight2D" parent="."]
+position = Vector2(18, -60)
+script = ExtResource("2_flashlight")
+
+[node name="Interactor" type="Node2D" parent="."]
+script = ExtResource("4_interactor")

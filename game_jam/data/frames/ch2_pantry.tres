@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="3_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/bubble_data.gd" id="4_bubble_data"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_hide.tres" id="5_vane_hide"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_hush.tres" id="6_vane_hush"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_wait.tres" id="7_vane_wait"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="8_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch2_servants_passage"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch2_clock_room"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_npc_data")
+id = &"mrs_vane"
+display_name = "Mrs. Vane"
+position = Vector2(560, 404)
+visual_style = &"housekeeper"
+bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("5_vane_hide"), ExtResource("6_vane_hush"), ExtResource("7_vane_wait")])
+lines = PackedStringArray("{word} in here, quickly!", "{word} now, child. It listens.", "{word} for the clock to strike.")
+broken_lines = PackedStringArray("...in here, q-quickly!", "...now. It l-l-listens.", "...for the c-clock to...")
+reactions = PackedStringArray("My words... where did they go?", "Child, you are making it worse.", "It comes for the ones who talk.")
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("8_light_spot_data")
+kind = &"candle"
+position = Vector2(715, 280)
+radius = 300.0
+energy = 0.85
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("8_light_spot_data")
+kind = &"glow"
+position = Vector2(1000, 240)
+radius = 200.0
+energy = 0.3
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch2_pantry"
+display_name = "The Housekeeper's Pantry"
+ambient_light = 0.1
+background_style = &"pantry"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("Mrs. Vane, the housekeeper. She keeps looking at the dark.", "Stand under a word and hold E to take it.")
+hint = "Take HIDE, HUSH and WAIT from Mrs. Vane. The clock room will test you."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+npcs = Array[ExtResource("3_npc_data")]([SubResource("Resource_3")])
+lights = Array[ExtResource("8_light_spot_data")]([SubResource("Resource_4"), SubResource("Resource_5")])
+events = Array[StringName]([&"crawler_fingers"])

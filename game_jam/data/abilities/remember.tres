@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_ability_data"]
+[ext_resource type="Script" path="res://scripts/abilities/remember_ability.gd" id="2_handler"]
+
+[resource]
+script = ExtResource("1_ability_data")
+id = &"remember"
+display_name = "Remember"
+description = "Brings back an ink memory hidden in the room."
+icon_word = "REMEMBER"
+target_type = 1
+cooldown = 0.0
+duration = 5.0
+handler = ExtResource("2_handler")

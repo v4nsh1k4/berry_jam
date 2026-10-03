@@ -1,0 +1,120 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://ui/page_overlay.gd" id="3_overlay"]
+[ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="4_start"]
+[ext_resource type="Script" path="res://scripts/systems/notice_system.gd" id="5_notice"]
+[ext_resource type="Script" path="res://ui/inventory_strip.gd" id="6_inventory"]
+[ext_resource type="Script" path="res://ui/interact_prompt.gd" id="7_prompt"]
+[ext_resource type="Script" path="res://ui/notice_meter.gd" id="8_meter"]
+[ext_resource type="Script" path="res://ui/ink_bleed.gd" id="9_bleed"]
+[ext_resource type="Script" path="res://scripts/systems/feedback_fx.gd" id="10_fx"]
+[ext_resource type="Script" path="res://ui/symbol_lock_ui.gd" id="11_lock"]
+[ext_resource type="Script" path="res://ui/main_menu.gd" id="12_menu"]
+[ext_resource type="Script" path="res://ui/pause_menu.gd" id="13_pause"]
+[ext_resource type="Script" path="res://ui/intro_sequence.gd" id="14_intro"]
+[ext_resource type="Script" path="res://ui/end_card.gd" id="15_end"]
+[ext_resource type="Resource" path="res://data/chapters/ch1.tres" id="16_ch1"]
+[ext_resource type="Script" path="res://ui/danger_vignette.gd" id="17_vignette"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+chapter = ExtResource("16_ch1")
+
+[node name="NoticeSystem" type="Node" parent="."]
+script = ExtResource("5_notice")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="FrameRoot" type="Node2D" parent="World"]
+
+[node name="Player" parent="World" instance=ExtResource("2_player")]
+
+[node name="PageLayer" type="CanvasLayer" parent="."]
+layer = 10
+follow_viewport_enabled = true
+
+[node name="InkBleed" type="ColorRect" parent="PageLayer"]
+script = ExtResource("9_bleed")
+
+[node name="PageOverlay" type="Node2D" parent="PageLayer"]
+script = ExtResource("3_overlay")
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="InventoryStrip" type="Control" parent="HUDLayer"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 48.0
+offset_top = 584.0
+offset_right = 1060.0
+offset_bottom = 704.0
+script = ExtResource("6_inventory")
+
+[node name="NoticeMeter" type="Node2D" parent="HUDLayer"]
+position = Vector2(1160, 632)
+script = ExtResource("8_meter")
+
+[node name="InteractPrompt" type="Node2D" parent="HUDLayer"]
+script = ExtResource("7_prompt")
+
+[node name="FXLayer" type="CanvasLayer" parent="."]
+layer = 25
+
+[node name="DangerVignette" type="ColorRect" parent="FXLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("17_vignette")
+
+[node name="FeedbackFx" type="Node2D" parent="FXLayer"]
+script = ExtResource("10_fx")
+
+[node name="LockLayer" type="CanvasLayer" parent="."]
+layer = 40
+
+[node name="SymbolLockUI" type="Control" parent="LockLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("11_lock")
+
+[node name="MenuLayer" type="CanvasLayer" parent="."]
+layer = 60
+
+[node name="IntroSequence" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("14_intro")
+
+[node name="EndCard" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("15_end")
+
+[node name="MainMenu" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("12_menu")
+
+[node name="PauseMenu" type="Control" parent="MenuLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("13_pause")
+
+[node name="StartLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="StartScreen" parent="StartLayer" instance=ExtResource("4_start")]

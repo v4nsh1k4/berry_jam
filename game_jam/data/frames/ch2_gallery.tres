@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="4_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch2_long_hallway"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch2_servants_passage"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"gallery_plaque"
+kind = &"writing"
+position = Vector2(470, 228)
+size = Vector2(300, 40)
+revealed_by_light = true
+text = "DON'T LOOK AT IT."
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(120, 300)
+radius = 220.0
+energy = 0.35
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(1130, 300)
+radius = 180.0
+energy = 0.35
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch2_gallery"
+display_name = "The Portrait Gallery"
+ambient_light = 0.05
+background_style = &"gallery"
+player_spawn = Vector2(150, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("Something sleeps in the far corner.", "Light wakes it. In the dark, walking is safe. Running (Shift) is not.")
+hint = "Turn the light off and walk past it slowly. If it rises, stand still in the dark."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_4"), SubResource("Resource_5")])
+crawler_spawn = Vector2(980, 492)

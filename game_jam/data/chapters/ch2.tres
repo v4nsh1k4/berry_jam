@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/chapter_data.gd" id="1_chapter_data"]
+
+[resource]
+script = ExtResource("1_chapter_data")
+id = &"ch2"
+title = "Chapter 2: The Hallway of Shadows"
+first_frame_id = &"ch2_long_hallway"
+damage_visual_scale = 1.3
+line_jitter = 1.35
+intro_lines = PackedStringArray("Issue #2.", "The house has noticed the one without words.", "Somewhere below, ink is moving.")

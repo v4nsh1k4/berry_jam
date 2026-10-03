@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="2_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_light_spot_data")
+kind = &"glow"
+position = Vector2(300, 300)
+radius = 300.0
+energy = 0.45
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch2_end"
+display_name = "The Cellar"
+ambient_light = 0.08
+background_style = &"cellar_stair"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray()
+hint = ""
+lights = Array[ExtResource("2_light_spot_data")]([SubResource("Resource_1")])
+ending_card = "CHAPTER 3: COMING SOON"

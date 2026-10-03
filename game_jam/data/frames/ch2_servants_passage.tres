@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="4_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch2_gallery"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch2_pantry"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"passage_wardrobe"
+kind = &"hiding_spot"
+position = Vector2(330, 120)
+size = Vector2(120, 262)
+text = "wardrobe"
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("3_interactable_data")
+id = &"passage_curtain"
+kind = &"hiding_spot"
+position = Vector2(640, 110)
+size = Vector2(110, 272)
+text = "curtain"
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("3_interactable_data")
+id = &"passage_table"
+kind = &"hiding_spot"
+position = Vector2(880, 300)
+size = Vector2(130, 82)
+text = "table"
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(620, 260)
+radius = 240.0
+energy = 0.4
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch2_servants_passage"
+display_name = "The Servants' Passage"
+ambient_light = 0.06
+background_style = &"passage"
+player_spawn = Vector2(190, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("The servants' passage. Narrow. Places to hide.")
+hint = "When it comes, press E at the wardrobe, curtain or table to hide. Come out when it has gone."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_6")])
+events = Array[StringName]([&"passage_stalker"])
+crawler_spawn = Vector2(70, 492)

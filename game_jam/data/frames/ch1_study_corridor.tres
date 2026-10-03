@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="3_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/bubble_data.gd" id="4_bubble_data"]
+[ext_resource type="Resource" path="res://data/bubbles/portrait_remember.tres" id="5_portrait_remember"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="6_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch1_landing"
+transition_style = 0
+target_spawn = Vector2(960, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch1_study"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_npc_data")
+id = &"portrait_lady"
+display_name = "The Portrait"
+position = Vector2(640, 190)
+visual_style = &"portrait"
+bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("5_portrait_remember")])
+lines = PackedStringArray("{word} me? Anyone?")
+broken_lines = PackedStringArray("...me? A-anyone?")
+reactions = PackedStringArray("Now I can't remember who I was.")
+reach_y = 270.0
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("6_light_spot_data")
+kind = &"candle"
+position = Vector2(440, 120)
+radius = 260.0
+energy = 0.8
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("6_light_spot_data")
+kind = &"candle"
+position = Vector2(915, 286)
+radius = 300.0
+energy = 0.85
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("6_light_spot_data")
+kind = &"glow"
+position = Vector2(190, 220)
+radius = 260.0
+energy = 0.35
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch1_study_corridor"
+display_name = "The Study Corridor"
+ambient_light = 0.16
+background_style = &"study_corridor"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("A portrait is muttering to itself.")
+hint = "The portrait still remembers something. Take its word."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+npcs = Array[ExtResource("3_npc_data")]([SubResource("Resource_3")])
+lights = Array[ExtResource("6_light_spot_data")]([SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6")])
+events = Array[StringName]([&"ink_hand"])

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/chapter_data.gd" id="1_chapter_data"]
+
+[resource]
+script = ExtResource("1_chapter_data")
+id = &"ch1"
+title = "Chapter 1: The Rotted Bedchamber"
+first_frame_id = &"ch1_awakening"
+damage_visual_scale = 1.0
+line_jitter = 1.0
+intro_lines = PackedStringArray("The Silent House of Hollow Hill.  Issue #1.", "Everyone in this house was drawn with something to say.", "Everyone... except you.")

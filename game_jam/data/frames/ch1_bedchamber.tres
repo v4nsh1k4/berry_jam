@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Resource" path="res://data/bubbles/drawer_hush.tres" id="4_drawer_hush"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="5_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="6_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 80, 112)
+target_frame_id = &"ch1_awakening"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch1_landing"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"bedchamber_drawer"
+kind = &"drawer"
+position = Vector2(325, 290)
+size = Vector2(90, 90)
+accepted_ability_ids = Array[StringName]([&"open"])
+sets_flag = &"drawer_open"
+prompt = "A locked drawer. It needs a word."
+reward_bubble = ExtResource("4_drawer_hush")
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("5_npc_data")
+id = &"arthur_far"
+display_name = "Arthur"
+position = Vector2(1114, 382)
+visual_style = &"butler"
+scale = 0.72
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("6_light_spot_data")
+kind = &"moon"
+position = Vector2(205, 160)
+radius = 330.0
+energy = 0.6
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("6_light_spot_data")
+kind = &"candle"
+position = Vector2(370, 258)
+radius = 240.0
+energy = 0.8
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch1_bedchamber"
+display_name = "The Rotted Bedchamber"
+ambient_light = 0.09
+background_style = &"bedchamber"
+player_spawn = Vector2(150, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("Something drips. The window is bleeding ink.", "Across the room, someone waits in the doorway.")
+hint = "The drawer is locked. A word would open it. Arthur has plenty of words."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
+npcs = Array[ExtResource("5_npc_data")]([SubResource("Resource_4")])
+lights = Array[ExtResource("6_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
+events = Array[StringName]([&"crawler_window"])

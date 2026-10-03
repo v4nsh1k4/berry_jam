@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/frame/frame.gd" id="1_frame"]
+[ext_resource type="Shader" path="res://shaders/halftone_paper.gdshader" id="2_paper"]
+[ext_resource type="Script" path="res://scripts/frame/frame_background.gd" id="3_bg"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_paper"]
+shader = ExtResource("2_paper")
+
+[node name="Frame" type="Node2D"]
+script = ExtResource("1_frame")
+
+[node name="Darkness" type="CanvasModulate" parent="."]
+color = Color(0.08, 0.08, 0.09, 1)
+
+[node name="Paper" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_paper")
+offset_right = 1184.0
+offset_bottom = 528.0
+mouse_filter = 2
+
+[node name="Background" type="Node2D" parent="."]
+script = ExtResource("3_bg")
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Exits" type="Node2D" parent="."]
