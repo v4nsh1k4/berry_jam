@@ -1,0 +1,83 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="3_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/bubble_data.gd" id="4_bubble_data"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_hide.tres" id="5_vane_hide"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_hush.tres" id="6_vane_hush"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_wait.tres" id="7_vane_wait"]
+[ext_resource type="Resource" path="res://data/bubbles/portrait_remember.tres" id="8_portrait_remember"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="9_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch3_returning_room"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("3_npc_data")
+id = &"mrs_vane"
+display_name = "Mrs. Vane"
+position = Vector2(470, 404)
+visual_style = &"housekeeper"
+bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("5_vane_hide"), ExtResource("6_vane_hush"), ExtResource("7_vane_wait")])
+lines = PackedStringArray("Don't {word} from me, child.", "{word}, the page is tearing.", "{word}. Don't leave us like this.")
+broken_lines = PackedStringArray("Don't... from me. P-please.", "..., the page is t-tearing...", "... Don't leave us. Please.")
+relief_lines = PackedStringArray("Bless you, child.", "It sounds right again.", "There. That's my voice.")
+words_stealable = false
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_npc_data")
+id = &"portrait_lady"
+display_name = "The Portrait"
+position = Vector2(1000, 170)
+visual_style = &"portrait"
+bubbles = Array[ExtResource("4_bubble_data")]([ExtResource("8_portrait_remember")])
+lines = PackedStringArray("Help me {word} who I was.")
+broken_lines = PackedStringArray("Help me... who I... was?")
+relief_lines = PackedStringArray("I remember now. Thank you.")
+words_stealable = false
+reach_y = 270.0
+bubble_offsets = PackedVector2Array(-230, -60)
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("3_npc_data")
+id = &"arthur_far"
+display_name = "Arthur"
+position = Vector2(1114, 382)
+visual_style = &"butler"
+scale = 0.6
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("9_light_spot_data")
+kind = &"glow"
+position = Vector2(470, 260)
+radius = 300.0
+energy = 0.5
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("9_light_spot_data")
+kind = &"glow"
+position = Vector2(1000, 200)
+radius = 220.0
+energy = 0.4
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch3_torn_page"
+display_name = "The Torn Page"
+ambient_light = 0.14
+background_style = &"torn_page"
+player_spawn = Vector2(150, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("The page is tearing. Everyone here is missing something.", "Pick a stolen word, stand under its owner's broken bubble, hold E to give it back.")
+hint = "Give each word back to the one you took it from. Arthur is further on."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
+npcs = Array[ExtResource("3_npc_data")]([SubResource("Resource_2"), SubResource("Resource_3"), SubResource("Resource_4")])
+lights = Array[ExtResource("9_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
+glitch = 0.35
+panel_tilt = -1.2
+sketch = 0.1

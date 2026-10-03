@@ -5,7 +5,8 @@ extends Node2D
 ## pushable) are resolved by ability handlers; plain targets (inspect, pickup,
 ## symbol_lock, hiding_spot) react to E with no word. `revealed_by_light`
 ## objects only show (and only work) while the flashlight cone is on them.
-## Drawing lives in InteractableArt / InteractableArt2.
+## Drawing lives in InteractableArt / InteractableArt2. Kinds with more
+## behaviour are subclasses: HidingSpot, ReturnSpot (see Frame.KIND_CLASSES).
 
 const PUSH_TIME: float = 0.4
 ## Kinds that react to E without a word.
@@ -26,10 +27,8 @@ var memory_alpha: float = 0.0:
 		queue_redraw()
 ## 0..1 how much the flashlight is revealing this (revealed_by_light only).
 var reveal: float = 0.0
-## A hiding spot the player is inside.
-var occupied: bool = false
-
 var _wiggle: float = 0.0
+## Glow light (memory sketches, return spots).
 var _glow: PointLight2D
 var _lit_time: float = 0.0
 var _tick: int = -1
@@ -58,6 +57,7 @@ func setup(interactable: InteractableData) -> void:
 		EventBus.symbol_lock_solved.connect(_on_symbol_lock_solved)
 	if data.kind == &"secret_door":
 		EventBus.interactable_resolved.connect(_on_any_resolved)
+
 
 
 ## Targetable unless passive, used up, or still hidden in the dark.
@@ -92,8 +92,6 @@ func get_prompt(bubble: BubbleData) -> String:
 			return "E: take"
 		&"symbol_lock":
 			return "E: try the dials"
-		&"hiding_spot":
-			return "E: come out" if occupied else "E: hide"
 	if data.requires_flag != &"" and not GameState.has_flag(data.requires_flag) and data.prompt != "":
 		return data.prompt
 	if bubble == null:
@@ -112,10 +110,6 @@ func interact_plain() -> void:
 				EventBus.caption_requested.emit(data.caption, 4.0)
 		&"symbol_lock":
 			EventBus.symbol_lock_requested.emit(data)
-		&"hiding_spot":
-			occupied = not occupied
-			EventBus.hiding_spot_used.emit(data.id, get_global_transform_with_canvas() * Vector2(data.size.x * 0.5, data.size.y))
-			queue_redraw()
 
 
 ## Done: opened, pushed, unlocked or taken.

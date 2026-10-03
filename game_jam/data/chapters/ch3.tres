@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChapterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/chapter_data.gd" id="1_chapter_data"]
+
+[resource]
+script = ExtResource("1_chapter_data")
+id = &"ch3"
+title = "Chapter 3: The Ink Heart"
+first_frame_id = &"ch3_torn_page"
+damage_visual_scale = 1.6
+line_jitter = 1.6
+allows_return = true
+intro_lines = PackedStringArray("Issue #3.", "The ink is running. The panels won't hold.", "Everyone you took from is still here. Waiting.")

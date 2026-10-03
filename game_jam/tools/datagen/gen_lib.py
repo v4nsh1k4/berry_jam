@@ -77,7 +77,7 @@ def exit_(area, target, spawn=None, style=0, flag=""):
 def light(kind, pos, radius, energy):
     return Sub("light_spot_data", kind=SN(kind), position=V2(pos), radius=float(radius), energy=float(energy))
 def item(**p):
-    for k in ("id", "kind", "sets_flag", "requires_flag"):
+    for k in ("id", "kind", "sets_flag", "requires_flag", "owner_id"):
         if k in p: p[k] = SN(p[k])
     for k in ("position", "size", "push_offset"):
         if k in p: p[k] = V2(p[k])
@@ -86,7 +86,7 @@ def item(**p):
     if "reward_bubble" in p and isinstance(p["reward_bubble"], str): p["reward_bubble"] = bubble_ext(p["reward_bubble"])
     return Sub("interactable_data", **p)
 def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(), items=(), npcs=(), events=(), ending="",
-          next_chapter="", crawler=None, patrol=False):
+          next_chapter="", crawler=None, patrol=False, glitch=0.0, tilt=0.0, sketch=0.0, crawler_kind=""):
     p = dict(id=SN(fid), display_name=name, ambient_light=float(ambient), background_style=SN(style),
              player_spawn=V2(spawn), walk_area=R2((40, 400, 1104, 104)), captions=PSA(captions), hint=hint)
     if exits: p["exits"] = TypedArr("exit_data", list(exits))
@@ -98,6 +98,10 @@ def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(),
     if next_chapter: p["next_chapter"] = Ext(next_chapter)
     if crawler: p["crawler_spawn"] = V2(crawler)
     if patrol: p["crawler_patrol"] = True
+    if glitch: p["glitch"] = float(glitch)
+    if tilt: p["panel_tilt"] = float(tilt)
+    if sketch: p["sketch"] = float(sketch)
+    if crawler_kind: p["crawler_kind"] = SN(crawler_kind)
     write(f"data/frames/{fid}.tres", "frame_data", p)
 
 SLIDE, SPLASH = 0, 1

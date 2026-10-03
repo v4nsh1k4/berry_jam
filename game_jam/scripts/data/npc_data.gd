@@ -16,6 +16,10 @@ extends Resource
 @export var reactions: PackedStringArray = PackedStringArray()
 ## Custom bubble positions relative to the NPC (empty = defaults).
 @export var bubble_offsets: PackedVector2Array = PackedVector2Array()
+## Captions when a word is given back, by number returned (1st, 2nd...).
+@export var relief_lines: PackedStringArray = PackedStringArray()
+## False: words this character still has can't be taken (Chapter 3).
+@export var words_stealable: bool = true
 @export var scale: float = 1.0
 ## Pushes the reach point down to the floor for NPCs on the wall (portraits).
 @export var reach_y: float = 0.0

@@ -29,12 +29,30 @@ func setup(npc: NpcData) -> void:
 		speech.position = spots[i % spots.size()]
 		var line: String = npc.lines[i] if i < npc.lines.size() else ""
 		var broken: String = npc.broken_lines[i] if i < npc.broken_lines.size() else ""
-		speech.setup(npc.bubbles[i], line, broken, mouth + Vector2(0, -8) - speech.position, reach)
+		speech.setup(npc.bubbles[i], line, broken, mouth + Vector2(0, -8) - speech.position, reach, npc.words_stealable)
 	EventBus.bubble_stolen.connect(_on_bubble_stolen)
+	EventBus.bubble_returned.connect(_on_bubble_returned)
 
 
 func _on_bubble_stolen(_bubble: BubbleData, _from: Vector2) -> void:
 	queue_redraw()
+
+
+## One of this character's words came home: relief, and they are drawn a
+## little more complete (the gap ratio follows stolen_from_count).
+func _on_bubble_returned(bubble: BubbleData, _pos: Vector2) -> void:
+	if bubble.stolen_from != data.id:
+		return
+	_reacted_count = GameState.stolen_from_count(data.id)
+	queue_redraw()
+	if data.relief_lines.is_empty():
+		return
+	var given: int = 0
+	for word in data.bubbles:
+		if GameState.is_bubble_returned(word.id):
+			given += 1
+	var line: String = data.relief_lines[clampi(given, 1, data.relief_lines.size()) - 1]
+	EventBus.caption_requested.emit("%s: \"%s\"" % [data.display_name, line], 3.5)
 
 
 func _process(_delta: float) -> void:

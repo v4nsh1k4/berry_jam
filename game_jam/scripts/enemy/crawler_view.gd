@@ -9,6 +9,7 @@ const POSE_FPS: float = 8.0
 
 var _brain: InkCrawler
 var _pose_timer: float = 0.0
+## New random pose each stop-motion tick (ShadowView reads it too).
 var _pose_seed: int = 0
 var _drip_t: float = 0.0
 var _eye_light: PointLight2D

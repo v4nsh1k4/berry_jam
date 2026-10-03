@@ -35,6 +35,12 @@ func _ready() -> void:
 
 func _on_click_to_start() -> void:
 	_start_layer.hide()
+	var jump: String = DebugJump.requested_frame()
+	var jump_chapter: ChapterData = DebugJump.prepare(jump) if jump != "" else null
+	if jump_chapter != null:
+		_start_chapter(jump_chapter)
+		FrameManager.go_to(StringName(jump))
+		return
 	_menu.open()
 
 

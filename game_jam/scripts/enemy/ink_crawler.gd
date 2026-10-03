@@ -28,6 +28,12 @@ const STALK_AT_NOTICE: float = 0.35
 ## Panel-space rect it can move in (the room's floor band); set by Frame.
 var walk_area: Rect2 = Rect2(40, 400, 1104, 104)
 var patrol: bool = false
+# Tuning a bigger subclass (InkShadow) can change.
+var speed_scale: float = 1.0
+var catch_radius: float = CATCH_RADIUS
+var lunge_range: float = LUNGE_RANGE
+## Never sinks back: after searching it goes straight back to stalking.
+var relentless: bool = false
 var state: State = State.DORMANT
 ## 0 = puddle, 1 = standing. Read by the view.
 var rise: float = 0.0
@@ -51,7 +57,7 @@ var _patrol_dir: float = 1.0
 func _ready() -> void:
 	_pos = position
 	_last_known = _pos
-	add_child(CrawlerView.new())
+	add_child(_make_view())
 	EventBus.notice_changed.connect(_on_notice_changed)
 	EventBus.player_noticed.connect(_on_player_noticed)
 	EventBus.player_lost.connect(_on_player_lost)
@@ -61,6 +67,11 @@ func _ready() -> void:
 	add_to_group(&"freezable")
 	if patrol:
 		_set_state(State.PATROL)
+
+
+## The look; InkShadow swaps in its own.
+func _make_view() -> Node2D:
+	return CrawlerView.new()
 
 
 # --- Perception --------------------------------------------------------------
@@ -131,6 +142,8 @@ func _on_hushed(duration: float) -> void:
 ## where they are for `scent` seconds even in the dark.
 func wake_to(hunting: bool, scent: float = 0.0) -> void:
 	_scent = scent
+	# It has to close in before its first lunge: no lunge straight off a rise.
+	_lunge_cd = 2.0
 	_last_known = _player_pos()
 	_set_state(State.HUNTING if hunting else State.STALKING)
 
@@ -159,7 +172,7 @@ func _set_state(next: State) -> void:
 
 func _move_toward(target: Vector2, speed: float, delta: float) -> bool:
 	var before: Vector2 = _pos
-	_pos = _pos.move_toward(target, speed * delta)
+	_pos = _pos.move_toward(target, speed * speed_scale * delta)
 	_pos = _pos.clamp(walk_area.position, walk_area.end)
 	if absf(_pos.x - before.x) > 0.01:
 		facing = signf(_pos.x - before.x)
@@ -196,7 +209,7 @@ func _physics_process(delta: float) -> void:
 			if _can_see():
 				_last_known = _player_pos()
 				_lost_time = 0.0
-				if _pos.distance_to(_last_known) < LUNGE_RANGE and _lunge_cd <= 0.0:
+				if _pos.distance_to(_last_known) < lunge_range and _lunge_cd <= 0.0:
 					_set_state(State.TELEGRAPH)
 			else:
 				_lost_time += delta
@@ -222,7 +235,7 @@ func _physics_process(delta: float) -> void:
 				var sweep: Vector2 = _last_known + Vector2(sin(_state_time * 1.3) * 150.0, 0)
 				_move_toward(sweep, SEARCH_SPEED, delta)
 				if _state_time > SEARCH_TIME:
-					_set_state(State.RETREATING)
+					_set_state(State.STALKING if relentless else State.RETREATING)
 		State.RETREATING:
 			if rise <= 0.0:
 				_set_state(State.PATROL if patrol else State.DORMANT)
@@ -234,6 +247,6 @@ func _check_catch() -> void:
 	if not state in [State.HUNTING, State.LUNGE]:
 		return
 	var p: Player = _player()
-	if p != null and not p.is_concealed() and _pos.distance_to(_player_pos()) < CATCH_RADIUS:
+	if p != null and not p.is_concealed() and _pos.distance_to(_player_pos()) < catch_radius:
 		_set_state(State.RETREATING)
 		EventBus.player_caught.emit()

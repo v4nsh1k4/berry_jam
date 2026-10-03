@@ -166,3 +166,15 @@ static func growl() -> AudioStreamWAV:
 		var env: float = minf(t * 8.0, 1.0) * (1.0 - t / 0.75)
 		out[i] = (saw * 0.55 + randf_range(-0.2, 0.2)) * env * 0.7
 	return _to_wav(out)
+
+
+## A pen scratching something out hard: the Ink Shadow erasing a hiding spot.
+static func scribble() -> AudioStreamWAV:
+	var out: PackedFloat32Array = _buffer(0.8)
+	var smooth: float = 0.0
+	for i in out.size():
+		var t: float = float(i) / RATE
+		smooth = lerpf(smooth, randf_range(-1.0, 1.0), 0.6)
+		var strokes: float = 0.5 + 0.5 * sin(TAU * 9.0 * t)
+		out[i] = smooth * strokes * (1.0 - t / 0.8) * 0.6
+	return _to_wav(out)

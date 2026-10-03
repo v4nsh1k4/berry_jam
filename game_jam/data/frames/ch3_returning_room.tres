@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/npc_data.gd" id="4_npc_data"]
+[ext_resource type="Script" path="res://scripts/data/bubble_data.gd" id="5_bubble_data"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_open.tres" id="6_arthur_open"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_push.tres" id="7_arthur_push"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_wait.tres" id="8_arthur_wait"]
+[ext_resource type="Resource" path="res://data/bubbles/arthur_help.tres" id="9_arthur_help"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="10_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch3_torn_page"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch3_gallery_words"
+transition_style = 0
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"ch3_drawer"
+kind = &"return_spot"
+position = Vector2(930, 300)
+size = Vector2(110, 82)
+owner_id = &"drawer"
+text = "drawer"
+sets_flag = &"whole_drawer"
+caption = "The old drawer"
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("4_npc_data")
+id = &"arthur"
+display_name = "Arthur"
+position = Vector2(560, 404)
+visual_style = &"butler"
+bubbles = Array[ExtResource("5_bubble_data")]([ExtResource("6_arthur_open"), ExtResource("7_arthur_push"), ExtResource("8_arthur_wait"), ExtResource("9_arthur_help")])
+lines = PackedStringArray("I used to {word} every door in this house.", "{word} the chairs in, I always said.", "{word} for me, sir. Please.", "Can you {word} me find my words?")
+broken_lines = PackedStringArray("I used to... every d-door. Please.", "...the chairs in. Something's m-missing.", "...for me. P-please, give it back.", "Can you... me? Please.")
+relief_lines = PackedStringArray("Oh... thank you, sir.", "That's mine. I remember it.", "I can nearly speak again.", "I'm whole. Thank you.")
+words_stealable = false
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("10_light_spot_data")
+kind = &"candle"
+position = Vector2(380, 288)
+radius = 320.0
+energy = 0.85
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("10_light_spot_data")
+kind = &"glow"
+position = Vector2(255, 175)
+radius = 240.0
+energy = 0.4
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch3_returning_room"
+display_name = "The Returning Room"
+ambient_light = 0.2
+background_style = &"returning_room"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("A quiet room. Nothing hunts here.", "Arthur is waiting for his words.")
+hint = "Select one of Arthur's words and hold E under its broken bubble. The drawer takes back what you found in it."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
+npcs = Array[ExtResource("4_npc_data")]([SubResource("Resource_4")])
+lights = Array[ExtResource("10_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
+glitch = 0.12
+panel_tilt = 0.4

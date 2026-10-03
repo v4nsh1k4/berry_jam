@@ -36,6 +36,8 @@ func _ready() -> void:
 	EventBus.crawler_proximity.connect(_on_crawler_proximity)
 	EventBus.crawler_telegraph.connect(play.bind(&"growl", -4.0, 0.05))
 	EventBus.frame_changed.connect(_on_frame_changed)
+	EventBus.bubble_returned.connect(_on_bubble_returned)
+	EventBus.hiding_spot_erased.connect(play.bind(&"scribble", -6.0, 0.1).unbind(1))
 
 
 func start() -> void:
@@ -46,7 +48,7 @@ func start() -> void:
 		&"step": SfxSynth.footstep(), &"steal": SfxSynth.steal(), &"creak": SfxSynth.creak(),
 		&"thud": SfxSynth.thud(), &"chime": SfxSynth.chime(), &"click": SfxSynth.click(),
 		&"splat": SfxSynth.splat(), &"heartbeat": SfxSynth.heartbeat(), &"skitter": SfxSynth.skitter(),
-		&"growl": SfxSynth.growl(),
+		&"growl": SfxSynth.growl(), &"scribble": SfxSynth.scribble(),
 	}
 	for i in VOICES:
 		var voice: AudioStreamPlayer = AudioStreamPlayer.new()
@@ -131,6 +133,12 @@ func _apply() -> void:
 
 func _on_bubble_stolen(_bubble: BubbleData, _from: Vector2) -> void:
 	play(&"steal", -7.0)
+
+
+## Softer and lower than the "word worked" chime.
+func _on_bubble_returned(_bubble: BubbleData, _pos: Vector2) -> void:
+	play(&"chime", -8.0, 0.0)
+	_voices[(_next_voice + VOICES - 1) % VOICES].pitch_scale = 0.75
 
 
 func _on_ability_used(_bubble: BubbleData, _target_id: StringName) -> void:

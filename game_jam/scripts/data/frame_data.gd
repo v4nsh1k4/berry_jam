@@ -28,5 +28,15 @@ extends Resource
 @export_multiline var hint: String = ""
 ## Non-empty: this frame ends the chapter and shows this card.
 @export var ending_card: String = ""
+## 0..1 how broken this panel is (Chapter 3): glitch tears, missing border,
+## a misregistered ghost panel, ink dripping into the gutter, coarse halftone.
+## The glitch calms as the player returns words.
+@export_range(0.0, 1.0) var glitch: float = 0.0
+## Degrees the whole panel is knocked askew.
+@export var panel_tilt: float = 0.0
+## 0..1 share of the background left as unfinished sketch (missing strokes).
+@export_range(0.0, 1.0) var sketch: float = 0.0
+## Which enemy sits at crawler_spawn: &"crawler" or &"shadow" (Ink Shadow).
+@export var crawler_kind: StringName = &"crawler"
 ## Non-null: arriving here ends the chapter and starts this one (intro first).
 @export var next_chapter: ChapterData

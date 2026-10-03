@@ -6,7 +6,7 @@ extends RefCounted
 const WOOD: Color = Color(0.78, 0.75, 0.68)
 const DARK_WOOD: Color = Color(0.2, 0.19, 0.22)
 const VOID: Color = Color(0.04, 0.04, 0.05)
-const KINDS: Array[StringName] = [&"hiding_spot", &"writing", &"clock", &"secret_door", &"latch"]
+const KINDS: Array[StringName] = [&"hiding_spot", &"writing", &"clock", &"secret_door", &"latch", &"return_spot"]
 
 
 static func handles(kind: StringName) -> bool:
@@ -27,9 +27,15 @@ static func draw(item: Interactable, tick: int) -> void:
 			_secret_door(item, r, s)
 		&"latch":
 			_latch(item, r, s)
+		&"return_spot":
+			_return_spot(item, r, s)
 
 
 static func _hiding_spot(ci: Interactable, r: Rect2, s: int) -> void:
+	if (ci as HidingSpot) != null and (ci as HidingSpot).erased:
+		# Only a smear of ink is left where it was.
+		InkDraw.fill(ci, PackedVector2Array([Vector2(0, r.size.y), Vector2(r.size.x * 0.3, r.size.y - 14), Vector2(r.size.x, r.size.y - 4), Vector2(r.size.x, r.size.y)]), InkDraw.INK)
+		return
 	match ci.data.text:
 		"curtain":
 			InkDraw.line(ci, Vector2(-10, 0), Vector2(r.size.x + 10, 0), 5.0, s)
@@ -51,7 +57,17 @@ static func _hiding_spot(ci: Interactable, r: Rect2, s: int) -> void:
 			ci.draw_circle(Vector2(r.size.x * 0.5 - 9, r.size.y * 0.5), 4.0, InkDraw.INK)
 			ci.draw_circle(Vector2(r.size.x * 0.5 + 9, r.size.y * 0.5), 4.0, InkDraw.INK)
 			InkDraw.hatch(ci, Rect2(6, r.size.y * 0.7, r.size.x - 12, r.size.y * 0.28), 8.0, 1.0, s + 2)
-	if ci.occupied:
+	var spot: HidingSpot = ci as HidingSpot
+	if spot != null and spot.erased:
+		return
+	if spot != null and spot.erase_progress > 0.0:
+		# The Ink Shadow scribbling it out: black zigzags piling up.
+		var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+		rng.seed = s
+		for i in int(spot.erase_progress * 14.0):
+			var y: float = r.size.y * (i + 0.5) / 14.0
+			InkDraw.line(ci, Vector2(rng.randf_range(-10, 10), y), Vector2(r.size.x + rng.randf_range(-10, 10), y + rng.randf_range(-24, 24)), 6.0, s + i)
+	if spot != null and spot.occupied:
 		# A sliver of red where the player crouches inside.
 		ci.draw_rect(Rect2(r.size.x * 0.5 - 2, r.size.y * 0.35, 4, r.size.y * 0.3), Color(InkDraw.RED, 0.8))
 
@@ -115,3 +131,26 @@ static func lock_panel(ci: Interactable, r: Rect2, s: int) -> void:
 		InkDraw.ellipse(ci, c, Vector2(13, 13), 2.5, s + 1 + i, InkDraw.PAPER)
 		var label: String = "ok" if ci.resolved else "?"
 		ci.draw_string(ThemeDB.fallback_font, c + Vector2(-5 if not ci.resolved else -8, 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, InkDraw.INK)
+
+
+## Where an owner's words go back: a painting of them (text "painting") or
+## the old drawer. Missing words show as dashed ghost bubbles until returned.
+static func _return_spot(ci: Interactable, r: Rect2, s: int) -> void:
+	var missing: int = GameState.stolen_from_count(ci.data.owner_id)
+	if ci.data.text == "painting":
+		InkDraw.rect(ci, r, 6.0, s, Color(0.3, 0.28, 0.3))
+		InkDraw.rect(ci, r.grow(-12), 2.0, s + 1, InkDraw.PAPER)
+		var head: Vector2 = Vector2(r.size.x * 0.5, r.size.y * 0.42)
+		InkDraw.gap_ratio = 0.25 * missing
+		InkDraw.ellipse(ci, head, Vector2(24, 30), 3.0, s + 2, InkDraw.WHITE)
+		InkDraw.polyline(ci, PackedVector2Array([head + Vector2(-40, 70), head + Vector2(-22, 34), head + Vector2(22, 34), head + Vector2(40, 70)]), 3.0, s + 3)
+		InkDraw.gap_ratio = 0.0
+		ci.draw_string(ThemeDB.fallback_font, Vector2(16, r.size.y - 16), ci.data.caption, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 32, 14, InkDraw.INK)
+	else:
+		InkDraw.rect(ci, r, 4.0, s, WOOD)
+		InkDraw.rect(ci, Rect2(10, 8, r.size.x - 20, r.size.y * 0.4), 2.5, s + 1, VOID if missing > 0 else WOOD)
+		InkDraw.rect(ci, Rect2(10, r.size.y * 0.5, r.size.x - 20, r.size.y * 0.4), 2.5, s + 2, WOOD)
+	for i in missing:
+		InkDraw.gap_ratio = 0.5
+		InkDraw.ellipse(ci, Vector2(r.size.x * 0.5 + (i - (missing - 1) * 0.5) * 34.0, -26), Vector2(15, 10), 2.0, s + 10 + i, Color(1, 1, 1, 0.7))
+		InkDraw.gap_ratio = 0.0

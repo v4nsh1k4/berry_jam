@@ -12,6 +12,8 @@ var style: StringName = &"plain":
 		queue_redraw()
 ## Seconds since the frame opened, for slow animation (ink drips).
 var time: float = 0.0
+## 0..1 share of strokes left out: the room is only half drawn.
+var sketch: float = 0.0
 
 var _tick: int = -1
 
@@ -25,6 +27,12 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	InkDraw.gap_ratio = sketch
+	_draw_style()
+	InkDraw.gap_ratio = 0.0
+
+
+func _draw_style() -> void:
 	draw_room(self, _tick)
 	match style:
 		&"awakening":
@@ -53,6 +61,14 @@ func _draw() -> void:
 			BgCh2Rooms.clock_room(self, _tick)
 		&"cellar_stair":
 			BgCh2Rooms.cellar_stair(self, _tick)
+		&"torn_page":
+			BgCh3.torn_page(self, _tick)
+		&"returning_room":
+			BgCh3.returning_room(self, _tick)
+		&"gallery_words":
+			BgCh3.gallery_words(self, _tick)
+		&"margin":
+			BgCh3.margin(self, _tick)
 
 
 ## Floor, floorboards in perspective, skirting shadow and wallpaper stripes.

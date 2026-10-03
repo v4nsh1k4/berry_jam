@@ -1,0 +1,102 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="4_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(0, 396, 96, 112)
+target_frame_id = &"ch3_returning_room"
+transition_style = 0
+target_spawn = Vector2(980, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch3_margin"
+transition_style = 0
+target_spawn = Vector2(320, 466)
+required_flag = &"gallery_open"
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"paint_arthur"
+kind = &"return_spot"
+position = Vector2(150, 140)
+size = Vector2(160, 200)
+owner_id = &"arthur"
+text = "painting"
+sets_flag = &"whole_arthur"
+caption = "Arthur"
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("3_interactable_data")
+id = &"paint_vane"
+kind = &"return_spot"
+position = Vector2(512, 140)
+size = Vector2(160, 200)
+owner_id = &"mrs_vane"
+text = "painting"
+sets_flag = &"whole_vane"
+caption = "Mrs. Vane"
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("3_interactable_data")
+id = &"paint_lady"
+kind = &"return_spot"
+position = Vector2(874, 140)
+size = Vector2(160, 200)
+owner_id = &"portrait_lady"
+text = "painting"
+sets_flag = &"whole_lady"
+caption = "The Lady"
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("3_interactable_data")
+id = &"gallery_wall"
+kind = &"secret_door"
+position = Vector2(1060, 120)
+size = Vector2(100, 262)
+requires_flag = &"gallery_open"
+sets_flag = &"gallery_door"
+
+[sub_resource type="Resource" id="Resource_7"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(230, 360)
+radius = 200.0
+energy = 0.35
+
+[sub_resource type="Resource" id="Resource_8"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(592, 360)
+radius = 200.0
+energy = 0.35
+
+[sub_resource type="Resource" id="Resource_9"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(954, 360)
+radius = 200.0
+energy = 0.35
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch3_gallery_words"
+display_name = "The Gallery of Words"
+ambient_light = 0.12
+background_style = &"gallery_words"
+player_spawn = Vector2(170, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("Three portraits. The way on opens when everyone is whole.", "Give their words back here, or where you met them.")
+hint = "A lit portrait is whole. Give back every word you took from the dark ones."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_7"), SubResource("Resource_8"), SubResource("Resource_9")])
+events = Array[StringName]([&"gallery_gate"])
+glitch = 0.5
+panel_tilt = 1.5
+sketch = 0.25

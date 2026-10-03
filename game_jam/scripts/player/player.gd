@@ -18,6 +18,7 @@ var facing: float = 1.0
 var running: bool = false
 
 var _hiding: bool = false
+var _hiding_spot: StringName = &""
 var _hide_time: float = 0.0
 var _concealed: bool = false
 var _reaction: String = ""
@@ -39,6 +40,7 @@ func _ready() -> void:
 	EventBus.hiding_spot_used.connect(_on_hiding_spot_used)
 	EventBus.player_hide_requested.connect(_on_hide_requested)
 	EventBus.frame_changed.connect(_on_frame_changed)
+	EventBus.hiding_spot_erased.connect(_on_hiding_spot_erased)
 
 
 func _on_ability_used(bubble: BubbleData, _target_id: StringName) -> void:
@@ -76,11 +78,17 @@ func _on_frame_changed(_data: FrameData) -> void:
 
 
 ## E at a hiding spot steps into it (snapping to it) or back out.
-func _on_hiding_spot_used(_spot_id: StringName, screen_point: Vector2) -> void:
+func _on_hiding_spot_used(spot_id: StringName, screen_point: Vector2) -> void:
 	_hiding = not _hiding
+	_hiding_spot = spot_id
 	if _hiding:
 		global_position.x = (get_viewport().get_canvas_transform().affine_inverse() * screen_point).x
 		LightingSystem.set_light(false)
+
+
+func _on_hiding_spot_erased(spot_id: StringName) -> void:
+	if _hiding and spot_id == _hiding_spot:
+		_hiding = false
 
 
 func _on_hide_requested(duration: float) -> void:

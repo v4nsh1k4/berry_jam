@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="FrameData" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
+[ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
+[ext_resource type="Script" path="res://scripts/data/interactable_data.gd" id="3_interactable_data"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="4_light_spot_data"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_exit_data")
+area = Rect2(1080, 396, 104, 112)
+target_frame_id = &"ch3_heart_card"
+transition_style = 1
+target_spawn = Vector2(170, 466)
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("3_interactable_data")
+id = &"margin_curtain"
+kind = &"hiding_spot"
+position = Vector2(330, 110)
+size = Vector2(110, 272)
+text = "curtain"
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("3_interactable_data")
+id = &"margin_wardrobe"
+kind = &"hiding_spot"
+position = Vector2(620, 120)
+size = Vector2(120, 262)
+text = "wardrobe"
+
+[sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("3_interactable_data")
+id = &"margin_table"
+kind = &"hiding_spot"
+position = Vector2(880, 300)
+size = Vector2(130, 82)
+text = "table"
+
+[sub_resource type="Resource" id="Resource_5"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(1110, 300)
+radius = 220.0
+energy = 0.45
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("4_light_spot_data")
+kind = &"glow"
+position = Vector2(600, 260)
+radius = 300.0
+energy = 0.3
+
+[resource]
+script = ExtResource("1_frame_data")
+id = &"ch3_margin"
+display_name = "The Margin"
+ambient_light = 0.12
+background_style = &"margin"
+player_spawn = Vector2(320, 466)
+walk_area = Rect2(40, 400, 1104, 104)
+captions = PackedStringArray("The margin. Nothing here is drawn properly.", "Something enormous is coming. Run for the door, or hide.")
+hint = "Run (Shift) for the far door. Hide only to dodge a lunge: it scribbles hiding places out."
+exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2"), SubResource("Resource_3"), SubResource("Resource_4")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
+events = Array[StringName]([&"margin_chase"])
+crawler_spawn = Vector2(40, 492)
+glitch = 0.75
+panel_tilt = -2.0
+sketch = 0.45
+crawler_kind = &"shadow"

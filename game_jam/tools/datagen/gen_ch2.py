@@ -77,8 +77,8 @@ frame("ch2_cellar", "The Locked Cellar Stair", "cellar_stair", 0.06, (200, 466),
                   prompt="Padlocked. The dials beside it are not set yet.")],
       crawler=(60, 492), events=["cellar_chase"])
 
-frame("ch2_end", "The Cellar", "cellar_stair", 0.08, (170, 466), [], "",
-      lights=[light("glow", (300, 300), 300, 0.45)], ending="CHAPTER 3: COMING SOON")
+frame("ch2_end", "The Cellar", "cellar_stair", 0.08, (170, 466), ["At the bottom of the stair, the page is wet."], "",
+      lights=[light("glow", (300, 300), 300, 0.45)], next_chapter="res://data/chapters/ch3.tres")
 
 write("data/chapters/ch2.tres", "chapter_data", dict(
     id=SN("ch2"), title="Chapter 2: The Hallway of Shadows", first_frame_id=SN("ch2_long_hallway"),

@@ -22,6 +22,8 @@ extends Resource
 @export var symbols: PackedStringArray = PackedStringArray()
 ## Only visible (and usable) while the flashlight cone covers it.
 @export var revealed_by_light: bool = false
+## return_spot: whose words this takes back (BubbleData.stolen_from).
+@export var owner_id: StringName = &""
 ## Words for `writing`; the look for `hiding_spot` (wardrobe, curtain, table)
 ## and `symbol_lock` ("panel" = small wall box instead of a door).
 @export var text: String = ""

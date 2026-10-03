@@ -1,11 +1,13 @@
 class_name Interactor
 extends Node2D
 ## Child of the Player. Picks what E would act on and publishes a prompt.
-## Bubbles in reach win: the one the player stands nearest to (measured along
-## the floor), ties going to the side they face. The mouse is not used, so it
-## stays free to aim the flashlight.
-## Hold E steals a bubble; E on an object speaks the selected word (or, for
-## plain objects, just uses it); E with nothing near speaks into the room.
+## Bubbles in reach win (stealable ones, and in Chapter 3 the broken ones a
+## word can go back to): the one the player stands nearest to along the
+## floor, ties going to the side they face. The mouse is not used, so it stays
+## free to aim the flashlight.
+## Hold E on a whole bubble: steal. Hold E on a broken bubble: give the
+## selected word back. E on an object: speak the selected word (or, for plain
+## objects, just use it). E with nothing near: speak into the room.
 
 const REACH: float = 130.0
 ## How far from the speaker the player may be to steal at all.
@@ -15,6 +17,7 @@ const UNDER_REACH: float = 120.0
 ## Bubbles closer than this count as a tie; facing decides.
 const TIE: float = 10.0
 const STEAL_TIME: float = 0.5
+const RETURN_TIME: float = 0.7
 
 var _target: Node2D
 var _hold: float = 0.0
@@ -30,32 +33,46 @@ func _player() -> Player:
 
 
 func _process(delta: float) -> void:
+	# The room it pointed into may have been freed (room change, quit).
+	if not is_instance_valid(_target):
+		_target = null
 	var target: Node2D = _find_target() if _player().can_act() else null
 	if target != _target:
 		_clear_hold()
-		if is_instance_valid(_target) and _target is SpeechBubble:
+		if _target is SpeechBubble:
 			(_target as SpeechBubble).targeted = false
 		_target = target
 		if _target is SpeechBubble:
 			(_target as SpeechBubble).targeted = true
 		_update_prompt()
 
-	if _target is SpeechBubble:
-		if Input.is_action_pressed("interact"):
-			_hold += delta
-			(_target as SpeechBubble).steal_progress = _hold / STEAL_TIME
-			if _hold >= STEAL_TIME:
-				_steal(_target as SpeechBubble)
-		elif _hold > 0.0:
-			_clear_hold()
+	if not _target is SpeechBubble:
+		return
+	var bubble: SpeechBubble = _target as SpeechBubble
+	var returning: bool = bubble.is_returnable()
+	if Input.is_action_pressed("interact") and (not returning or GameState.selected_bubble() != null):
+		_hold += delta
+		var needed: float = RETURN_TIME if returning else STEAL_TIME
+		bubble.steal_progress = _hold / needed
+		if _hold >= needed:
+			if returning:
+				_give_back(bubble)
+			else:
+				_steal(bubble)
+	elif _hold > 0.0:
+		_clear_hold()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not is_instance_valid(_target):
+		_target = null
 	if not event.is_action_pressed("interact") or _target is SpeechBubble or not _player().can_act():
 		return
 	var target: Interactable = _target as Interactable
 	if target != null and target.is_plain():
 		target.interact_plain()
+	elif target is ReturnSpot:
+		(target as ReturnSpot).receive_word(GameState.selected_bubble())
 	else:
 		_speak(target)
 	_update_prompt()
@@ -67,19 +84,20 @@ func _find_target() -> Node2D:
 	var best_bubble: Node2D = null
 	var best_score: float = INF
 	_choices = 0
-	for node in get_tree().get_nodes_in_group(&"stealable"):
-		var bubble: SpeechBubble = node as SpeechBubble
-		if global_position.distance_to(bubble.get_interact_point()) > SPEAKER_REACH:
-			continue
-		var dx: float = bubble.global_position.x - global_position.x
-		if absf(dx) > UNDER_REACH:
-			continue
-		_choices += 1
-		# Bucket by TIE so near-equal distances compare on facing instead.
-		var score: float = floorf(absf(dx) / TIE) * 2.0 + (0.0 if signf(dx) == facing or dx == 0.0 else 1.0)
-		if score < best_score:
-			best_bubble = bubble
-			best_score = score
+	for group in [&"stealable", &"returnable"]:
+		for node in get_tree().get_nodes_in_group(group):
+			var bubble: SpeechBubble = node as SpeechBubble
+			if global_position.distance_to(bubble.get_interact_point()) > SPEAKER_REACH:
+				continue
+			var dx: float = bubble.global_position.x - global_position.x
+			if absf(dx) > UNDER_REACH:
+				continue
+			_choices += 1
+			# Bucket by TIE so near-equal distances compare on facing instead.
+			var score: float = floorf(absf(dx) / TIE) * 2.0 + (0.0 if signf(dx) == facing or dx == 0.0 else 1.0)
+			if score < best_score:
+				best_bubble = bubble
+				best_score = score
 	if best_bubble != null:
 		return best_bubble
 	var best: Node2D = null
@@ -101,6 +119,19 @@ func _steal(bubble: SpeechBubble) -> void:
 	_hold = 0.0
 	_update_prompt()
 	GameState.add_bubble(data, screen_pos)
+
+
+## Gives the selected word back if it belongs to this bubble; otherwise "?".
+func _give_back(bubble: SpeechBubble) -> void:
+	_clear_hold()
+	var word: BubbleData = GameState.selected_bubble()
+	if word == null or word.id != bubble.data.id:
+		bubble.refuse()
+		EventBus.ability_failed.emit(word, &"")
+		return
+	_target = null
+	GameState.return_bubble(word, bubble.get_global_transform_with_canvas().origin)
+	_update_prompt()
 
 
 func _speak(target: Interactable) -> void:

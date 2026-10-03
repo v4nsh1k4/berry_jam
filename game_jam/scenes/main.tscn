@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://ui/end_card.gd" id="15_end"]
 [ext_resource type="Resource" path="res://data/chapters/ch1.tres" id="16_ch1"]
 [ext_resource type="Script" path="res://ui/danger_vignette.gd" id="17_vignette"]
+[ext_resource type="Script" path="res://ui/glitch_overlay.gd" id="18_glitch"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -34,6 +35,10 @@ script = ExtResource("5_notice")
 [node name="PageLayer" type="CanvasLayer" parent="."]
 layer = 10
 follow_viewport_enabled = true
+
+[node name="GlitchOverlay" type="ColorRect" parent="PageLayer"]
+mouse_filter = 2
+script = ExtResource("18_glitch")
 
 [node name="InkBleed" type="ColorRect" parent="PageLayer"]
 script = ExtResource("9_bleed")

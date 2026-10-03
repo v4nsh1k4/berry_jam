@@ -11,3 +11,6 @@ extends Resource
 @export var damage_visual_scale: float = 1.0
 ## Line wobble multiplier: the drawing quality slips as the story goes on.
 @export var line_jitter: float = 1.0
+## Stolen words can be given back to their owners in this chapter. Off in
+## Chapters 1-2 so a needed word (OPEN) can't be returned too early.
+@export var allows_return: bool = false

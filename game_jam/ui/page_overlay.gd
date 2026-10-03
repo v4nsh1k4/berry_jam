@@ -15,6 +15,8 @@ var _toast_left: float = 0.0
 var _damage: float = 0.0
 ## 0..1 how close the Crawler is; the border warps near it.
 var _crawler_near: float = 0.0
+## FrameData.glitch of the current panel (Chapter 3 breakdown).
+var _glitch: float = 0.0
 var _tick: int = -1
 
 
@@ -28,6 +30,7 @@ func _ready() -> void:
 
 
 func _on_frame_changed(data: FrameData) -> void:
+	_glitch = data.glitch
 	_title = data.display_name.to_upper()
 	_captions = data.captions
 	_toast = ""
@@ -73,7 +76,10 @@ func _draw() -> void:
 	draw_rect(Rect2(-100, panel.end.y, page.size.x + 200, page.size.y - panel.end.y + 100), gutter)
 	draw_rect(Rect2(-100, -100, panel.position.x + 100, page.size.y + 200), gutter)
 	draw_rect(Rect2(panel.end.x, -100, page.size.x - panel.end.x + 100, page.size.y + 200), gutter)
+	_draw_breakdown(panel)
+	InkDraw.gap_ratio = _glitch * 0.3
 	InkDraw.rect(self, panel, 7.0 + _damage * 2.0, _tick * 7, Color.TRANSPARENT, InkDraw.INK, 1.6 + _damage * 3.5 + _crawler_near * 4.0)
+	InkDraw.gap_ratio = 0.0
 	if _damage > 0.0:
 		# Thin red edge just inside the border: comic damage made visible.
 		InkDraw.rect(self, panel.grow(-5.0 - _damage * 2.0), 0.6 + _damage * 3.0, _tick * 7 + 3, Color.TRANSPARENT, Color(InkDraw.RED, 0.85), 1.2 + _damage * 2.0)
@@ -91,6 +97,24 @@ func _draw() -> void:
 		var top_left: Vector2 = Vector2(panel.end.x - size.x - 46.0, y - size.y - 14.0)
 		_draw_caption(font, _captions[i], top_left, CAPTION_FONT_SIZE, 10 + i)
 		y = top_left.y - 10.0
+
+
+## Chapter 3: a misregistered ghost of the panel, and ink running off the
+## bottom edge into the gutter. Scales with how broken the frame is and with
+## comic damage, so returning words calms it.
+func _draw_breakdown(panel: Rect2) -> void:
+	var amount: float = _glitch * (0.35 + 0.65 * _damage)
+	if amount <= 0.01:
+		return
+	var shift: Vector2 = Vector2(14, -9) * amount * 1.6
+	InkDraw.rect(self, Rect2(panel.position + shift, panel.size), 3.0, _tick * 9, Color.TRANSPARENT, Color(InkDraw.INK, 0.45), 2.5)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 911
+	for i in int(amount * 9.0):
+		var x: float = panel.position.x + rng.randf_range(20, panel.size.x - 20)
+		var length: float = rng.randf_range(20, 110) * amount
+		InkDraw.line(self, Vector2(x, panel.end.y), Vector2(x + rng.randf_range(-4, 4), panel.end.y + length), rng.randf_range(2, 5), _tick + i)
+		draw_circle(Vector2(x, panel.end.y + length), 4.0, InkDraw.INK)
 
 
 ## Hairline cracks running in from the border. Positions are fixed per crack

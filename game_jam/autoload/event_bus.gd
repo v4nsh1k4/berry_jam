@@ -104,3 +104,11 @@ signal crawler_state_changed(state: StringName)
 ## A heartbeat was played; strength 0..1 (vignette pulses with it).
 @warning_ignore("unused_signal")
 signal heartbeat(strength: float)
+
+# Returning words (Chapter 3)
+## A stolen word went back to its owner. `screen_pos` is where it landed.
+@warning_ignore("unused_signal")
+signal bubble_returned(bubble: BubbleData, screen_pos: Vector2)
+## The Ink Shadow scribbled out a hiding spot.
+@warning_ignore("unused_signal")
+signal hiding_spot_erased(spot_id: StringName)

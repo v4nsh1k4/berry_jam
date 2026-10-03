@@ -10,6 +10,8 @@ const DECAY: float = 1.7
 var trauma: float = 0.0
 
 var _shaking: bool = false
+## Resting transform: a knocked-askew panel (FrameData.panel_tilt).
+var _base: Transform2D = Transform2D.IDENTITY
 
 
 func _ready() -> void:
@@ -18,6 +20,15 @@ func _ready() -> void:
 	EventBus.ability_failed.connect(_on_ability_failed)
 	EventBus.interactable_resolved.connect(_on_interactable_resolved)
 	EventBus.player_caught.connect(add_trauma.bind(0.7))
+	EventBus.frame_changed.connect(_on_frame_changed)
+	EventBus.returned_to_menu.connect(_on_frame_changed.bind(null))
+
+
+func _on_frame_changed(data: FrameData) -> void:
+	var tilt: float = deg_to_rad(data.panel_tilt) if data != null else 0.0
+	var c: Vector2 = Frame.PANEL_RECT.get_center()
+	_base = Transform2D(0.0, c) * Transform2D(tilt, Vector2.ZERO) * Transform2D(0.0, -c)
+	get_viewport().canvas_transform = _base
 
 
 func add_trauma(amount: float) -> void:
@@ -28,13 +39,13 @@ func _process(delta: float) -> void:
 	if trauma <= 0.0:
 		if _shaking:
 			_shaking = false
-			get_viewport().canvas_transform = Transform2D.IDENTITY
+			get_viewport().canvas_transform = _base
 		return
 	_shaking = true
 	trauma = maxf(0.0, trauma - DECAY * delta)
 	var strength: float = trauma * trauma
 	var offset: Vector2 = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * MAX_OFFSET * strength
-	get_viewport().canvas_transform = Transform2D(randf_range(-1, 1) * MAX_ROTATION * strength, offset)
+	get_viewport().canvas_transform = Transform2D(randf_range(-1, 1) * MAX_ROTATION * strength, offset) * _base
 
 
 func _on_bubble_stolen(_bubble: BubbleData, _from: Vector2) -> void:

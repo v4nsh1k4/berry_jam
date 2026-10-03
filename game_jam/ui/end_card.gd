@@ -53,6 +53,7 @@ func _draw() -> void:
 	var baseline: Vector2 = box.position + Vector2(50, 75 + font.get_ascent(54) * 0.4)
 	draw_string_outline(font, baseline, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, 54, 4, InkDraw.INK)
 	draw_string(font, baseline, _text, HORIZONTAL_ALIGNMENT_LEFT, -1, 54, InkDraw.INK)
-	var sub: String = "Thanks for playing Chapter 1."
+	var chapter: ChapterData = GameState.current_chapter
+	var sub: String = "Thanks for playing %s." % chapter.title if chapter != null else "Thanks for playing."
 	var sw: float = font.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	draw_string(font, Vector2(size.x * 0.5 - sw * 0.5, box.end.y + 40), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, InkDraw.WHITE)

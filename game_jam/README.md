@@ -5,7 +5,7 @@ House of Hollow Hill*. You are an unperson with no speech bubble, drawn in the
 only colour in the comic: red. You steal other characters' words and speak
 them to open, move, remember, freeze and hide. Light shows you the house, and
 it shows you to the Ink Crawler. Every stolen word damages the comic a little
-more.
+more, and in Chapter 3 the way out is to give them all back.
 
 Made in Godot 4.7.2 with GDScript and the Compatibility renderer. All art and
 sound are generated in code: there are no asset files and no addons.
@@ -24,6 +24,7 @@ sound are generated in code: there are no asset files and no addons.
 | Pick a stolen word | **1-6** for a visible slot, **Q / R** or the mouse wheel to cycle, or click a slot |
 | Say the word | **E** at the thing in front of you, or with nothing near to say it into the room |
 | Look / take / hide / dials | **E** on mirrors, pickups, hiding spots and dial locks |
+| Give a word back (Chapter 3) | Pick it, stand under its owner's broken bubble and hold **E** (or press **E** at their portrait) |
 | Flashlight | **F** or left click, aimed with the mouse (from the end of Chapter 1) |
 | Pause | **Esc** or **P** |
 
@@ -66,7 +67,7 @@ Optional: OPEN the bedchamber drawer to get **HUSH**.
 6. **The Locked Cellar Stair.** If you've forgotten the marks, say REMEMBER.
    Press E at the dial box, set it to spiral, hand, house, then say **OPEN**
    at the padlock. The Crawler surges, so go through the door.
-7. "CHAPTER 3: COMING SOON".
+7. **The Cellar.** Chapter 3's intro follows.
 
 **If you take nothing optional:** Chapter 1 still gives OPEN, PUSH and
 REMEMBER, and Chapter 2 needs only OPEN, REMEMBER and the flashlight. The clock
@@ -74,6 +75,34 @@ can be read with no words at all: wait until the Crawler is at the far end of
 its patrol, light the clock for a second, then turn the light off and stand
 still, or hide behind the curtain. Words are never used up, so
 no order of play can lock you out.
+
+### Chapter 3: The Ink Heart (first four frames)
+
+Every frame is more broken than the last: torn and askew panels, a ghost
+border, ink running into the gutter, coarse halftone, glitching bands. Giving
+words back visibly calms it all. Nothing in Chapter 3 needs a word to be
+*used*, so returning a word can never block you.
+
+1. **The Torn Page.** Mrs. Vane and the Portrait plead with broken lines for
+   exactly the words you took. Pick one of their words (1-6, Q/R), stand under
+   the matching broken bubble and hold **E**: THANK YOU, a line of relief, and
+   the panel heals a step. The wrong word just gets a "?".
+2. **The Returning Room** (safe). Give Arthur back his words. If you took
+   HUSH from the drawer in Chapter 1, press E at the old drawer with it.
+3. **The Gallery of Words.** Three portraits: Arthur, Mrs. Vane, the Lady. A
+   portrait is lit when that person is whole. Give any remaining words here
+   (E at the portrait) or where you met them. When all three are lit, the
+   wall on the right opens.
+4. **The Margin.** The **Ink Shadow** rises at the left after a warning and
+   comes for you, with a wall of ink behind it. Run (Shift) for the door. Hiding
+   works, but if you linger it stops and scribbles your hiding place out (you
+   get the scribble, a sound, and a head start). Caught = the room reloads,
+   words kept.
+5. "THE INK HEART: COMING NEXT" (Stage 4B).
+
+**If you stole nothing optional:** you arrive with only OPEN, PUSH and
+REMEMBER. Mrs. Vane is already whole and her portrait starts lit. Give OPEN
+and PUSH to Arthur and REMEMBER to the Lady, and the gallery opens.
 
 ## How it fits together
 
@@ -87,19 +116,39 @@ data/chapters/    ChapterData: title, intro captions, first frame, damage scale,
 data/frames/      FrameData .tres, one per comic panel
 scripts/abilities/  one handler per ability (open, push, remember, hush, help, wait, hide)
 scripts/audio/    SfxSynth: every sound rendered in code
-scripts/enemy/    InkCrawler (brain: states and senses), CrawlerView (stop-motion look), CrawlerArt
-scripts/events/   scripted moments: ink hand, crawler window, pantry fingers, passage stalker, cellar chase
+scripts/enemy/    InkCrawler (brain: states and senses), CrawlerView (stop-motion look), CrawlerArt,
+                  InkShadow + ShadowView (the huge Chapter 3 version)
+scripts/events/   scripted moments: ink hand, crawler window, pantry fingers, passage stalker,
+                  cellar chase, gallery gate, margin chase
 scripts/frame/    Frame, exits, fixed lights, backgrounds/ (art per room)
 scripts/interactables/  doors, drawers, latches, cabinets, pickups, locks, memories,
-                  hiding spots, light-revealed writing, the clock and its pendulum
+                  light-revealed writing, the clock and its pendulum; HidingSpot and
+                  ReturnSpot are subclasses (Frame.KIND_CLASSES)
 scripts/npc/      characters (Arthur, the portrait, Mrs. Vane) and their art
 scripts/player/   Player, Interactor (steal / speak), Flashlight
-scripts/systems/  notice meter, feedback FX, save system
-shaders/          halftone paper, ink-splash wipe, ink bleed, danger vignette
+scripts/systems/  notice meter, feedback FX, save system, debug room jump
+shaders/          halftone paper, ink-splash wipe, ink bleed, danger vignette, glitch
 ui/               menus, pause, intro, end card, inventory, lock dials, page overlay
 tests/            debug tests (not exported)
 tools/datagen/    Python generators for the chapter .tres files (not exported)
 ```
+
+**Returning words (Chapter 3)**
+- `GameState.return_bubble(bubble, screen_pos)` takes the word out of the
+  inventory and out of `stolen_bubble_ids`, adds it to `returned_bubble_ids`
+  (saved; a returned word is gone for good), lowers `stolen_bubble_count` and
+  `comic_damage`, and emits **`EventBus.bubble_returned(bubble, screen_pos)`**
+  plus `comic_damage_changed`.
+- Who listens: the bubble (whole again, never stealable), its character
+  (relief caption, outline completes), return spots and the gallery gate,
+  FeedbackFx (THANK YOU, red-to-white drops), AudioManager (soft chime). The
+  cracks, ink bleed, wobble and glitch all heal through `comic_damage_changed`.
+- Only chapters with `ChapterData.allows_return` (Chapter 3) let you give
+  words back, so OPEN can't be returned before the doors that need it.
+- Stage 4B hooks are marked `TODO(later)` in `return_bubble` and `InkShadow`.
+
+**Comic damage** = stolen words / 9 (every stealable word in the game: 6 in
+Chapter 1, 3 in Chapter 2). Each chapter scales how strongly it shows.
 
 **Adding content**
 - **A frame:** add a `FrameData` .tres in `data/frames/` named after its `id`,
@@ -117,6 +166,9 @@ tools/datagen/    Python generators for the chapter .tres files (not exported)
 
 ## Tests
 
+- **Jump to any room (debug builds only):** on the web add `?frame=ch3_margin`
+  (any frame id) to the page URL; on desktop run with `-- --frame=ch3_margin`.
+  You get the words a player would normally carry into that chapter.
 - **Inventory test** (steals 12 words, then checks it can add, cycle, show,
   speak and save/load them; your real save is restored afterwards):
   ```

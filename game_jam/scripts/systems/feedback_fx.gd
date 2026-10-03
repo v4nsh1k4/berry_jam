@@ -15,6 +15,24 @@ func _ready() -> void:
 	EventBus.interactable_resolved.connect(_on_interactable_resolved)
 	EventBus.ability_failed.connect(_on_ability_failed)
 	EventBus.player_caught.connect(_on_player_caught)
+	EventBus.bubble_returned.connect(_on_bubble_returned)
+
+
+## A word goes home: soft, not punchy. Ink drops that start red and fade to
+## white as they rise, and a gentle THANK YOU.
+func _on_bubble_returned(_bubble: BubbleData, at: Vector2) -> void:
+	if at == Vector2.INF:
+		at = _player_screen_pos() + Vector2(0, -120)
+	var ramp: Gradient = Gradient.new()
+	ramp.set_color(0, InkDraw.RED)
+	ramp.set_color(1, Color(1, 1, 1, 0))
+	var drops: CPUParticles2D = splash(at, 26, Color.WHITE)
+	drops.gravity = Vector2(0, -160)
+	drops.initial_velocity_min = 40.0
+	drops.initial_velocity_max = 140.0
+	drops.lifetime = 1.2
+	drops.color_ramp = ramp
+	popup("THANK YOU", at + Vector2(0, -50), 0.8)
 
 
 func _on_bubble_stolen(_bubble: BubbleData, from: Vector2) -> void:
@@ -48,7 +66,7 @@ func _player_screen_pos() -> Vector2:
 
 
 ## One-shot burst of ink drops.
-func splash(pos: Vector2, amount: int, color: Color = InkDraw.INK) -> void:
+func splash(pos: Vector2, amount: int, color: Color = InkDraw.INK) -> CPUParticles2D:
 	var particles: CPUParticles2D = CPUParticles2D.new()
 	particles.position = pos
 	particles.texture = _dot_texture()
@@ -67,6 +85,7 @@ func splash(pos: Vector2, amount: int, color: Color = InkDraw.INK) -> void:
 	add_child(particles)
 	particles.emitting = true
 	particles.finished.connect(particles.queue_free)
+	return particles
 
 
 ## Comic sound word that punches in, holds, and floats away.
