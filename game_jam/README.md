@@ -43,8 +43,8 @@ Menus work with the mouse or the keyboard (arrows + Enter; Esc goes back).
    WAIT) and hold E. Pick OPEN, then press E at the study door.
 4. **The Study Corridor.** The ink hand passes. Steal **REMEMBER** from the
    portrait.
-5. **The Study.** PUSH the cabinet, then say REMEMBER: the marks are **eye,
-   moon, key**. Set the door's dials to match.
+5. **The Study.** PUSH the cabinet, then say REMEMBER: the marks **eye,
+   moon, key** glow, and the carved door opens for whoever remembers.
 6. **The Back Stair.** Take the flashlight, then go through the right-hand
    door. Chapter 2's intro follows.
 
@@ -121,7 +121,7 @@ Every frame is more broken than the last. Giving words back calms it all.
 
 **Minimum word set for the whole game:** OPEN, PUSH, REMEMBER (Chapter 1) and
 ERASE. Words are never used up, so no order of play can lock you out.
-**Estimated first-time runtime:** about 16-17 minutes (see the Stage 4C notes
+**Estimated first-time runtime:** about 15½-16 minutes (see the Stage 4C notes
 in CLAUDE.md).
 
 ## How it fits together

@@ -28,6 +28,7 @@ position = Vector2(715, 190)
 size = Vector2(130, 80)
 requires_flag = &"cabinet_pushed"
 symbols = PackedStringArray("eye", "moon", "key")
+sets_flag = &"study_lock_open"
 
 [sub_resource type="Resource" id="Resource_4"]
 script = ExtResource("3_interactable_data")
@@ -43,11 +44,11 @@ prompt = "A heavy cabinet. Far too heavy to move by hand."
 [sub_resource type="Resource" id="Resource_5"]
 script = ExtResource("3_interactable_data")
 id = &"study_lock"
-kind = &"symbol_lock"
+kind = &"secret_door"
 position = Vector2(1010, 120)
 size = Vector2(130, 262)
-sets_flag = &"study_lock_open"
-symbols = PackedStringArray("eye", "moon", "key")
+requires_flag = &"study_lock_open"
+sets_flag = &"study_door_carved"
 
 [sub_resource type="Resource" id="Resource_6"]
 script = ExtResource("4_light_spot_data")
@@ -71,8 +72,8 @@ ambient_light = 0.1
 background_style = &"study"
 player_spawn = Vector2(170, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("The study. Something is hidden here.", "Three symbols lock the far door.")
-hint = "That cabinet is hiding something. PUSH it, then try to REMEMBER."
+captions = PackedStringArray("The study. Something is hidden here.", "Three symbols are carved on the far door. It won't budge.")
+hint = "That cabinet is hiding something. PUSH it, then say REMEMBER: the door opens for whoever remembers."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
 interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5")])
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_6"), SubResource("Resource_7")])

@@ -143,8 +143,10 @@ func reveal_memory(duration: float) -> void:
 	tween.tween_property(self, "memory_alpha", 1.0, 0.5)
 	tween.tween_interval(maxf(duration, 1.0))
 	tween.tween_property(self, "memory_alpha", 0.0, 1.0)
-	if data.sets_flag != &"":
+	if data.sets_flag != &"" and not GameState.has_flag(data.sets_flag):
 		GameState.set_flag(data.sets_flag)
+		var screen_pos: Vector2 = get_global_transform_with_canvas() * (data.size * 0.5)
+		EventBus.interactable_resolved.emit(data.id, data.kind, screen_pos)
 
 
 ## Wrong word: a little shudder, never a failure state.

@@ -63,18 +63,18 @@ frame("ch1_study_corridor", "The Study Corridor", "study_corridor", 0.16, (170, 
       events=["ink_hand"])
 
 frame("ch1_study", "The Study", "study", 0.1, (170, 466),
-      ["The study. Something is hidden here.", "Three symbols lock the far door."],
-      "That cabinet is hiding something. PUSH it, then try to REMEMBER.",
+      ["The study. Something is hidden here.", "Three symbols are carved on the far door. It won't budge."],
+      "That cabinet is hiding something. PUSH it, then say REMEMBER: the door opens for whoever remembers.",
       exits=[exit_((0, 396, 96, 112), "ch1_study_corridor", (980, 466), SLIDE),
              exit_((1080, 396, 104, 112), "ch1_exit", (170, 466), SLIDE, "study_lock_open")],
       lights=[light("candle", (300, 252), 300, 0.85), light("candle", (960, 120), 240, 0.7)],
       items=[item(id="alcove_memory", kind="memory", position=(715, 190), size=(130, 80),
-                  requires_flag="cabinet_pushed", symbols=LOCK_SYMBOLS),
+                  requires_flag="cabinet_pushed", symbols=LOCK_SYMBOLS, sets_flag="study_lock_open"),
              item(id="study_cabinet", kind="pushable", position=(695, 110), size=(170, 272),
                   accepted_ability_ids=["push"], sets_flag="cabinet_pushed", push_offset=(-190, 0),
                   prompt="A heavy cabinet. Far too heavy to move by hand."),
-             item(id="study_lock", kind="symbol_lock", position=(1010, 120), size=(130, 262),
-                  sets_flag="study_lock_open", symbols=LOCK_SYMBOLS)])
+             item(id="study_lock", kind="secret_door", position=(1010, 120), size=(130, 262),
+                  requires_flag="study_lock_open", sets_flag="study_door_carved")])
 
 frame("ch1_exit", "The Back Stair", "exit_room", 0.08, (170, 466),
       ["Something lies on the table."],

@@ -445,7 +445,8 @@ Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 bedchamber (locked drawer holding HUSH, the Crawler's silhouette at the window,
 Arthur far away) → landing (Arthur: **OPEN, PUSH**, WAIT, HELP; study door
 needs OPEN) → study corridor (portrait gives **REMEMBER**; the ink-hand moment)
-→ study (PUSH the cabinet, REMEMBER shows **eye, moon, key**, dial lock) →
+→ study (PUSH the cabinet; REMEMBER shows **eye, moon, key** and its
+`sets_flag` opens the carved `secret_door`: the dial lock was cut in 4C) →
 back stair (flashlight pickup sets `has_flashlight`) → `ch1_end` hands off to
 Chapter 2.
 
@@ -479,7 +480,8 @@ optional.
 
 **Stage 4C timing** (estimates for a first-time player, not measured): before
 the cuts ≈16:40; with the new content (≈50 s cutscenes, +13 s reveal, the
-spread, light puzzles, longer intro/ending) and the cuts ≈16:30-17:00. The
+spread, light puzzles, longer intro/ending) and the cuts ≈15:45 (after the
+Ch1 study dial lock was also cut, with the user's OK). The
 cuts: Ch1 intro captions dropped, Ch2/Ch3 chapter lines shortened, Torn Page
 removed (its pleading is in the spread), the Gallery's third dial lock
 replaced by the spread, the return phase batched into one room (no Torn
@@ -488,10 +490,11 @@ by the shadow puzzle.
 
 ## 8. Open issues and next steps
 
-1. Stage 4C is complete; nothing is stubbed. Runtime lands at ~16.5-17
-   min (estimate), a little over the 15-minute target: further cuts would
-   remove a puzzle or story beat, so they need the user's say (candidates: the
-   Ch1 study dial lock, the Bedchamber drawer detour, the Margin chase).
+1. Stage 4C is complete; nothing is stubbed. Runtime ≈15:45 (estimate) after
+   cutting the Ch1 study dial lock (memories with `sets_flag` now emit
+   `interactable_resolved`, so secret doors open on REMEMBER). Further cuts
+   would remove a beat and need the user's say (Bedchamber drawer detour,
+   Margin chase length). The symbol-lock UI is now unused but kept.
    Tuning knobs: the hand (`data/hand/hand_pressure.tres`), the Heart's
    listen cycle (`heart_shadow.gd`), the reveal timeline (`reveal_sequence.gd`
    consts), cutscenes (`gen_cutscenes.py`), light hold times (`light_hold` in
