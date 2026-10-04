@@ -12,7 +12,7 @@ const HEART_PANEL: Rect2 = Rect2(60, 1282, 1280, 571)
 const SMUDGE: Color = Color(0.62, 0.6, 0.58)
 ## Who each owner is in the "cost" shot, and which frame holds their lines.
 const OWNERS: PackedStringArray = ["arthur", "mrs_vane", "portrait_lady"]
-const OWNER_FRAMES: PackedStringArray = ["ch3_returning_room", "ch3_torn_return", "ch3_torn_return"]
+const OWNER_FRAMES: PackedStringArray = ["ch3_returning_room", "ch3_returning_room", "ch3_returning_room"]
 
 static var _current: Transform2D = Transform2D.IDENTITY
 

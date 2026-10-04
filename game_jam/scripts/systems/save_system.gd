@@ -2,11 +2,12 @@ class_name SaveSystem
 extends RefCounted
 ## One save slot in user:// (IndexedDB on the web). Every call fails soft:
 ## a missing or broken file just means "no save".
-## Version 2 (Stage 4B) adds twist_revealed and reorders Chapter 3; older
-## saves are migrated by migrate().
+## Version 2 (Stage 4B) adds twist_revealed and reorders Chapter 3. Version 3
+## (Stage 4C) cuts and merges rooms and adds seen cutscenes; older saves are
+## migrated by migrate().
 
 const SAVE_PATH: String = "user://ink_bleed_save.json"
-const VERSION: int = 2
+const VERSION: int = 3
 ## Survives new games: things the player has already seen (the reveal can be
 ## skipped on later viewings) and whether they finished the game.
 const PROGRESS_PATH: String = "user://progress.cfg"
@@ -46,6 +47,8 @@ static func migrate(data: Dictionary) -> Dictionary:
 	var version: int = int(data.get("version", 0))
 	if version == VERSION:
 		return data
+	if version == 2:
+		return _migrate_v2(data)
 	if version != 1:
 		return {}
 	# Version 1 (Stage 4A) let words be given back before the reveal, and its
@@ -61,6 +64,18 @@ static func migrate(data: Dictionary) -> Dictionary:
 		migrated["chapter_start"] = (start as Dictionary).duplicate(true)
 	migrated["twist_revealed"] = false
 	migrated["returned_ids"] = []
+	migrated["version"] = 2
+	return _migrate_v2(migrated)
+
+
+## Version 2 -> 3 (Stage 4C). The Torn Page, the Torn Page revisit and the
+## Gallery revisit were cut (rooms that no longer exist fall back safely in
+## StateSnapshot.apply), and cutscenes now remember being seen. Nothing else
+## changed shape, so the save carries over as it is.
+static func _migrate_v2(data: Dictionary) -> Dictionary:
+	var migrated: Dictionary = data.duplicate(true)
+	if not migrated.has("seen"):
+		migrated["seen"] = []
 	migrated["version"] = VERSION
 	return migrated
 

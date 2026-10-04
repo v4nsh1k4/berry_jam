@@ -32,3 +32,11 @@ extends Resource
 @export_multiline var caption: String = ""
 ## A bubble found inside when this is opened (e.g. a word in a drawer).
 @export var reward_bubble: BubbleData
+
+## Light puzzles (LightPuzzle): seconds the cone must stay on it (light_ink,
+## lens, shadow_puzzle). light_ink `text` picks the look: door, pool, growth
+## (growth creeps back in the dark).
+@export var light_hold: float = 1.5
+## shadow_puzzle: where the player must stand (panel coords) for the object's
+## shadow to fall into the shape on the wall.
+@export var stand_spot: Rect2 = Rect2()

@@ -10,9 +10,9 @@ extends Node2D
 
 const PUSH_TIME: float = 0.4
 ## Kinds that react to E without a word.
-const PLAIN_KINDS: Array[StringName] = [&"inspect", &"pickup", &"symbol_lock", &"hiding_spot"]
+const PLAIN_KINDS: Array[StringName] = [&"inspect", &"pickup", &"symbol_lock", &"hiding_spot", &"lever"]
 ## Kinds that are never a target for E.
-const PASSIVE_KINDS: Array[StringName] = [&"memory", &"writing", &"clock", &"secret_door"]
+const PASSIVE_KINDS: Array[StringName] = [&"memory", &"writing", &"clock", &"secret_door", &"light_ink", &"lens", &"shadow_puzzle"]
 ## Seconds of light the clock needs before its face counts as read.
 const CLOCK_READ_TIME: float = 1.0
 
@@ -92,6 +92,8 @@ func get_prompt(bubble: BubbleData) -> String:
 			return "E: take"
 		&"symbol_lock":
 			return "E: try the dials"
+		&"lever":
+			return "E: pull"
 	if data.requires_flag != &"" and not GameState.has_flag(data.requires_flag) and data.prompt != "":
 		return data.prompt
 	if bubble == null:
@@ -104,7 +106,7 @@ func interact_plain() -> void:
 	match data.kind:
 		&"inspect":
 			EventBus.caption_requested.emit(data.caption, 3.5)
-		&"pickup":
+		&"pickup", &"lever":
 			resolve()
 			if data.caption != "":
 				EventBus.caption_requested.emit(data.caption, 4.0)
@@ -183,7 +185,7 @@ func _update_reveal(delta: float) -> void:
 		_lit_time += delta
 		if _lit_time >= CLOCK_READ_TIME:
 			resolve()
-			EventBus.caption_requested.emit("Three marks on the clock face. Remember them.", 4.0)
+			EventBus.caption_requested.emit(data.caption if data.caption != "" else "Three marks on the clock face. Remember them.", 4.0)
 	_update_group()
 
 
@@ -191,7 +193,9 @@ func _draw() -> void:
 	if data == null:
 		return
 	draw_set_transform(Vector2(_wiggle, 0))
-	if InteractableArt2.handles(data.kind):
+	if LightPuzzleArt.handles(data.kind):
+		LightPuzzleArt.draw(self, _tick)
+	elif InteractableArt2.handles(data.kind):
 		InteractableArt2.draw(self, _tick)
 	else:
 		InteractableArt.draw(self, _tick)

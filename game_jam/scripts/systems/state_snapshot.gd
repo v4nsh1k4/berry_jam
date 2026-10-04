@@ -22,6 +22,7 @@ static func build(gs: Node) -> Dictionary:
 		"flags": flag_names,
 		"stolen_ids": _strings(gs.stolen_bubble_ids),
 		"returned_ids": _strings(gs.returned_bubble_ids),
+		"seen": _strings(gs.seen),
 		"stolen_count": gs.stolen_bubble_count,
 		"damage": gs.comic_damage,
 		"twist_revealed": gs.twist_revealed,
@@ -49,6 +50,8 @@ static func apply(gs: Node, snapshot: Dictionary) -> void:
 				break
 	for id in snapshot.get("returned_ids", []):
 		gs.returned_bubble_ids.append(StringName(id))
+	for id in snapshot.get("seen", []):
+		gs.seen.append(StringName(id))
 	gs.stolen_bubble_count = int(snapshot.get("stolen_count", gs.inventory.size()))
 	gs.comic_damage = float(snapshot.get("damage", 0.0))
 	gs.twist_revealed = bool(snapshot.get("twist_revealed", false))
@@ -60,9 +63,13 @@ static func apply(gs: Node, snapshot: Dictionary) -> void:
 	gs.selected_index = int(snapshot.get("selected", -1))
 	gs.current_frame_id = StringName(snapshot["frame"])
 	# A frame that no longer exists (renamed or cut) falls back to the start
-	# of its chapter instead of leaving the player on a blank page.
+	# of its chapter, or of the return phase if the twist is already known,
+	# instead of leaving the player on a blank page.
 	if not ResourceLoader.exists(FRAME_PATH % gs.current_frame_id) and gs.current_chapter != null:
-		gs.current_frame_id = gs.current_chapter.first_frame_id
+		var back: StringName = gs.current_chapter.first_frame_id
+		if gs.twist_revealed and gs.current_chapter.return_frame_id != &"":
+			back = gs.current_chapter.return_frame_id
+		gs.current_frame_id = back
 
 
 ## Loads a saved word; if its file moved, tries data/bubbles/<id>.tres

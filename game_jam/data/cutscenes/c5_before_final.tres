@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CutsceneData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cutscene_data.gd" id="1_cutscene_data"]
+[ext_resource type="Script" path="res://scripts/data/cutscene_beat.gd" id="2_cutscene_beat"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_cutscene_beat")
+duration = 2.8
+panels = Array[Rect2]([Rect2(0, 0, 0.5, 1), Rect2(0.5, 0, 0.5, 1)])
+draws = PackedStringArray("sketch_through", "torn_panels")
+caption = "The Heart. Every line in the book runs here."
+camera = &"zoom_in"
+sfx = &"heartbeat"
+page_turn = false
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_cutscene_beat")
+duration = 3.4
+panels = Array[Rect2]([Rect2(0, 0, 0.62, 1), Rect2(0.62, 0, 0.38, 1)])
+draws = PackedStringArray("shadow_hang", "eraser_dust")
+caption = "Something huge holds the last word."
+camera = &"pan_left"
+sfx = &"nib"
+page_turn = true
+
+[resource]
+script = ExtResource("1_cutscene_data")
+id = &"c5_before_final"
+trigger = "frame:ch3_ink_heart"
+skippable = true
+music_cue = &"sting_heart"
+beats = Array[ExtResource("2_cutscene_beat")]([SubResource("Resource_1"), SubResource("Resource_2")])

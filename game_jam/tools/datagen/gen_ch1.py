@@ -91,6 +91,4 @@ frame("ch1_end", "The Hallway", "hallway", 0.12, (170, 466), ["The hallway goes 
 write("data/chapters/ch1.tres", "chapter_data", dict(
     id=SN("ch1"), title="Chapter 1: The Rotted Bedchamber", first_frame_id=SN("ch1_awakening"),
     damage_visual_scale=1.0, line_jitter=1.0,
-    intro_lines=PSA(["The Silent House of Hollow Hill.  Issue #1.",
-                     "Everyone in this house was drawn with something to say.",
-                     "Everyone... except you."])))
+    intro_lines=PSA([])))

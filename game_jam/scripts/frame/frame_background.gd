@@ -33,6 +33,8 @@ func _draw() -> void:
 
 
 func _draw_style() -> void:
+	if style == &"spread":
+		return
 	draw_room(self, _tick)
 	match style:
 		&"awakening":

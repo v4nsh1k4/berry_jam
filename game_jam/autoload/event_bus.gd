@@ -134,3 +134,18 @@ signal epilogue_finished
 ## The player walked out of the page: the save is cleared.
 @warning_ignore("unused_signal")
 signal game_completed
+
+# Cutscenes, music, goals (Stage 4C)
+@warning_ignore("unused_signal")
+signal cutscene_started(cutscene_id: StringName)
+@warning_ignore("unused_signal")
+signal cutscene_finished(cutscene_id: StringName)
+## Ask the music to play a track or stinger (MusicManager ids).
+@warning_ignore("unused_signal")
+signal music_cue(cue: StringName)
+## The persistent goal line in the HUD ("" hides it).
+@warning_ignore("unused_signal")
+signal goal_changed(text: String)
+## A scare fired; intensity 0..1 scales its shake and flash (accessibility).
+@warning_ignore("unused_signal")
+signal scare(kind: StringName, intensity: float)

@@ -20,6 +20,11 @@ var _notice: float = 0.0
 var _near: float = 0.0
 var _beat_left: float = 0.0
 var _skitter_left: float = 0.0
+var _whisper_left: float = 3.0
+var _pending: Dictionary = {}
+# A held breath before a lunge: after the growl, everything drops out.
+var _hush_in: float = -1.0
+var _hush: float = 0.0
 
 
 func _ready() -> void:
@@ -34,7 +39,7 @@ func _ready() -> void:
 	EventBus.player_caught.connect(play.bind(&"splat", -6.0))
 	EventBus.notice_changed.connect(_on_notice_changed)
 	EventBus.crawler_proximity.connect(_on_crawler_proximity)
-	EventBus.crawler_telegraph.connect(play.bind(&"growl", -4.0, 0.05))
+	EventBus.crawler_telegraph.connect(_on_telegraph)
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.bubble_returned.connect(_on_bubble_returned)
 	EventBus.hiding_spot_erased.connect(play.bind(&"scribble", -6.0, 0.1).unbind(1))
@@ -52,6 +57,11 @@ func start() -> void:
 		&"splat": SfxSynth.splat(), &"heartbeat": SfxSynth.heartbeat(), &"skitter": SfxSynth.skitter(),
 		&"growl": SfxSynth.growl(), &"scribble": SfxSynth.scribble(), &"rub": SfxSynth.rub(),
 		&"slam": SfxSynth.slam(),
+	}
+	# Later sounds are built one per frame so the first click doesn't stall.
+	_pending = {
+		&"swoosh": SfxSynth2.swoosh, &"nib": SfxSynth2.nib, &"whisper": SfxSynth2.whisper,
+		&"sting": SfxSynth2.sting, &"scare_hit": SfxSynth2.scare_hit,
 	}
 	for i in VOICES:
 		var voice: AudioStreamPlayer = AudioStreamPlayer.new()
@@ -78,6 +88,13 @@ func _on_crawler_proximity(amount: float, moving: bool) -> void:
 	if moving and amount > 0.05 and _skitter_left <= 0.0:
 		_skitter_left = 0.25
 		play(&"skitter", lerpf(-24.0, -8.0, amount), 0.2)
+		if randf() < 0.3:
+			play(&"nib", lerpf(-26.0, -12.0, amount), 0.15)
+
+
+func _on_telegraph() -> void:
+	play(&"growl", -4.0, 0.05)
+	_hush_in = 0.3
 
 
 func _on_frame_changed(_data: FrameData) -> void:
@@ -88,7 +105,25 @@ func _on_frame_changed(_data: FrameData) -> void:
 func _process(delta: float) -> void:
 	if not _started:
 		return
+	if not _pending.is_empty():
+		var id: StringName = _pending.keys()[0]
+		_streams[id] = (_pending[id] as Callable).call()
+		_pending.erase(id)
 	_skitter_left -= delta
+	if _hush_in > 0.0:
+		_hush_in -= delta
+		if _hush_in <= 0.0:
+			_hush = 0.4
+	if _hush > 0.0:
+		_hush -= delta
+		_rumble.volume_db = -60.0
+		_drone.volume_db = -60.0
+		return
+	_drone.volume_db = move_toward(_drone.volume_db, -20.0, delta * 60.0)
+	_whisper_left -= delta
+	if _near > 0.5 and _whisper_left <= 0.0:
+		_whisper_left = randf_range(3.5, 6.5)
+		play(&"whisper", lerpf(-20.0, -9.0, _near), 0.12)
 	_rumble.volume_db = lerpf(_rumble.volume_db, linear_to_db(maxf(_near * 0.9, 0.0001)), minf(delta * 4.0, 1.0))
 	var dread: float = maxf(_notice, _near)
 	_beat_left -= delta
@@ -177,6 +212,7 @@ func _load_settings() -> void:
 
 func _save_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
+	config.load(SETTINGS_PATH)
 	config.set_value("audio", "master_volume", master_volume)
 	config.set_value("audio", "muted", muted)
 	config.save(SETTINGS_PATH)

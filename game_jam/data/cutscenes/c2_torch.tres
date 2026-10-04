@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CutsceneData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cutscene_data.gd" id="1_cutscene_data"]
+[ext_resource type="Script" path="res://scripts/data/cutscene_beat.gd" id="2_cutscene_beat"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_cutscene_beat")
+duration = 2.8
+panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
+draws = PackedStringArray("torch")
+caption = "Light. The house shows what it hides..."
+camera = &"zoom_in"
+sfx = &"click"
+page_turn = false
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_cutscene_beat")
+duration = 3.0
+panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
+draws = PackedStringArray("pen_shadow")
+caption = "...and it shows you to whatever is watching."
+camera = &"pan_right"
+sfx = &"whisper"
+page_turn = true
+
+[resource]
+script = ExtResource("1_cutscene_data")
+id = &"c2_torch"
+trigger = "resolved:flashlight"
+skippable = true
+music_cue = &"sting_soft"
+beats = Array[ExtResource("2_cutscene_beat")]([SubResource("Resource_1"), SubResource("Resource_2")])

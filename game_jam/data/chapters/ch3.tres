@@ -6,9 +6,9 @@
 script = ExtResource("1_chapter_data")
 id = &"ch3"
 title = "Chapter 3: The Ink Heart"
-first_frame_id = &"ch3_torn_page"
+first_frame_id = &"ch3_gallery_words"
 damage_visual_scale = 1.6
 line_jitter = 1.6
 allows_return = true
 return_frame_id = &"ch3_returning_room"
-intro_lines = PackedStringArray("Issue #3.", "The ink is running. The panels won't hold.", "Everyone you took from is still here. Waiting.")
+intro_lines = PackedStringArray("Issue #3. The panels won't hold.")

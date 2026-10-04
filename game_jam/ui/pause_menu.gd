@@ -5,6 +5,8 @@ extends Control
 var _mute_button: Button
 var _resume_button: Button
 var _volume: HSlider
+var _music_button: Button
+var _music: HSlider
 
 
 func _ready() -> void:
@@ -38,6 +40,15 @@ func _ready() -> void:
 	_volume.custom_minimum_size = Vector2(320, 28)
 	_volume.value_changed.connect(_on_volume_changed)
 	box.add_child(_volume)
+	_music_button = UiTheme.make_button("", _on_music_mute)
+	box.add_child(_music_button)
+	_music = HSlider.new()
+	_music.min_value = 0.0
+	_music.max_value = 1.0
+	_music.step = 0.05
+	_music.custom_minimum_size = Vector2(320, 28)
+	_music.value_changed.connect(MusicManager.set_music_volume)
+	box.add_child(_music)
 	box.add_child(UiTheme.make_button("Quit to Menu", _on_quit))
 	hide()
 
@@ -56,6 +67,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_volume.set_value_no_signal(AudioManager.master_volume)
+	_music.set_value_no_signal(MusicManager.music_volume)
 	_refresh_mute()
 	show()
 	get_tree().paused = true
@@ -69,6 +81,12 @@ func close() -> void:
 
 func _refresh_mute() -> void:
 	_mute_button.text = "Sound: Off" if AudioManager.muted else "Sound: On"
+	_music_button.text = "Music: Off" if MusicManager.music_muted else "Music: On"
+
+
+func _on_music_mute() -> void:
+	MusicManager.set_music_muted(not MusicManager.music_muted)
+	_refresh_mute()
 
 
 func _on_mute() -> void:

@@ -16,6 +16,12 @@ var controls_enabled: bool = false
 var walk_area: Rect2 = Rect2()
 var facing: float = 1.0
 var running: bool = false
+## Height of a jump (drawing only; the feet stay on the floor line). Spread
+## pages set it (SpreadController).
+var lift: float = 0.0:
+	set(value):
+		lift = value
+		queue_redraw()
 
 var _hiding: bool = false
 var _hiding_spot: StringName = &""
@@ -146,6 +152,7 @@ func _draw() -> void:
 	var swing: float = sin(_walk_phase) * (14.0 if running else 11.0) if _moving else 0.0
 	var bob: float = absf(sin(_walk_phase)) * -2.0 if _moving else 0.0
 	var hip: Vector2 = Vector2(0, -42 + bob)
+	draw_set_transform(Vector2(0, -lift))
 
 	# Legs.
 	InkDraw.polyline(self, PackedVector2Array([hip, Vector2(-4 + swing, -20), Vector2(-6 + swing, 0), Vector2(-6 + swing + 9 * f, 0)]), 4.0, s + 1, false, red)

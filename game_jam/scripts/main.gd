@@ -18,6 +18,8 @@ const CHAPTER_HANDOFF: float = 1.5
 @onready var _cinematic: Control = $MenuLayer/IntroCinematic
 
 ## Chapter whose intro is playing; it starts when the intro ends.
+## Debug builds: which cutscene F6 plays next.
+var _debug_cutscene: int = -1
 var _pending: ChapterData
 
 
@@ -108,6 +110,8 @@ func _begin(frame_id: StringName) -> void:
 ## stay, anything taken in this chapter goes back.
 func _on_restart_chapter() -> void:
 	var start: Dictionary = GameState.chapter_start
+	# Cutscenes already watched stay watched: restarting never replays them.
+	var seen: Array[StringName] = GameState.seen.duplicate()
 	var current: ChapterData = GameState.current_chapter if GameState.current_chapter != null else chapter
 	var frame_id: StringName = current.first_frame_id
 	if start.is_empty() or not GameState.from_dict(start):
@@ -117,6 +121,7 @@ func _on_restart_chapter() -> void:
 		frame_id = GameState.current_frame_id
 	GameState.current_chapter = current
 	GameState.chapter_start = start
+	GameState.seen = seen
 	GameState.is_playing = true
 	_apply_chapter_look()
 	FrameManager.go_to(frame_id, Vector2.INF, ExitData.TransitionStyle.INK_SPLASH)
@@ -143,6 +148,9 @@ func _on_frame_changed(data: FrameData) -> void:
 func _hand_off(next: ChapterData) -> void:
 	_player.controls_enabled = false
 	await get_tree().create_timer(CHAPTER_HANDOFF).timeout
+	# A chapter-end cutscene plays first; the next intro waits for it.
+	while CutsceneSystem.is_playing:
+		await EventBus.cutscene_finished
 	if GameState.is_playing:
 		_player.controls_enabled = true
 		_play_intro(next)
@@ -170,17 +178,38 @@ func _on_game_completed() -> void:
 	SaveSystem.set_progress("completed")
 
 
-## Debug builds: F9 jumps to the next Chapter 3 room with the words (and the
-## twist state) a player would have there. See DebugJump.
+## Debug builds only (see DebugJump):
+##   F6  play the next cutscene (C1..C6, even if seen)
+##   F7  the Clock Room jumpscare (jumps there first)
+##   F8  the reveal (jumps to the Ink Heart and takes ERASE)
+##   F9  the next Chapter 3 room, with the words a player would have there
+##   F10 the page spread (Gallery of Words)
 func _unhandled_key_input(event: InputEvent) -> void:
 	var key: InputEventKey = event as InputEventKey
-	if not OS.is_debug_build() or key == null or not key.pressed or key.echo or key.keycode != KEY_F9:
+	if not OS.is_debug_build() or key == null or not key.pressed or key.echo:
 		return
-	if not GameState.is_playing or TransitionManager.is_playing:
+	if not GameState.is_playing or TransitionManager.is_playing or CutsceneSystem.is_playing:
 		return
-	var next: String = DebugJump.next_room(String(GameState.current_frame_id))
-	if _debug_jump(next):
-		EventBus.caption_requested.emit("DEBUG: %s" % next, 2.0)
+	match key.keycode:
+		KEY_F6:
+			var ids: PackedStringArray = CutsceneSystem.ids()
+			ids.sort()
+			_debug_cutscene = (_debug_cutscene + 1) % ids.size()
+			CutsceneSystem.play_id(StringName(ids[_debug_cutscene]))
+		KEY_F7:
+			if _debug_jump("ch2_clock_room"):
+				await get_tree().create_timer(1.5).timeout
+				$FXLayer/JumpscareOverlay.play(&"scare_clock")
+		KEY_F8:
+			if _debug_jump("ch3_ink_heart"):
+				await get_tree().create_timer(1.5).timeout
+				GameState.add_bubble(load("res://data/bubbles/hand_erase.tres"))
+		KEY_F9:
+			var next: String = DebugJump.next_room(String(GameState.current_frame_id))
+			if _debug_jump(next):
+				EventBus.caption_requested.emit("DEBUG: %s" % next, 2.0)
+		KEY_F10:
+			_debug_jump("ch3_gallery_words")
 
 
 func _debug_jump(frame_id: String) -> bool:

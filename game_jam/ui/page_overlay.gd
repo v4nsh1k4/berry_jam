@@ -12,6 +12,10 @@ const MAX_CRACKS: int = 7
 
 var _title: String = ""
 var _captions: PackedStringArray = PackedStringArray()
+## Spread pages fill the whole panel: their captions teach, then get out of
+## the way after this many seconds.
+const SPREAD_CAPTION_TIME: float = 9.0
+var _captions_left: float = -1.0
 var _toast: String = ""
 var _toast_left: float = 0.0
 var _damage: float = 0.0
@@ -41,6 +45,7 @@ func _on_frame_changed(data: FrameData) -> void:
 	_gap = 1.0 if _gap_frame and GameState.has_flag(&"comic_repaired") else 0.0
 	_title = data.display_name.to_upper()
 	_captions = data.captions
+	_captions_left = SPREAD_CAPTION_TIME if data.spread != null else -1.0
 	_toast = ""
 	_toast_left = 0.0
 	show()
@@ -71,6 +76,11 @@ func _on_damage_changed(_value: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if _captions_left > 0.0:
+		_captions_left -= delta
+		if _captions_left <= 0.0:
+			_captions = PackedStringArray()
+			queue_redraw()
 	if _toast_left > 0.0:
 		_toast_left -= delta
 		if _toast_left <= 0.0:

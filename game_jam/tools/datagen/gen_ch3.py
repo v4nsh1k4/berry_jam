@@ -57,38 +57,49 @@ def paint(pid, oid, x, name, flag=""):
 
 # ---- Before the reveal -------------------------------------------------------
 
-# 1. The Torn Page: everyone missing exactly what was taken. Nothing can be mended yet.
-frame("ch3_torn_page", "The Torn Page", "torn_page", 0.14, (150, 466),
-      ["The page is tearing. Everyone here is missing something.", "They are missing what you took."],
-      "Nothing here can be mended yet. The way on is to the right.",
-      exits=[exit_(GO, "ch3_gallery_words", (170, 466), SLIDE)],
-      lights=[light("glow", (470, 260), 300, 0.5), light("glow", (1000, 200), 220, 0.4)],
-      npcs=[owner(**VANE), owner(**LADY), ARTHUR_FAR],
-      glitch=0.35, tilt=-1.2, sketch=0.1)
-
-# 2. The Gallery of Words: the damage on show (ghost bubbles over the
-# portraits), and a puzzle for the words every player has: PUSH, REMEMBER,
-# the dial box, OPEN. The flashlight finds the hint.
-GALLERY_SYMBOLS = ["nib", "eye", "hand"]
-frame("ch3_gallery_words", "The Gallery of Words", "gallery_words", 0.12, (170, 466),
-      ["Three portraits, and ghost bubbles where their words should be. Yours now.", "The way on is sealed."],
-      "PUSH the fallen frame, say REMEMBER at the wall behind it, set the dial box to those marks, then say OPEN at the door.",
-      exits=[exit_(BACK, "ch3_torn_page", (980, 466), SLIDE), exit_(GO, "ch3_margin", (320, 466), SLIDE, "gallery_open")],
-      lights=[light("glow", (195, 360), 200, 0.35), light("glow", (595, 360), 200, 0.35), light("glow", (935, 360), 200, 0.35)],
-      items=[paint("paint_arthur", "arthur", 115, "Arthur"), paint("paint_vane", "mrs_vane", 515, "Mrs. Vane"),
-             paint("paint_lady", "portrait_lady", 855, "The Lady"),
-             item(id="gallery_memory", kind="memory", position=(300, 220), size=(190, 110), symbols=GALLERY_SYMBOLS,
-                  requires_flag="gallery_frame_moved"),
-             item(id="gallery_fallen", kind="pushable", position=(310, 252), size=(170, 130), accepted_ability_ids=["push"],
-                  sets_flag="gallery_frame_moved", push_offset=(-190, 0), prompt="A fallen frame, far too heavy to lift."),
-             item(id="gallery_writing", kind="writing", position=(560, 20), size=(440, 90), revealed_by_light=True,
-                  text="what fell hides what it saw\nmove it. REMEMBER."),
-             item(id="gallery_dials", kind="symbol_lock", position=(705, 262), size=(120, 70), text="panel",
-                  symbols=GALLERY_SYMBOLS, sets_flag="gallery_dials"),
-             item(id="gallery_door", kind="door", position=(1066, 150), size=(96, 232), accepted_ability_ids=["open"],
-                  requires_flag="gallery_dials", sets_flag="gallery_open",
-                  prompt="Sealed. The dial box beside the portraits isn't set.")],
-      glitch=0.5, tilt=1.5, sketch=0.25)
+# 2. The Gallery of Words: a whole comic page of four small panels the
+# player hops between (PageSpreadData). Solution: A (Vane and the Portrait
+# plead) -> B (dark: light the lens; it throws light down into C and shows a
+# lever there) -> drop to C (A's floor tear) -> cross C's gutter tear (jump,
+# the torchlit pencil plank, or PUSH A's crate down into it) -> pull the lever
+# -> D: say OPEN at the door. Or clear B's ink pool with light and drop into D.
+# Minimum words: OPEN. Light puzzles: the lens, the pool, the plank.
+SPREAD = page_spread(
+    [spread_panel("A", (16, 12, 568, 248), 200, (60, 200), "gallery", 0.75, -1.2, gap=(300, 372)),
+     spread_panel("B", (604, 8, 564, 256), 206, (650, 206), "dark_room", 0.0, 1.0),
+     spread_panel("C", (16, 282, 548, 234), 456, (60, 456), "torn", 0.5, 0.8, gap=(290, 390), bridge="spread_crate",
+                  lit_bridge=True),
+     spread_panel("D", (584, 286, 584, 230), 458, (640, 458), "door_room", 0.6, -0.8)],
+    [hop("A", "right", "B", (650, 206)), hop("B", "left", "A", (535, 200)),
+     hop("A", "fall", "C", (230, 456), zone=(300, 372)),
+     hop("C", "jump", "A", (110, 200), zone=(30, 120)),
+     hop("C", "right", "D", (640, 458)), hop("D", "left", "C", (520, 456)),
+     hop("B", "fall", "D", (1040, 458), zone=(990, 1100), flag="spread_pool"),
+     hop("D", "jump", "B", (1040, 206), zone=(990, 1110))])
+frame("ch3_gallery_words", "The Gallery of Words", "spread", 0.03, (60, 200),
+      ["The page has come apart into panels. Walk off an edge to cross the gutter.",
+       "Space: jump. The white between the panels is nothing at all."],
+      "Light the glass in the dark panel. Drop through the tear, cross the gutter (jump, or light the pencil plank), "
+      "pull the lever, then say OPEN at the last door.",
+      exits=[exit_((1050, 390, 110, 90), "ch3_margin", (320, 466), SLIDE, "spread_door")],
+      items=[item(id="spread_crate", kind="pushable", position=(420, 120), size=(80, 80), accepted_ability_ids=["push"],
+                  sets_flag="spread_crate", push_offset=(-125, 320), prompt="A crate, right by the tear."),
+             item(id="spread_lens", kind="lens", position=(690, 24), size=(70, 90), light_hold=1.2, sets_flag="spread_lens",
+                  push_offset=(-230, 310), caption="The glass throws the light down through the gutter."),
+             item(id="spread_hint", kind="writing", position=(800, 40), size=(320, 70), revealed_by_light=True,
+                  text="LIGHT THE GLASS"),
+             item(id="spread_pool", kind="light_ink", text="pool", position=(985, 174), size=(120, 46), light_hold=1.6,
+                  sets_flag="spread_pool", caption="The ink shrinks from a hole in the floor."),
+             item(id="spread_arrow", kind="lit_writing", position=(330, 296), size=(140, 50), requires_flag="spread_lens",
+                  text="PULL"),
+             item(id="spread_lever", kind="lever", position=(470, 340), size=(50, 90), requires_flag="spread_lens",
+                  sets_flag="spread_lever", caption="Far off, in the last panel, a bolt slides back."),
+             item(id="spread_door", kind="door", position=(1046, 270), size=(90, 188), accepted_ability_ids=["open"],
+                  requires_flag="spread_lever", sets_flag="spread_door",
+                  prompt="Bolted from somewhere else. Then it will need a word.")],
+      npcs=[owner(**dict(VANE, pos=(130, 200), show_bubbles=False, scale=0.8)),
+            owner(**dict(LADY, pos=(250, 130), show_bubbles=False, scale=0.6))],
+      glitch=0.2, sketch=0.15, spread=SPREAD, walk=(0, 0, 1184, 528))
 
 # 3. The Margin: the Ink Shadow's chase.
 frame("ch3_margin", "The Margin", "margin", 0.12, (320, 466),
@@ -103,53 +114,34 @@ frame("ch3_margin", "The Margin", "margin", 0.12, (320, 466),
 
 # 4. The Ink Heart: the Shadow's lair. It guards the last word and listens.
 frame("ch3_ink_heart", "The Ink Heart", "ink_heart", 0.1, (160, 466),
-      ["The Ink Heart. It is holding one last word.", "When its eyes go white, it is listening. Be still."],
+      ["The Ink Heart. It is holding one last word.", "When its eyes go white, it is listening. Be still.",
+       "The ink drinks the light here. Your torch is useless."],
       "Move only while it isn't listening; hide or stand still when its eyes go white. Stand under the word and hold E. "
       "HUSH, WAIT and HIDE make it easier.",
       lights=[light("glow", (860, 170), 170, 0.55), light("glow", (200, 300), 220, 0.3)],
       items=[item(id="heart_curtain", kind="hiding_spot", position=(360, 110), size=(110, 272), text="curtain"),
              item(id="heart_table", kind="hiding_spot", position=(650, 300), size=(130, 82), text="table")],
       npcs=[the_hand("The Shadow")],
-      crawler=(1010, 492), patrol=True, crawler_kind="heart", glitch=0.9, tilt=-3.0, sketch=0.55)
+      crawler=(1010, 492), patrol=True, crawler_kind="heart", glitch=0.9, tilt=-3.0, sketch=0.55, light_disabled=True)
 
 # ---- After the reveal: the return phase ---------------------------------------
 
-# 5. The Returning Room: first room after the reveal. Arthur and the drawer.
+# 5. The Returning Room: everyone you robbed waits here together (the returns
+# are batched into one room). Any of an owner's broken bubbles takes their
+# word back. The way to the Heart opens when every ordinary word is home.
 frame("ch3_returning_room", "The Returning Room", "returning_room", 0.2, (170, 466),
       ["Now you know what you are. Give back what you took.",
-       "Select a word (1-6, Q / R), stand under its owner's broken bubble, hold E."],
-      "Give Arthur his words, and the drawer its HUSH. When the eraser's shadow falls on the floor, step out of it or hide.",
-      exits=[exit_(GO, "ch3_torn_return", (170, 466), SLIDE)],
-      lights=[light("candle", (380, 288), 320, 0.85), light("glow", (255, 175), 240, 0.4)],
-      items=[item(id="ch3_drawer", kind="return_spot", position=(930, 300), size=(110, 82), owner_id="drawer",
+       "Select a word (1-6, Q / R), stand under one of its owner's broken bubbles, hold E."],
+      "Give each word to its owner: Arthur, Mrs. Vane, the Portrait, the old drawer. When the eraser's shadow falls, step out of it or hide.",
+      exits=[exit_(GO, "ch3_heart_return", (160, 466), SPLASH, "all_returned")],
+      lights=[light("candle", (600, 288), 320, 0.85), light("glow", (210, 175), 240, 0.4), light("glow", (900, 230), 240, 0.4)],
+      items=[item(id="ch3_drawer", kind="return_spot", position=(995, 300), size=(110, 82), owner_id="drawer",
                   text="drawer", sets_flag="whole_drawer", caption="the old drawer"),
-             item(id="returning_curtain", kind="hiding_spot", position=(30, 110), size=(100, 272), text="curtain")],
-      npcs=[owner(**ARTHUR)], events=[HAND], glitch=0.6, tilt=0.6, sketch=0.15)
-
-# 6. The Torn Page again: Mrs. Vane and the Portrait.
-frame("ch3_torn_return", "The Torn Page", "torn_page", 0.16, (170, 466),
-      ["The torn page. They are still waiting.", "Give each word back to the one you took it from."],
-      "Give Mrs. Vane her words, and the Portrait hers. The hand grows weaker with every word you give back.",
-      exits=[exit_(BACK, "ch3_returning_room", (980, 466), SLIDE), exit_(GO, "ch3_gallery_return", (170, 466), SLIDE)],
-      lights=[light("glow", (470, 260), 300, 0.5), light("glow", (1000, 200), 220, 0.4)],
-      items=[item(id="torn_curtain", kind="hiding_spot", position=(920, 110), size=(100, 272), text="curtain")],
-      npcs=[owner(**VANE), owner(**LADY), ARTHUR_FAR], events=[HAND], glitch=0.45, tilt=-1.0, sketch=0.1)
-
-# 7. The Gallery of Words, repairing: the right word to the right owner opens the way.
-frame("ch3_gallery_return", "The Gallery of Words", "gallery_words", 0.14, (170, 466),
-      ["Every portrait wants its voice back. So does the drawer.", "The way on opens when everyone is whole."],
-      "Give each word to its owner's portrait (or the drawer). A lit portrait is whole. Owners you never robbed are lit already.",
-      exits=[exit_(BACK, "ch3_torn_return", (980, 466), SLIDE),
-             exit_(GO, "ch3_heart_return", (160, 466), SPLASH, "gallery_open")],
-      lights=[light("glow", (230, 360), 200, 0.35), light("glow", (592, 360), 200, 0.35), light("glow", (954, 360), 200, 0.35)],
-      items=[paint("paint_arthur", "arthur", 150, "Arthur", "whole_arthur"),
-             paint("paint_vane", "mrs_vane", 512, "Mrs. Vane", "whole_vane"),
-             paint("paint_lady", "portrait_lady", 874, "The Portrait", "whole_lady"),
-             item(id="gallery_drawer", kind="return_spot", position=(360, 300), size=(100, 82), owner_id="drawer",
-                  text="drawer", sets_flag="whole_drawer", caption="the old drawer"),
-             item(id="gallery_wall", kind="secret_door", position=(1060, 120), size=(100, 262),
-                  requires_flag="gallery_open", sets_flag="gallery_door")],
-      events=["gallery_gate", HAND], glitch=0.3, tilt=0.8, sketch=0.1)
+             item(id="returning_curtain", kind="hiding_spot", position=(20, 110), size=(100, 272), text="curtain")],
+      npcs=[owner(**dict(ARTHUR, pos=(420, 404), bubble_offsets=PV2A([(-150, -205), (-80, -305), (110, -225), (190, -318)]))),
+            owner(**dict(VANE, pos=(820, 404), bubble_offsets=PV2A([(-110, -210), (-60, -300), (100, -240)]))),
+            owner(**dict(LADY, pos=(210, 160), bubble_offsets=PV2A([(0, -110)])))],
+      events=[HAND, "return_gate"], glitch=0.5, tilt=0.6, sketch=0.15)
 
 # 8. The Ink Heart again: the last word goes back to the hand.
 frame("ch3_heart_return", "The Ink Heart", "ink_heart", 0.2, (160, 466),
@@ -178,6 +170,6 @@ frame("ch3_escape", "The Last Page", "escape", 0.9, (170, 466),
 frame("ch3_outside", "", "plain", 1.0, (170, 466), [], "", ending="THE END", epilogue=True)
 
 write("data/chapters/ch3.tres", "chapter_data", dict(
-    id=SN("ch3"), title="Chapter 3: The Ink Heart", first_frame_id=SN("ch3_torn_page"),
+    id=SN("ch3"), title="Chapter 3: The Ink Heart", first_frame_id=SN("ch3_gallery_words"),
     damage_visual_scale=1.6, line_jitter=1.6, allows_return=True, return_frame_id=SN("ch3_returning_room"),
-    intro_lines=PSA(["Issue #3.", "The ink is running. The panels won't hold.", "Everyone you took from is still here. Waiting."])))
+    intro_lines=PSA(["Issue #3. The panels won't hold."])))

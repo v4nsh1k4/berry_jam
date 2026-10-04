@@ -14,7 +14,7 @@ const EVENT_SCRIPTS: Dictionary = {
 	&"crawler_fingers": preload("res://scripts/events/crawler_fingers_event.gd"),
 	&"passage_stalker": preload("res://scripts/events/passage_stalker_event.gd"),
 	&"cellar_chase": preload("res://scripts/events/cellar_chase_event.gd"),
-	&"gallery_gate": preload("res://scripts/events/gallery_gate_event.gd"),
+	&"return_gate": preload("res://scripts/events/return_gate_event.gd"),
 	&"margin_chase": preload("res://scripts/events/margin_chase_event.gd"),
 	&"artist_hand": preload("res://scripts/enemy/artist_hand.gd"),
 }
@@ -23,6 +23,11 @@ const EVENT_SCRIPTS: Dictionary = {
 const KIND_CLASSES: Dictionary = {
 	&"hiding_spot": preload("res://scripts/interactables/hiding_spot.gd"),
 	&"return_spot": preload("res://scripts/interactables/return_spot.gd"),
+	&"light_ink": preload("res://scripts/interactables/light_puzzle.gd"),
+	&"lens": preload("res://scripts/interactables/light_puzzle.gd"),
+	&"shadow_puzzle": preload("res://scripts/interactables/light_puzzle.gd"),
+	&"lit_writing": preload("res://scripts/interactables/light_puzzle.gd"),
+	&"lever": preload("res://scripts/interactables/light_puzzle.gd"),
 }
 
 var data: FrameData
@@ -46,6 +51,10 @@ func setup(frame_data: FrameData) -> void:
 	_background.sketch = data.sketch
 	_set_halftone(GameState.glitch_of(data))
 	EventBus.comic_repaired.connect(_on_comic_repaired)
+	if data.spread != null:
+		var spread: SpreadController = SpreadController.new()
+		_props.add_child(spread)
+		spread.setup(data.spread)
 	for spot in data.lights:
 		var light: LightSpot = LightSpot.new()
 		_props.add_child(light)

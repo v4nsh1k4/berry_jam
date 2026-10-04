@@ -26,6 +26,8 @@ sound are generated in code: there are no asset files and no addons.
 | Look / take / hide / dials | **E** on mirrors, pickups, hiding spots and dial locks |
 | Give a word back (Chapter 3) | Pick it, stand under its owner's broken bubble and hold **E** (or press **E** at their portrait) |
 | Flashlight | **F** or left click, aimed with the mouse (from the end of Chapter 1) |
+| Jump | **Space**, only on the page-spread page in Chapter 3 |
+| Skip a cutscene | **Space** or click (each cutscene plays once per run) |
 | Pause | **Esc** or **P** |
 
 Menus work with the mouse or the keyboard (arrows + Enter; Esc goes back).
@@ -50,85 +52,108 @@ Optional: OPEN the bedchamber drawer to get **HUSH**.
 
 ### Chapter 2: The Hallway of Shadows
 
-1. **The Long Hallway** (safe). Turn the light on. Writing appears on the wall,
-   and a **hidden latch** appears at the far end. Say OPEN to the latch, and the
-   panelling opens.
-2. **The Portrait Gallery.** The Crawler sleeps by the exit. Keep the light
-   off and walk (don't run) past it. If it wakes, stand still in the dark
-   until it sinks.
+Light puzzles: every one fills the noticed meter where the Crawler is, so use
+the light in short bursts.
+
+1. **The Long Hallway** (safe). Turn the light on. Writing appears on the
+   wall. Hold the light on the **ink over the far door** until it shrinks
+   away.
+2. **The Portrait Gallery.** The Crawler sleeps by the far door, and the door
+   has no handle. **Sweep the light along the walls** to find a lever, and
+   pull it with E while it is lit. Then turn the light off and walk (don't
+   run) past the sleeper. If it wakes, stand still in the dark until it sinks.
 3. **The Servants' Passage.** After a growl and a warning, the Crawler rises
-   behind you. Press E at the wardrobe, curtain or table to hide, and come out
-   when it has gone. You can also simply run for the far door.
-4. **The Housekeeper's Pantry.** Steal **HIDE, HUSH and WAIT** from Mrs. Vane.
-   The first theft triggers the chapter's one scare.
-5. **The Clock Room.** The Crawler patrols. Say **HUSH** (or WAIT once it is
-   up), then shine the light on the clock face for a second. Its marks are
-   **spiral, hand, house**. Turn the light off, or hide behind the curtain.
-6. **The Locked Cellar Stair.** If you've forgotten the marks, say REMEMBER.
-   Press E at the dial box, set it to spiral, hand, house, then say **OPEN**
-   at the padlock. The Crawler surges, so go through the door.
-7. **The Cellar.** Chapter 3's intro follows.
+   behind you. Press E at the wardrobe, curtain or table to hide. When it has
+   gone, **burn back the ink growth** over the far door with a long look of
+   light (it creeps back in the dark).
+4. **The Housekeeper's Pantry.** Mrs. Vane's flashback cutscene plays. Steal
+   **HIDE, HUSH and WAIT** from her (optional).
+5. **The Clock Room.** The Crawler patrols, and the far door is bolted. Say
+   **HUSH** (or WAIT once it's up), then light the clock face for a second.
+   The clock strikes, the bolt slides back, and *something happens*: run for
+   the door or hide behind the curtain.
+6. **The Locked Cellar Stair.** A **shadow puzzle**: stand on the glowing
+   chalk X and light the iron key on its stand until its shadow fits the
+   keyhole outline on the wall. Then say **OPEN** at the padlock and run.
+7. **The Cellar.** A cutscene leads into Chapter 3.
 
-**If you take nothing optional:** Chapter 1 still gives OPEN, PUSH and
-REMEMBER, and Chapter 2 needs only OPEN, REMEMBER and the flashlight. The clock
-can be read with no words at all: wait until the Crawler is at the far end of
-its patrol, light the clock for a second, then turn the light off and stand
-still, or hide behind the curtain. Words are never used up, so
-no order of play can lock you out.
+**Minimum:** OPEN, REMEMBER (Chapter 1's study) and the flashlight. HUSH and
+WAIT only make the Clock Room easier: you can wait for the patrol to turn
+away, light the clock, then hide.
 
-### Chapter 3: The Ink Heart (first four frames)
+### Chapter 3: The Ink Heart
 
-Every frame is more broken than the last: torn and askew panels, a ghost
-border, ink running into the gutter, coarse halftone, glitching bands. Giving
-words back visibly calms it all. Nothing in Chapter 3 needs a word to be
-*used*, so returning a word can never block you.
+Every frame is more broken than the last. Giving words back calms it all.
 
-1. **The Torn Page.** Mrs. Vane and the Portrait plead with broken lines for
-   exactly the words you took. Pick one of their words (1-6, Q/R), stand under
-   the matching broken bubble and hold **E**: THANK YOU, a line of relief, and
-   the panel heals a step. The wrong word just gets a "?".
-2. **The Returning Room** (safe). Give Arthur back his words. If you took
-   HUSH from the drawer in Chapter 1, press E at the old drawer with it.
-3. **The Gallery of Words.** Three portraits: Arthur, Mrs. Vane, the Lady. A
-   portrait is lit when that person is whole. Give any remaining words here
-   (E at the portrait) or where you met them. When all three are lit, the
-   wall on the right opens.
-4. **The Margin.** The **Ink Shadow** rises at the left after a warning and
-   comes for you, with a wall of ink behind it. Run (Shift) for the door. Hiding
-   works, but if you linger it stops and scribbles your hiding place out (you
-   get the scribble, a sound, and a head start). Caught = the room reloads,
-   words kept.
-5. "THE INK HEART: COMING NEXT" (Stage 4B).
+1. **The Gallery of Words: a page spread.** The whole screen is a comic page
+   of four small panels. Walk off a panel's edge to hop across the gutter;
+   **Space** jumps. The white gutter is nothing: fall in and you are spat
+   back where you entered that panel. Leaving the torch on too long makes ink
+   fingers poke up through the gutter under you (a warning first). Mrs. Vane
+   and the Portrait plead in the top-left panel; nothing can be given back
+   yet.
+   - Top-left **A** → walk off its right edge (jump the tear in the floor
+     on the way) → top-right **B**, which is dark. Sweep the light: hold it
+     on the **glass lens** high on the left. It throws light down into
+     bottom-left **C** and shows a lever there. Hold the light on the **ink
+     pool** on B's floor to clear a hole, and walk into it to drop to **D**.
+   - From D walk left into C, pull the **lever** (E). Back right into D and
+     say **OPEN** at the door.
+   - Other ways: drop through A's floor tear into C. Cross C's gutter tear by
+     jumping, by lighting the pencil-sketched plank (solid only while lit), or
+     by saying **PUSH** at A's crate so it falls into the tear. Jump in C's
+     left corner to climb back to A, or in D's right corner to climb to B.
+2. **The Margin.** The Artist's hand slams across the page. Then the **Ink
+   Shadow** rises at the left after a warning. Run (Shift) for the door, or
+   hide (lingering gets your hiding place scribbled out).
+3. **The Ink Heart.** The torch doesn't work here ("the ink drinks the
+   light"). Move only while the Shadow isn't listening (its eyes go white),
+   stand under **ERASE** and hold E.
+4. **The reveal** (~35 s). Then the goal line reads *Give back what you
+   took.*
+5. **The Returning Room.** Arthur, Mrs. Vane, the Portrait and the old drawer
+   wait together. Pick one of their words and hold E under any of that
+   person's broken bubbles (or at the drawer). Dodge the Artist's hand (hide
+   behind the curtain on the far left). When everyone is whole, go right.
+6. **The Ink Heart again.** Hold E under the hand's open palm with ERASE: the
+   page mends (cutscene), and a lit gap opens in the border.
+7. **The Last Page.** Walk out through the gap: the ending pages and credits.
 
-**If you stole nothing optional:** you arrive with only OPEN, PUSH and
-REMEMBER. Mrs. Vane is already whole and her portrait starts lit. Give OPEN
-and PUSH to Arthur and REMEMBER to the Lady, and the gallery opens.
+**Minimum word set for the whole game:** OPEN, PUSH, REMEMBER (Chapter 1) and
+ERASE. Words are never used up, so no order of play can lock you out.
+**Estimated first-time runtime:** about 16-17 minutes (see the Stage 4C notes
+in CLAUDE.md).
 
 ## How it fits together
 
 ```
 autoload/         EventBus (all signals), GameState (inventory, flags, comic damage,
-                  chapter, checkpoints), FrameManager, TransitionManager, LightingSystem,
-                  AbilityRegistry, AudioManager, ShakeManager
+                  chapter, checkpoints, seen cutscenes/scares), FrameManager, TransitionManager,
+                  LightingSystem, AbilityRegistry, AudioManager, ShakeManager, CutsceneSystem,
+                  MusicManager
 data/abilities/   AbilityData .tres, one per word ability (8)
 data/bubbles/     BubbleData .tres, one per stealable word
 data/chapters/    ChapterData: title, intro captions, first frame, damage scale, line wobble
+data/cutscenes/   CutsceneData C1-C6 (beats: panels, drawings, caption, camera, sound)
 data/frames/      FrameData .tres, one per comic panel
 scripts/abilities/  one handler per ability (open, push, remember, hush, help, wait, hide)
-scripts/audio/    SfxSynth: every sound rendered in code
+scripts/audio/    SfxSynth / SfxSynth2: every sound; MusicSynth + MusicRenderer: the music
 scripts/enemy/    InkCrawler (brain: states and senses), CrawlerView (stop-motion look), CrawlerArt,
                   InkShadow + ShadowView (the huge Chapter 3 version)
 scripts/events/   scripted moments: ink hand, crawler window, pantry fingers, passage stalker,
-                  cellar chase, gallery gate, margin chase
-scripts/frame/    Frame, exits, fixed lights, backgrounds/ (art per room)
+                  cellar chase, return gate, margin chase
+scripts/frame/    Frame, exits, fixed lights, backgrounds/ (art per room), spread/ (the page
+                  spread: SpreadController, panel views, gutter fingers)
 scripts/interactables/  doors, drawers, latches, cabinets, pickups, locks, memories,
                   light-revealed writing, the clock and its pendulum; HidingSpot and
-                  ReturnSpot are subclasses (Frame.KIND_CLASSES)
+                  ReturnSpot and LightPuzzle (light ink, lens, shadow puzzle, lever) are
+                  subclasses (Frame.KIND_CLASSES)
 scripts/npc/      characters (Arthur, the portrait, Mrs. Vane) and their art
 scripts/player/   Player, Interactor (steal / speak), Flashlight
 scripts/systems/  notice meter, feedback FX, save system, debug room jump
 shaders/          halftone paper, ink-splash wipe, ink bleed, danger vignette, glitch
-ui/               menus, pause, intro, end card, inventory, lock dials, page overlay
+ui/               menus, pause, intro and ending (ComicPages), cutscene view and art, reveal,
+                  jumpscares, goal line, end card, inventory, lock dials, page overlay
 tests/            debug tests (not exported)
 tools/datagen/    Python generators for the chapter .tres files (not exported)
 ```
@@ -166,6 +191,10 @@ Chapter 1, 3 in Chapter 2). Each chapter scales how strongly it shows.
 
 ## Tests
 
+- **Debug keys (debug builds only, e.g. the editor's ▶):** **F6** plays the
+  next cutscene, **F7** jumps to the Clock Room jumpscare, **F8** jumps to the
+  reveal, **F9** goes to the next Chapter 3 room, **F10** jumps to the page
+  spread.
 - **Jump to any room (debug builds only):** on the web add `?frame=ch3_margin`
   (any frame id) to the page URL; on desktop run with `-- --frame=ch3_margin`.
   You get the words a player would normally carry into that chapter.

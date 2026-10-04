@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="FrameData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="FrameData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
 [ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
@@ -18,6 +18,7 @@ area = Rect2(1080, 396, 104, 112)
 target_frame_id = &"ch2_servants_passage"
 transition_style = 0
 target_spawn = Vector2(170, 466)
+required_flag = &"gallery_lever"
 
 [sub_resource type="Resource" id="Resource_3"]
 script = ExtResource("3_interactable_data")
@@ -29,13 +30,23 @@ revealed_by_light = true
 text = "DON'T LOOK AT IT."
 
 [sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("3_interactable_data")
+id = &"gallery_lever"
+kind = &"lever"
+position = Vector2(330, 270)
+size = Vector2(60, 100)
+revealed_by_light = true
+sets_flag = &"gallery_lever"
+caption = "Somewhere by the far door, a bolt slides back."
+
+[sub_resource type="Resource" id="Resource_5"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
 position = Vector2(120, 300)
 radius = 220.0
 energy = 0.35
 
-[sub_resource type="Resource" id="Resource_5"]
+[sub_resource type="Resource" id="Resource_6"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
 position = Vector2(1130, 300)
@@ -50,9 +61,9 @@ ambient_light = 0.05
 background_style = &"gallery"
 player_spawn = Vector2(150, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("Something sleeps in the far corner.", "Light wakes it. In the dark, walking is safe. Running (Shift) is not.")
-hint = "Turn the light off and walk past it slowly. If it rises, stand still in the dark."
+captions = PackedStringArray("Something sleeps by the far door. The door has no handle.", "Sweep the light along the walls to find a way, but light wakes it. Walk, don't run.")
+hint = "Sweep the light along the walls (in short bursts) to find the lever, pull it with E, then walk past it in the dark."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
-interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
-lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_4"), SubResource("Resource_5")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
 crawler_spawn = Vector2(980, 492)

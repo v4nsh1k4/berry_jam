@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="FrameData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="FrameData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
 [ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
@@ -25,25 +25,16 @@ HE KEEPS THE TIME."
 
 [sub_resource type="Resource" id="Resource_3"]
 script = ExtResource("3_interactable_data")
-id = &"hall_latch"
-kind = &"latch"
-position = Vector2(950, 300)
-size = Vector2(60, 60)
-revealed_by_light = true
-accepted_ability_ids = Array[StringName]([&"open"])
+id = &"hall_ink"
+kind = &"light_ink"
+text = "door"
+position = Vector2(1050, 120)
+size = Vector2(120, 270)
+light_hold = 1.6
 sets_flag = &"hall_panel_open"
-prompt = "A hidden latch. It needs a word."
+caption = "The ink shrinks from the light. The way is open."
 
 [sub_resource type="Resource" id="Resource_4"]
-script = ExtResource("3_interactable_data")
-id = &"hall_panel"
-kind = &"secret_door"
-position = Vector2(1060, 120)
-size = Vector2(100, 262)
-requires_flag = &"hall_panel_open"
-sets_flag = &"hall_panel_door"
-
-[sub_resource type="Resource" id="Resource_5"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
 position = Vector2(150, 300)
@@ -58,8 +49,8 @@ ambient_light = 0.045
 background_style = &"long_hallway"
 player_spawn = Vector2(150, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("The house is darker here. Your torch is all you have.", "F or click: flashlight, aimed with the mouse. Light shows what the dark hides.")
-hint = "Shine the light along the walls. Something at the far end opens with a word."
+captions = PackedStringArray("The house is darker here. Your torch is all you have.", "F or click: flashlight, aimed with the mouse. Ink shrinks from the light.")
+hint = "Shine the light on the ink over the far door and hold it there until it shrinks away."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
-interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2"), SubResource("Resource_3"), SubResource("Resource_4")])
-lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_5")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2"), SubResource("Resource_3")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_4")])

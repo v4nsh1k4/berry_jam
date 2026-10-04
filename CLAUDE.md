@@ -81,9 +81,10 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 | 3 | Inventory bug fix (no cap, paging), stand-under targeting, red art direction, Crawler redesign (state machine, stop-motion), WAIT and HIDE, hiding spots, light-revealed objects, Chapter 2 (7 frames), chapter chaining |
 | 4A | Return-the-words mechanic, Chapter 3 frames 1-4, glitch/breakdown visuals, Ink Shadow v1, damage recalibrated to 9 words, debug room jump |
 | 4B | Story reorder (no returning before the reveal), Gallery ability puzzle, the Ink Heart and the final steal (ERASE), the reveal, the return phase with the Artist's hand, the final word and repair, the Last Page, epilogue, intro cinematic, save v2 migration, F9 debug jump |
+| 4C | Pacing pass to ~15 min (Torn Page cut, one batched Returning Room, gallery return removed, Ch1 intro captions cut), CutsceneSystem + C1-C6, reveal rewrite (9 captions, ~35 s, goal line), light puzzles (4 in Ch2, 3 in the spread, light disabled in the Ink Heart), the page spread (Gallery of Words), scarier monster, one major + one minor jumpscare, MusicManager, intro/ending as comic pages, save v3, F6-F10 debug keys |
 
-Git history on `ink-bleed`: commit 1 = Chapters 1-2, commit 2 = Stage 4A.
-Stage 4B is uncommitted until the user asks.
+Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B.
+Stage 4C is uncommitted until the user asks.
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
 Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
@@ -110,9 +111,21 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   OPEN, PUSH, REMEMBER), `ch3_systems` (save v1 migration, resuming mid-reveal,
   Restart after the reveal, the hand's telegraph/catch/hiding/WAIT/weakening,
   lost-word fallback, the Heart's listening), `menu_clicks`, `exit_grace`.
+  Stage 4C added: `cutscenes` (every beat screenshotted, triggers, skip
+  grace, `seen` saved and kept on restart), `reveal_check` (each caption beat,
+  goal line), `spread_play` (the whole page spread with real inputs: hops,
+  jump, lens, pool drop, gutter fall, crate bridge, lever, fingers, door),
+  `scare_check` (both scares, once only), `music_check` (render time, slowest
+  frame, clipping, loop seams), `cinematics_check` (intro and ending pages).
+  Older playthroughs skip cutscenes by connecting `cutscene_started` to
+  `CutsceneSystem._finish`.
   They print a log and save screenshots to `$SHOT_DIR`. Read the screenshots,
   because visual bugs (cyan glitch blocks, a pink vignette flood) only showed
   up there. `tests/visual/art_preview.gd` renders any drawing call to a PNG.
+- **Run with `--disable-vsync`** on macOS: an occluded/unfocused test window
+  can block on vsync and freeze the run at a screenshot (looks like a hang
+  with no error). Unfocused windows can also drop `warp_mouse`, so a torch-
+  aiming step can fail once; rerun before suspecting the game.
 - **Run tests one at a time:** they share `user://ink_bleed_save.json`. A test
   that errors never quits (the window stays open): kill it. Long runs can have
   their window shrunk by the desktop, so `_shot` resets it to 1280x720 first.
@@ -121,8 +134,10 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   were caught only this way (§9).
 - Debug builds only: **jump to any room**. On the web add `?frame=ch3_margin`
   (optionally `&words=arthur_open,vane_hide` and `&twist=1`); on desktop run
-  with `-- --frame=ch3_margin [--words=...] [--twist=1]`. **In game, F9** jumps
-  to the next Chapter 3 room (works from the editor's ▶). `DebugJump` adds the
+  with `-- --frame=ch3_margin [--words=...] [--twist=1]`. **In game (debug
+  builds, e.g. the editor's ▶): F6** next cutscene, **F7** Clock Room
+  jumpscare, **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
+  spread (all in `main._unhandled_key_input`). `DebugJump` adds the
   words a player would carry; return-phase rooms also get ERASE and
   `twist_revealed`.
 - Web check in a browser: serve `build/web` with `python3 -m http.server`. The
@@ -152,14 +167,17 @@ box). Don't name test methods after `SceneTree` methods.
 | `FrameManager` | Loads `data/frames/<id>.tres`, builds the `Frame`, places the player, exits, reload on `player_caught` |
 | `TransitionManager` | SLIDE (page sheet) and INK_SPLASH (shader) wipes around a swap |
 | `AbilityRegistry` | ability id → `AbilityData` + handler instance, `speak()`, cooldowns (`ABILITY_PATHS` list) |
+| `CutsceneSystem` | CanvasLayer 55. Loads `data/cutscenes/*.tres` (`CUTSCENE_PATHS`), plays one when its trigger fires (`first_steal`, `resolved:<id>`, `frame:<id>`, `repaired`), pauses the tree, skippable after 0.6 s, marks it in `GameState.seen` |
+| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame (`MusicSynth`), crossfades, intensity/hunt layers, stingers, ducking, focus-loss mute; music volume/mute in `settings.cfg` |
 
 ### Scene tree (`scenes/main.tscn`) and canvas layers
 World (layer 0: the `Frame` under `World/FrameRoot`, plus `World/Player`; the
 Frame's `CanvasModulate` darkens only this layer) → PageLayer 10 (follows
 the viewport so it shakes and tilts with the world: `GlitchOverlay`,
 `InkBleed`, `PageOverlay` = white gutter, border, cracks, captions) → HUDLayer
-20 (`InventoryStrip`, `NoticeMeter`, `InteractPrompt`) → FXLayer 25
-(`DangerVignette`, `FeedbackFx`) → LockLayer 40 → TransitionManager 50 →
+20 (`InventoryStrip`, `NoticeMeter`, `InteractPrompt`, `GoalLine`) → FXLayer 25
+(`DangerVignette`, `FeedbackFx`, `JumpscareOverlay`) → LockLayer 40 →
+TransitionManager 50 → CutsceneSystem 55 →
 MenuLayer 60 (IntroCinematic, IntroSequence, RevealSequence,
 EpilogueSequence, EndCard, MainMenu, PauseMenu) → StartLayer 100. The panel
 is the fixed `Frame.PANEL_RECT` = (48, 32, 1184×528) on a 1280×720 page. All
@@ -183,11 +201,14 @@ words carried in stay, this chapter's (or this phase's) thefts and returns are
 undone. **Autosave** (`user://ink_bleed_save.json`, IndexedDB on the web)
 happens on every frame change, theft, solved object and quit to menu.
 
-**Save format v2** (`SaveSystem.VERSION`): adds `twist_revealed`.
-`SaveSystem.migrate()` upgrades v1 (Stage 4A) saves: Chapters 1-2 as they are;
+**Save format v3** (`SaveSystem.VERSION`): v2 added `twist_revealed`; v3 adds
+`seen` (watched cutscenes and fired scares; v2 saves migrate with an empty
+list). `SaveSystem.migrate()` upgrades v1 (Stage 4A) saves: Chapters 1-2 as they are;
 a save inside Chapter 3 restarts at Chapter 3's `chapter_start` (so the reveal
 is never skipped); unusable or future-version saves count as "no save". A save
-naming a frame that no longer exists falls back to its chapter's first frame.
+naming a frame that no longer exists (Stage 4C removed `ch3_torn_page`,
+`ch3_torn_return`, `ch3_gallery_return`) falls back to its chapter's first
+frame, or `return_frame_id` after the twist.
 `user://progress.cfg` (`SaveSystem.get_progress/set_progress`) survives new
 games: `seen_reveal` (the reveal is skippable only after one full viewing) and
 `completed`.
@@ -200,7 +221,19 @@ games: `seen_reveal` (the reveal is skippable only after one full viewing) and
   (`LightSpotData`), events (ids in `Frame.EVENT_SCRIPTS`, incl.
   `artist_hand`), hint (for HELP), ending_card, next_chapter, glitch,
   panel_tilt, sketch, **border_gap** (the lit way out in the right border once
-  repaired), **epilogue** (arriving plays the epilogue).
+  repaired), **epilogue** (arriving plays the epilogue), **light_disabled**
+  (the torch won't work: "The ink drinks the light."), **spread**
+  (`PageSpreadData`: the frame is a page of small panels).
+- `PageSpreadData` → `panels: Array[SpreadPanelData]` (id, rect, tilt,
+  ambient, style, floor_y, entry, gap + gap_bridge_flag + gap_lit_bridge),
+  `hops: Array[SpreadHop]` (from_panel, trigger right/left/jump/fall/down,
+  zone_x, to_panel, to_point, requires_flag, locked_caption), page_number,
+  finger_hazard. Interactables and NPCs stay in the frame's normal lists, in
+  frame coordinates; each belongs to the panel that contains it.
+- `CutsceneData` (id, trigger, skippable, music_cue, beats) →
+  `CutsceneBeat` (duration, `panels: Array[Rect2]` as page fractions, draws
+  = `CutsceneArt` ids, caption, camera still/zoom_in/zoom_out/pan_left/
+  pan_right/shake, sfx, page_turn). Generated by `tools/datagen/gen_cutscenes.py`.
 - `BubbleData`: id, text, ability_id, stolen_from (an owner id: `arthur`,
   `mrs_vane`, `portrait_lady`, `drawer`, `hand`), **owner_name** (for "give
   back to Arthur"), **story_final** (ERASE: stealing it plays the reveal,
@@ -219,7 +252,13 @@ games: `seen_reveal` (the reveal is skippable only after one full viewing) and
   Passive: `memory` (REMEMBER), `writing`, `clock`, `secret_door` (opens when
   `requires_flag` is set). Chapter 3: `return_spot` (`owner_id`; text painting
   or drawer). Plus `revealed_by_light` (only visible and usable inside the
-  flashlight cone).
+  flashlight cone). Light kinds (Stage 4C, `LightPuzzle` subclass): `light_ink`
+  (text door/pool/growth; recedes under the cone for `light_hold` s, creeps
+  back in the dark), `lens` (lit for `light_hold` s → sets its flag, beam
+  along `push_offset`), `lit_writing` (shows once `requires_flag` is set),
+  `shadow_puzzle` (stand inside `stand_spot` and light it: its shadow
+  (symbols[0]) slides into the wall outline), `lever` (plain E; hidden in the
+  dark if `revealed_by_light`, hidden until `requires_flag` if set).
 - `ChapterData`: title, intro_lines, first_frame_id, damage_visual_scale,
   line_jitter, allows_return, **return_frame_id** (where the reveal lands).
 - `HandPressureData` (`data/hand/hand_pressure.tres`): the Artist's hand
@@ -229,7 +268,7 @@ games: `seen_reveal` (the reveal is skippable only after one full viewing) and
   (INTERACTABLE / ROOM), cooldown, duration, handler script.
 
 **Data generators:** `tools/datagen/gen_lib.py` plus `gen_ch1.py`, `gen_ch2.py`,
-`gen_ch3.py` write whole chapters. Run them from `game_jam/`
+`gen_ch3.py` write whole chapters, `gen_cutscenes.py` the cutscenes. Run them from `game_jam/`
 (`python3 tools/datagen/gen_ch3.py .`). They **overwrite** that chapter's
 `.tres` files, so edit the generator rather than the `.tres` (or stop using the
 generator for that chapter). `tests/` and `tools/` are excluded from the export.
@@ -269,16 +308,21 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   (`GameState.restore_lost_word`). Return FX: warm two-note chime, THANK YOU,
   red-to-white drops, relief caption, the comic heals smoothly
   (`shown_damage` eases at 0.8 words/s).
-- **The reveal** (`ui/reveal_sequence.gd` + `ui/reveal_art.gd`, ~22 s): on
-  stealing a `story_final` word (or resuming a save holding it with the twist
-  unseen) it emits `reveal_started`, pauses the tree, and draws: the Shadow
-  resolving into the hand with a pen (HandArt, `shadow` fading) → pull back to
-  the page on the Artist's desk (eraser beside it) → push in on the red figure,
-  rubbed by eraser smudges → "the cost" (each robbed character, unfinished,
-  with their broken line from frame data). Captions: "I was never the
-  victim." / "I was the mistake on the page." / "And look what I took." Then
-  `GameState.reveal_twist()` (emits **`twist_revealed`**), `chapter_start` is
-  retaken, and the player lands in `return_frame_id`.
+- **The reveal** (`ui/reveal_sequence.gd` + `reveal_art.gd` +
+  `reveal_art_tear.gd`, ~35 s, unskippable the first time): on stealing a
+  `story_final` word (or resuming a save holding it with the twist unseen) it
+  emits `reveal_started`, pauses the tree, and plays nine one-idea captions,
+  each on its beat: the Shadow resolves into a hand with a pen ("The hand holds
+  a pen.") → pull back to the page ("This comic has an Artist.") → the desk
+  ("Everyone here says only what the Artist wrote.") → back in on the red
+  figure ("I was never written...") → the hand swaps to the eraser and rubs the
+  figure's legs out, dust falling ("The Artist is erasing me..." / "It was the
+  Artist's hand.") → the cost: robbed characters with broken lines ("And every
+  word I stole..."), rips tear down the page ("Every theft tore the page.") and
+  stitch with light ("To mend it, I must give it all back."). Then
+  `reveal_twist()`, `chapter_start` retaken, land in `return_frame_id`, and
+  `goal_changed("Give back what you took.")` shows the HUD goal line
+  (`ui/goal_line.gd`; it fades on the first return, flag `goal_first_return`).
 - **The Artist's hand** (`scripts/enemy/artist_hand.gd`, drawn by `HandArt`
   and `HandFloorArt`; a frame lists it as the `artist_hand` event). States:
   HOVER → AIM (the eraser's hatched shadow darkens a strip of floor + growl;
@@ -303,8 +347,59 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   in the right border (`PageOverlay`). The exit to the Last Page needs the flag.
 - **Light**: Chapter 1 rooms use fixed `LightSpot`s (candle, moon, glow). The
   flashlight cone texture is generated in code; `Flashlight.illuminates(_rect)`
-  does cone tests for `revealed_by_light` objects. The player's red aura is
-  always on (dims when concealed).
+  does cone tests for `revealed_by_light` objects and the light puzzles
+  (`scripts/interactables/light_puzzle.gd` + `light_puzzle_art.gd`). Light
+  still fills the notice meter, so every puzzle is light-vs-risk. Frames with
+  `light_disabled` refuse the torch (`LightingSystem.light_blocked`). The
+  player's red aura is always on (dims when concealed).
+- **Cutscenes** (`autoload/cutscene_system.gd`, `ui/cutscene_view.gd`,
+  `ui/cutscene_art.gd` + `cutscene_art2.gd`): a page with 1-4 clipped panel
+  Controls that ink in one by one, a typed narration box, a slow camera
+  transform, an optional page turn. C1 first steal, C2 the torch
+  (`resolved:flashlight`), C3 Mrs. Vane's flashback (`frame:ch2_pantry`),
+  C4 descent (`frame:ch2_end`), C5 the Heart (`frame:ch3_ink_heart`), C6 the
+  repair (`repaired`). `GameState.seen` (saved, v3) holds watched cutscenes
+  **and** scares; Restart Chapter and deaths keep it, so nothing replays.
+  `main._hand_off` waits for a cutscene before the next chapter's intro.
+- **Page spread** (`scripts/frame/spread/`): `Frame.setup` adds a
+  `SpreadController` first when `data.spread` is set. It clamps the player to
+  their panel's floor (walk_area per panel), hops them across gutters
+  (`SpreadHop`, a tweened arc + "WHOOSH"), drops them into the gutter through
+  tears (respawn at the panel's entry, never a death), handles jumping (Space,
+  `Player.lift` is drawing-only) and lighting. **Per-panel light, no
+  SubViewports:** the frame's CanvasModulate keeps everything dark; each
+  `SpreadPanelView`, prop and (while inside) the player carries its panel's
+  light-mask bit; a soft square fill light per lit panel culls to that bit;
+  the torch lights every bit. `SpreadFingers`: torch on 4 s → fingers peek
+  through the gutter under the player (0.8 s telegraph) and stab (knock back).
+- **Scares** (`ui/jumpscare_overlay.gd`, FXLayer): `scare_clock` 0.6 s after
+  the clock is read (0.35 s face + `scare_hit` + shake + one short red flash,
+  then `InkCrawler.appear_at` 330 px behind the player + `wake_to`: run for the
+  unbolted door or hide), `scare_margin` (the hand slams across the page with
+  a nib stab). Once per run (`GameState.seen`), never with a menu, cutscene or
+  page turn up. `intensity` = settings.cfg `[accessibility] scare_intensity`
+  scales shake and flash (Stage 5 option). Emits `EventBus.scare`.
+- **Monster look** (`crawler_view.gd`): after each move its strokes pen back in
+  (`InkDraw.gap_ratio`) over faint pencil guides; the eyes follow the player
+  even when dormant (`CrawlerArt.look`); the mouth tears wider within 380 px;
+  twitches get more erratic when near; `CrawlerGlimpse` very rarely flashes a
+  silhouette at the cone's edge (40 s cooldown). Audio: whispers when near,
+  nib scratches with the skitter, and a 0.4 s held silence after the growl
+  before a lunge (`AudioManager._on_telegraph`).
+- **Music** (`autoload/music_manager.gd`, `scripts/audio/music_synth.gd`):
+  menu (music box motif), ch1, ch2 (Shepard tone), ch3 (stutter), reveal
+  (swell then silence), warm (motif in major: return phase + repair), ending;
+  layers `layer_intensity` (notice/nearness) and `layer_hunt`. Loops are
+  folded seamless. Renders in ~4 s on desktop at 4 ms/frame, menu first.
+  Stingers: discover (new room), danger (`player_noticed`), relief (return),
+  cutscene cues. Ducks for cutscenes and scares; drops out before lunges.
+- **Intro / ending** (`ui/intro_cinematic.gd`, `ui/epilogue_sequence.gd`,
+  shared `ui/comic_pages.gd`): comic pages of tilted, clipped panels looking
+  into one continuous 1280x720 scene, halftone tint, page turns. Intro ~25 s
+  (bedroom → ink → SLAM! → the first panel's border inks in). Ending ~30 s
+  (out through the border gap → the teen closes the book → the last panel,
+  everyone whole, a faint red mark, "Some stories keep a little of whoever
+  visits them.").
 - **Notice meter** (`scripts/systems/notice_system.gd`): active only in frames
   with a Crawler *and* once the player has the flashlight. Light fills it in
   3 s; it drains in 5 s (3x faster when concealed, where light counts only
@@ -340,7 +435,9 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
 `HidingSpot` / `ReturnSpot` subclasses chosen by `Frame.KIND_CLASSES`, the
 Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 (GameState serialisation), `HandArt` / `HandFloorArt`, `RevealArt`,
-`RealWorldArt` (intro + epilogue), `BgCh3End`.
+`RealWorldArt` (intro + epilogue), `BgCh3End`, `CutsceneArt`/`CutsceneArt2`,
+`SfxSynth2`, `LightPuzzle`/`LightPuzzleArt`, `SpreadController`/`SpreadArt`/
+`SpreadPanelView`/`SpreadFingers`, `RevealArtTear`, `ComicPages`.
 
 ## 7. Content, chapter by chapter
 
@@ -352,40 +449,60 @@ needs OPEN) → study corridor (portrait gives **REMEMBER**; the ink-hand moment
 back stair (flashlight pickup sets `has_flashlight`) → `ch1_end` hands off to
 Chapter 2.
 
-**Chapter 2, The Hallway of Shadows** (`ch2_*`): long hallway (safe;
-light-revealed writing and a hidden latch, OPEN) → gallery (Crawler dormant;
-learn that light is risk) → servants' passage (scripted stalker; hide in a
-wardrobe, curtain or table) → pantry (Mrs. Vane: **HIDE, HUSH, WAIT**; the
-pantry-fingers scare on the first theft) → clock room (patrolling Crawler;
-light the clock face to read **spiral, hand, house**) → cellar stair (dials,
-then OPEN, then a short chase) → `ch2_end` hands off to Chapter 3. Only OPEN,
-REMEMBER and the flashlight are required.
+**Chapter 2, The Hallway of Shadows** (`ch2_*`), four light puzzles: long
+hallway (safe tutorial: light-revealed writing; hold the light on the
+`light_ink` door over the exit) → gallery (Crawler dormant by the handle-less
+door; sweep for the light-revealed `lever`, then sneak past) → servants'
+passage (scripted stalker; hide; then burn back the `light_ink` growth over
+the exit, which regrows in the dark) → pantry (C3 flashback; Mrs. Vane:
+**HIDE, HUSH, WAIT**; the pantry-fingers scare on the first theft) → clock
+room (patrolling Crawler; light the clock face: it unbolts the exit, then the
+**major jumpscare**: the Crawler appears behind you and hunts) → cellar stair
+(`shadow_puzzle`: stand on the chalk X, light the iron key until its shadow
+fits the keyhole; then OPEN, then a short chase) → `ch2_end` (C4) hands off
+to Chapter 3. Only OPEN and the flashlight are required here.
 
-**Chapter 3, The Ink Heart** (`ch3_*`). *Before the reveal:* torn page
-(Vane and the Portrait plead; nothing can be given back) → gallery of words
-(ghost bubbles over the portraits show the damage; puzzle: **PUSH** the
-fallen frame, **REMEMBER** at the wall behind it shows **nib, eye, hand**, set
-the dial box, **OPEN** the door; light-revealed writing hints at it) → margin
-(Ink Shadow chase) → **ink heart** (the Shadow paces its lair holding
-**ERASE** out; move between its listens, steal ERASE → reveal). *After the
-reveal:* returning room (Arthur, the drawer; the hand at full strength; hide
-behind the curtain on the far left) → torn page (Vane, Portrait; curtain on the
-right) → gallery (three portraits plus the drawer as `ReturnSpot`s;
-`gallery_gate` opens the way when every owner is whole) → ink heart (the hand
-WATCHes; give ERASE back → repair, lit gap in the border) → **the Last Page**
-(everyone whole, speaking full lines; walk out through the border) →
-`ch3_outside` (epilogue, THE END, credits). Minimum words for the whole game:
-OPEN, PUSH, REMEMBER (+ ERASE in Chapter 3); every other word is optional.
+**Chapter 3, The Ink Heart** (`ch3_*`). *Before the reveal:* gallery of words
+= **the page spread** (4 panels; Vane and the Portrait plead without bubbles;
+light puzzles: lens → shows C's lever, ink pool → drop to D, torchlit pencil
+plank over C's gutter tear; PUSH the crate into the tear as a bridge; lever +
+**OPEN** at D's door) → margin (minor scare: the hand slams across the page;
+Ink Shadow chase) → **ink heart** (C5; light disabled; move between the
+Shadow's listens, steal **ERASE** → reveal). *After the reveal:* returning
+room (everyone at once: Arthur, Mrs. Vane, the Portrait, the drawer;
+`return_gate` sets `all_returned` and opens the way when every owner is
+whole; the hand at full strength; curtain on the far left) → heart return
+(the hand WATCHes; give ERASE back → C6 repair, lit gap in the border) → **the
+Last Page** → `ch3_outside` (ending pages, THE END, credits). Minimum words
+for the whole game: OPEN, PUSH, REMEMBER (+ ERASE); every other word is
+optional.
+
+**Stage 4C timing** (estimates for a first-time player, not measured): before
+the cuts ≈16:40; with the new content (≈50 s cutscenes, +13 s reveal, the
+spread, light puzzles, longer intro/ending) and the cuts ≈16:30-17:00. The
+cuts: Ch1 intro captions dropped, Ch2/Ch3 chapter lines shortened, Torn Page
+removed (its pleading is in the spread), the Gallery's third dial lock
+replaced by the spread, the return phase batched into one room (no Torn
+Page / Gallery revisits), the cellar's second dial lock + REMEMBER replaced
+by the shadow puzzle.
 
 ## 8. Open issues and next steps
 
-1. Stage 4B is complete; nothing is stubbed. Tuning knobs: the hand
-   (`data/hand/hand_pressure.tres`), the Heart's listen cycle (consts in
-   `heart_shadow.gd`), the reveal timeline (consts in `reveal_sequence.gd`).
-   If new stealable words are added, raise `GameState.DAMAGE_FOR_FULL_EFFECT`.
-2. **Not built:** "erasing platforms" (the game has no jumping, so the Shadow
-   erases hiding spots instead) and screen distortion near the Crawler (that
-   is border warp plus shake, not a screen shader).
+1. Stage 4C is complete; nothing is stubbed. Runtime lands at ~16.5-17
+   min (estimate), a little over the 15-minute target: further cuts would
+   remove a puzzle or story beat, so they need the user's say (candidates: the
+   Ch1 study dial lock, the Bedchamber drawer detour, the Margin chase).
+   Tuning knobs: the hand (`data/hand/hand_pressure.tres`), the Heart's
+   listen cycle (`heart_shadow.gd`), the reveal timeline (`reveal_sequence.gd`
+   consts), cutscenes (`gen_cutscenes.py`), light hold times (`light_hold` in
+   the chapter generators), `SpreadFingers.FILL_TIME`, music levels
+   (`MusicManager.BASE_DB`), `JumpscareOverlay.intensity`.
+2. `ink_crawler.gd` is 261 lines (it was 254 before 4C; `appear_at` added 7).
+   Next time it grows, split the senses (`_can_see`, notice/footstep
+   handlers) into a helper.
+3. Stage 5: an options screen for music volume (pause menu has it now),
+   "reduce shake and flashing" (wire it to settings.cfg
+   `[accessibility] scare_intensity`, read by `JumpscareOverlay`).
 4. Credits say "the Berry Jam team"; real names go in `ui/main_menu.gd`.
 5. The user should delete `ink-bleed-(4.3)/` (deleting it from here was blocked).
 
@@ -425,6 +542,17 @@ OPEN, PUSH, REMEMBER (+ ERASE in Chapter 3); every other word is optional.
 - The reveal pauses the tree; it and the screens around it use
   `PROCESS_MODE_ALWAYS`. Timers that must run while paused need
   `create_timer(t, true)`.
+- **`settings.cfg` is shared** by AudioManager, MusicManager and (read-only)
+  JumpscareOverlay: every save must `load()` the file first, then set its own
+  keys, or it wipes the others' (AudioManager used to overwrite it).
+- **Nothing heavy on the first click:** browsers need that click before
+  audio, and everything built then stalls the frame. Music renders a chunk
+  per frame (`MusicRenderer`), and newer sounds and stingers are built one
+  per frame after it (`AudioManager._pending`, `MusicManager._stinger_jobs`).
+  A 130 ms stall here made `menu_clicks` miss the Controls button.
+- **Cutscenes pause the tree** like the reveal; `CutsceneSystem` and its view
+  are `PROCESS_MODE_ALWAYS`. Anything that hands off between chapters must
+  wait for `CutsceneSystem.is_playing` to clear.
 - Red is reserved: the player, the steal ring, the selected slot, the prompt
   key, SNATCH!/SPLAT!, the steal splash, cracks, the damage edge, the notice
   blot, hunting eyes, the danger vignette (edges only, capped). Anything else

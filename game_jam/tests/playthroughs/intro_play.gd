@@ -34,6 +34,8 @@ func _tap(action: String) -> void:
 
 func _run() -> void:
 	var bus = root.get_node("/root/EventBus")
+	# Cutscenes have their own test (cutscenes.gd): skip them here.
+	bus.cutscene_started.connect(func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish"))
 	await _wait(0.3)
 	bus.game_started.emit()
 	await _wait(0.3)
@@ -42,11 +44,12 @@ func _run() -> void:
 	var cinematic = current_scene.get_node("MenuLayer/IntroCinematic")
 	var captions = current_scene.get_node("MenuLayer/IntroSequence")
 	var elapsed: float = 0.0
-	for mark in [1.5, 6.0, 10.0, 13.6, 15.7, 18.3]:
+	for mark in [2.0, 7.0, 12.0, 16.0, 20.0, 23.5]:
 		await _wait(mark - elapsed)
 		elapsed = mark
 		await _shot("30_intro_%04.1f.png" % mark)
-	await _wait(1.2)
+	await _wait(2.2)
+	# Chapter 1 has no intro captions since Stage 4C (the cinematic ends on its first panel).
 	print("I1 cinematic done=", not cinematic.visible, " chapter captions showing=", captions.visible)
 	await _shot("31_intro_captions.png")
 	captions.hide()

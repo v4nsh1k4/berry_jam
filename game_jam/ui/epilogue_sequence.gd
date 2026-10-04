@@ -1,23 +1,31 @@
 extends Control
-## The epilogue, drawn in code (about 15 s; click skips). Plays on arriving at
-## a frame marked `epilogue` (walking out through the border):
-##   morning in the real world, the teenager closes the book -> one last panel:
-##   everyone in the house complete, speaking full lines, and a faint red mark
-##   on the page. Then the end card (credits, Back to Menu).
-## The save is cleared as it starts (EventBus.game_completed).
+## The ending, drawn in code as comic pages (about 30 s; click skips to the
+## fade). Plays on arriving at a frame marked `epilogue` (walking out through
+## the border):
+##   page 1: the red figure steps through the gap in the panel border into a
+##           lit rectangle of the real world;
+##   page 2: dawn; the teenager closes the book;
+##   page 3: one clear last panel: everyone in the house complete, speaking
+##           full lines, a faint red mark on the page, and a closing line.
+## Then the end card (credits, Back to Menu). The save is cleared as it
+## starts (EventBus.game_completed).
 
 const HIP: Vector2 = Vector2(330, 470)
 const BOOK: Vector2 = Vector2(560, 360)
-const T_CLOSE: float = 4.0
-const T_PANEL: float = 8.0
-const T_FADE: float = 14.0
-const T_END: float = 15.0
+const T_PAGE2: float = 9.0
+const T_CLOSE: float = 13.5
+const T_PAGE3: float = 18.0
+const T_FADE: float = 27.6
+const T_END: float = 30.0
 ## The last page's characters and their lines come from this frame's data.
 const LAST_PAGE: String = "res://data/frames/ch3_escape.tres"
 
 var _t: float = -1.0
 var _cast: Array[NpcData] = []
 var _closed: bool = false
+var _pages: ComicPages
+## White in at the start, white out at the end, over the pages.
+var _white: ColorRect
 
 
 func _ready() -> void:
@@ -25,6 +33,26 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.returned_to_menu.connect(_stop)
+	_pages = ComicPages.new()
+	_pages.scene_drawer = _scene
+	_pages.tint = Color(0.85, 0.7, 0.45, 0.10)
+	_pages.footer = "click: skip"
+	_pages.pages = [
+		{start = 0.0, end = T_PAGE2, caption = "Through the gap in the border, there was morning.", panels = [
+			{rect = Rect2(0, 0, 0.62, 1), src = Rect2(260, 60, 860, 640), scene = 0, zoom = 1.04},
+			{rect = Rect2(0.62, 0, 0.38, 1), src = Rect2(380, 120, 420, 600), scene = 1, tilt = 1.5, zoom = 1.1}]},
+		{start = T_PAGE2, end = T_PAGE3, caption = "I gave every word back. The book could close.", panels = [
+			{rect = Rect2(0, 0, 1, 0.55), src = Rect2(0, 80, 1280, 580), scene = 1, zoom = 1.05},
+			{rect = Rect2(0, 0.55, 0.5, 0.45), src = Rect2(430, 260, 260, 200), scene = 1, tilt = -1.5, zoom = 1.2},
+			{rect = Rect2(0.5, 0.55, 0.5, 0.45), src = Rect2(200, 150, 340, 230), scene = 1, tilt = 1.5, zoom = 1.15}]},
+		{start = T_PAGE3, end = T_END + 1.0, caption = "Some stories keep a little of whoever visits them.", panels = [
+			{rect = Rect2(0, 0, 1, 1), src = Rect2(0, 0, 1280, 720), scene = 2, zoom = 1.03}]},
+	]
+	add_child(_pages)
+	_white = ColorRect.new()
+	_white.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_white.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_white)
 	hide()
 
 
@@ -50,6 +78,9 @@ func _process(delta: float) -> void:
 	if _t < 0.0:
 		return
 	_t += delta
+	for at in [T_PAGE2, T_PAGE3]:
+		if _t >= at and _t - delta < at:
+			AudioManager.play(&"swoosh", -6.0, 0.05)
 	if _t >= T_CLOSE and not _closed:
 		_closed = true
 		AudioManager.play(&"slam", -9.0, 0.0)
@@ -57,7 +88,8 @@ func _process(delta: float) -> void:
 		_stop()
 		EventBus.epilogue_finished.emit()
 		return
-	queue_redraw()
+	_pages.set_time(_t)
+	_white.color = Color(1, 1, 1, maxf(1.0 - _t, smoothstep(T_FADE, T_END, _t)))
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -66,56 +98,59 @@ func _gui_input(event: InputEvent) -> void:
 		_t = maxf(_t, T_FADE)
 
 
-func _draw() -> void:
-	if _t < 0.0:
-		return
-	var tick: int = InkDraw.boil_tick()
-	if _t < T_PANEL:
-		_draw_morning(tick)
-	else:
-		_draw_last_panel(tick)
-	var white: float = maxf(1.0 - _t / 1.0, smoothstep(T_FADE, T_END, _t))
-	draw_rect(Rect2(Vector2.ZERO, size), Color(1, 1, 1, white))
+func _scene(ci: CanvasItem, id: int, t: float, tick: int) -> void:
+	match id:
+		0:
+			_escape(ci, t, tick)
+		1:
+			_morning(ci, t, tick)
+		_:
+			_last_panel(ci, tick)
 
 
-## Dawn. The book glows faintly, then is shut.
-func _draw_morning(tick: int) -> void:
-	RealWorldArt.bedroom(self, size, 0.85, tick)
-	var open: float = 1.0 - smoothstep(T_CLOSE - 0.3, T_CLOSE, _t)
-	var lowered: Vector2 = BOOK.lerp(Vector2(560, 470), smoothstep(T_CLOSE + 0.5, T_PANEL - 1.0, _t))
-	RealWorldArt.teen(self, HIP, lowered, 1.0, 0.0, tick)
-	RealWorldArt.book(self, lowered, open, 0.5 * open, tick)
-	var alpha: float = clampf((_t - 5.0) / 0.5, 0.0, 1.0) * clampf((T_PANEL - 0.2 - _t) / 0.4, 0.0, 1.0)
-	RevealArt.caption(self, "I gave every word back.", Vector2(size.x * 0.5, 64), alpha, tick)
+## Inside the comic: the border splits and the red figure walks into light.
+func _escape(ci: CanvasItem, t: float, tick: int) -> void:
+	var s: Vector2 = ComicPages.SCENE
+	ci.draw_rect(Rect2(Vector2(-100, -100), s + Vector2(200, 200)), InkDraw.PAPER)
+	InkDraw.line(ci, Vector2(-100, 560), Vector2(s.x + 100, 562), 4.0, tick)
+	var open: float = smoothstep(0.5, 4.0, t)
+	var gap: Rect2 = Rect2(880, 560 - 360 * open, 90, 360 * open)
+	ci.draw_rect(Rect2(910, -100, 24, s.y + 200), InkDraw.INK)
+	ci.draw_rect(gap, Color(1.0, 0.97, 0.86))
+	ci.draw_colored_polygon(PackedVector2Array([gap.position, gap.position + Vector2(0, gap.size.y),
+		Vector2(gap.position.x - 700 * open, 600), Vector2(gap.position.x - 700 * open, gap.position.y - 40)]), Color(1.0, 0.95, 0.75, 0.4))
+	var x: float = lerpf(380.0, 915.0, smoothstep(3.0, 8.5, t))
+	RevealArt.red_figure(ci, Vector2(x, 560), 2.0 * (1.0 - smoothstep(7.5, 8.8, t) * 0.4), tick)
+
+
+## Dawn in the bedroom; the book glows faintly, then is shut and set down.
+func _morning(ci: CanvasItem, t: float, tick: int) -> void:
+	RealWorldArt.bedroom(ci, ComicPages.SCENE, 0.85, tick)
+	var open: float = 1.0 - smoothstep(T_CLOSE - 0.3, T_CLOSE, t)
+	var lowered: Vector2 = BOOK.lerp(Vector2(560, 470), smoothstep(T_CLOSE + 0.5, T_PAGE3 - 1.0, t))
+	RealWorldArt.teen(ci, HIP, lowered, 1.0, 0.0, tick)
+	RealWorldArt.book(ci, lowered, open, 0.5 * open, tick)
 
 
 ## The last panel: the house whole again, everyone speaking, and a faint red
 ## mark where the player was.
-func _draw_last_panel(tick: int) -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), InkDraw.WHITE)
-	var panel: Rect2 = Rect2(80, 60, size.x - 160, size.y - 120)
-	InkDraw.rect(self, panel, 8.0, tick, InkDraw.PAPER)
-	InkDraw.line(self, Vector2(panel.position.x, panel.position.y + 430), Vector2(panel.end.x, panel.position.y + 430), 3.0, tick + 1)
-	var font: Font = ThemeDB.fallback_font
+func _last_panel(ci: CanvasItem, tick: int) -> void:
+	var s: Vector2 = ComicPages.SCENE
+	ci.draw_rect(Rect2(Vector2(-100, -100), s + Vector2(200, 200)), InkDraw.PAPER)
+	var floor_y: float = 560.0
+	InkDraw.line(ci, Vector2(-100, floor_y), Vector2(s.x + 100, floor_y), 3.0, tick + 1)
 	for i in _cast.size():
 		var npc: NpcData = _cast[i]
-		var feet: Vector2 = panel.position + Vector2(220 + i * 380, 440)
+		var feet: Vector2 = Vector2(300 + i * 340, floor_y + 10)
 		if npc.visual_style == &"portrait":
-			feet = panel.position + Vector2(200 + i * 380, 220)
-		draw_set_transform(feet, 0.0, Vector2(0.85, 0.85))
-		NpcArt.draw(self, npc.visual_style, tick)
-		draw_set_transform(Vector2.ZERO)
+			feet = Vector2(300 + i * 340, 330)
+		RevealArt._character(ci, npc.visual_style, feet, 1.1, tick)
 		if npc.bubbles.is_empty() or npc.lines.is_empty():
 			continue
 		var line: String = npc.lines[0].replace("{word}", npc.bubbles[0].text)
-		var half: float = BubbleArt.size_for(line, 18).x * 0.5 + 24.0
-		var center: Vector2 = Vector2(clampf(feet.x, panel.position.x + half, panel.end.x - half), panel.position.y + 60 + (i % 2) * 56)
-		BubbleArt.draw(self, center, line, feet + Vector2(0, -150 if npc.visual_style != &"portrait" else -10), tick + i)
-	# The faint red mark: something was here, and was let go.
-	var mark: Vector2 = panel.end - Vector2(90, 70)
-	draw_colored_polygon(InkDraw.ellipse_points(mark, Vector2(26, 10), 14), Color(InkDraw.RED, 0.28))
-	draw_circle(mark + Vector2(18, -10), 4.0, Color(InkDraw.RED, 0.22))
-	var title: String = RealWorldArt.TITLE_TOP + " " + RealWorldArt.TITLE_BOTTOM
-	var title_size: Vector2 = font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 18)
-	InkDraw.rect(self, Rect2(panel.position - Vector2(6, 6), title_size + Vector2(28, 14)), 3.0, tick + 9, InkDraw.PAPER)
-	draw_string(font, panel.position + Vector2(8, 1 + font.get_ascent(18)), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, InkDraw.INK)
+		var half: float = BubbleArt.size_for(line, 20).x * 0.5 + 24.0
+		var center: Vector2 = Vector2(clampf(feet.x, half + 20, s.x - half - 20), 90 + (i % 2) * 64)
+		BubbleArt.draw(ci, center, line, feet + Vector2(0, -210 if npc.visual_style != &"portrait" else -40), tick + i, 20)
+	var mark: Vector2 = Vector2(s.x - 130, floor_y + 60)
+	ci.draw_colored_polygon(InkDraw.ellipse_points(mark, Vector2(34, 12), 14), Color(InkDraw.RED, 0.3))
+	ci.draw_circle(mark + Vector2(24, -12), 5.0, Color(InkDraw.RED, 0.24))

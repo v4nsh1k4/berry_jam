@@ -63,6 +63,7 @@ func _run() -> void:
 	gs = root.get_node("/root/GameState")
 	fm = root.get_node("/root/FrameManager")
 	await _wait(0.3)
+	root.get_node("/root/EventBus").cutscene_started.connect(func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish"))
 	root.get_node("/root/EventBus").game_started.emit()
 	await _wait(0.3)
 	await _shot("00_menu.png")

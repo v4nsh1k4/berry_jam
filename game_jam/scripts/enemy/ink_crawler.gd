@@ -149,6 +149,13 @@ func wake_to(hunting: bool, scent: float = 0.0) -> void:
 	_set_state(State.HUNTING if hunting else State.STALKING)
 
 
+## The jumpscare: it is suddenly there, risen (panel coords).
+func appear_at(at: Vector2) -> void:
+	_pos = at.clamp(walk_area.position, walk_area.end)
+	position = _pos
+	rise = 1.0
+
+
 ## WAIT word support: risen Crawlers can be frozen in place.
 func can_freeze() -> bool:
 	return state != State.DORMANT and _frozen <= 0.0

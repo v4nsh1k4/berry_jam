@@ -85,6 +85,8 @@ func _run() -> void:
 	gs = root.get_node("/root/GameState")
 	fm = root.get_node("/root/FrameManager")
 	bus = root.get_node("/root/EventBus")
+	# Cutscenes have their own test (cutscenes.gd): skip them here.
+	bus.cutscene_started.connect(func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish"))
 	bus.player_caught.connect(func(): caught[0] += 1)
 	await _wait(0.3)
 	bus.game_started.emit()
@@ -200,10 +202,10 @@ func _run() -> void:
 	print("F2 held share=", snapped(gs.held_share(), 0.01), " hand=", HAND[_hand().state])
 
 	# G. Lost word fallback: stolen but no longer held -> goes home by itself.
-	await _jump("ch3_torn_return", ["portrait_remember", "hand_erase"], true)
+	await _jump("ch3_returning_room", ["portrait_remember", "hand_erase"], true)
 	gs.stolen_bubble_ids.append(&"vane_hush")
 	print("G0 frame=", fm.current_frame.data.id, " can_return=", gs.can_return(), " time_scale=", Engine.time_scale, " paused=", paused)
-	await _at(470)
+	await _at(820)
 	await _wait(0.5)
 	print("G1 lost vane_hush restored=", gs.is_bubble_returned(&"vane_hush"))
 

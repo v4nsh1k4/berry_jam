@@ -29,7 +29,7 @@ func setup(npc: NpcData) -> void:
 	var spots: PackedVector2Array = npc.bubble_offsets if not npc.bubble_offsets.is_empty() else NpcArt.default_bubble_spots(npc.visual_style)
 	var mouth: Vector2 = NpcArt.mouth(npc.visual_style)
 	var reach: Vector2 = global_position + Vector2(0, npc.reach_y)
-	for i in npc.bubbles.size():
+	for i in npc.bubbles.size() if npc.show_bubbles else 0:
 		var speech: SpeechBubble = SpeechBubble.new()
 		add_child(speech)
 		speech.position = spots[i % spots.size()]

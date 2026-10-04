@@ -18,6 +18,7 @@ area = Rect2(1080, 396, 104, 112)
 target_frame_id = &"ch2_cellar"
 transition_style = 0
 target_spawn = Vector2(200, 466)
+required_flag = &"clock_read"
 
 [sub_resource type="Resource" id="Resource_3"]
 script = ExtResource("3_interactable_data")
@@ -28,6 +29,7 @@ size = Vector2(120, 310)
 revealed_by_light = true
 symbols = PackedStringArray("spiral", "hand", "house")
 sets_flag = &"clock_read"
+caption = "The clock strikes once. Across the room, a bolt slides back."
 
 [sub_resource type="Resource" id="Resource_4"]
 script = ExtResource("3_interactable_data")
@@ -59,8 +61,8 @@ ambient_light = 0.05
 background_style = &"clock_room"
 player_spawn = Vector2(170, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("The clock has no hands. Its face only shows in the light.", "It patrols here. Light lets you read the clock, and lets it find you.")
-hint = "Say HUSH or WAIT first, then light the clock face for a moment. Or hide behind the curtain afterwards."
+captions = PackedStringArray("The clock has no hands. Its face only shows in the light.", "It patrols here. The far door stays bolted until the clock is read.")
+hint = "Say HUSH or WAIT first, then light the clock face for a moment. Hide behind the curtain afterwards."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
 interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4")])
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])

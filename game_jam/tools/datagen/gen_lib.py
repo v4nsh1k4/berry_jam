@@ -14,10 +14,13 @@ class TypedArr:
 class SNArr(list): pass
 class PSA(list): pass                   # PackedStringArray
 class PV2A(list): pass
+class R2Arr(list): pass                 # Array[Rect2]
 
 SCRIPTS = {k: f"res://scripts/data/{k}.gd" for k in
-           ["frame_data", "exit_data", "interactable_data", "npc_data", "bubble_data", "light_spot_data", "chapter_data"]}
-CLASS = {"frame_data": "FrameData", "bubble_data": "BubbleData", "chapter_data": "ChapterData"}
+           ["frame_data", "exit_data", "interactable_data", "npc_data", "bubble_data", "light_spot_data", "chapter_data",
+            "cutscene_data", "cutscene_beat", "page_spread_data", "spread_panel_data", "spread_hop"]}
+CLASS = {"frame_data": "FrameData", "bubble_data": "BubbleData", "chapter_data": "ChapterData",
+         "cutscene_data": "CutsceneData"}
 
 def q(s): return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
@@ -40,6 +43,7 @@ class Writer:
             return f'Array[ExtResource("{sid}")]([' + ", ".join(self.val(i) for i in v.items) + "])"
         if isinstance(v, SNArr): return "Array[StringName]([" + ", ".join("&" + q(i) for i in v) + "])"
         if isinstance(v, PSA): return "PackedStringArray(" + ", ".join(q(i) for i in v) + ")"
+        if isinstance(v, R2Arr): return "Array[Rect2]([" + ", ".join(f"Rect2({a}, {b}, {c}, {d})" for a, b, c, d in v) + "])"
         if isinstance(v, PV2A): return "PackedVector2Array(" + ", ".join(f"{a}, {b}" for a, b in v) + ")"
         raise TypeError(v)
     def body(self, script, props):
@@ -81,15 +85,17 @@ def item(**p):
         if k in p: p[k] = SN(p[k])
     for k in ("position", "size", "push_offset"):
         if k in p: p[k] = V2(p[k])
+    if "stand_spot" in p: p["stand_spot"] = R2(p["stand_spot"])
+    if "light_hold" in p: p["light_hold"] = float(p["light_hold"])
     if "accepted_ability_ids" in p: p["accepted_ability_ids"] = SNArr(p["accepted_ability_ids"])
     if "symbols" in p: p["symbols"] = PSA(p["symbols"])
     if "reward_bubble" in p and isinstance(p["reward_bubble"], str): p["reward_bubble"] = bubble_ext(p["reward_bubble"])
     return Sub("interactable_data", **p)
 def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(), items=(), npcs=(), events=(), ending="",
           next_chapter="", crawler=None, patrol=False, glitch=0.0, tilt=0.0, sketch=0.0, crawler_kind="",
-          border_gap=False, epilogue=False):
+          border_gap=False, epilogue=False, light_disabled=False, spread=None, walk=(40, 400, 1104, 104)):
     p = dict(id=SN(fid), display_name=name, ambient_light=float(ambient), background_style=SN(style),
-             player_spawn=V2(spawn), walk_area=R2((40, 400, 1104, 104)), captions=PSA(captions), hint=hint)
+             player_spawn=V2(spawn), walk_area=R2(walk), captions=PSA(captions), hint=hint)
     if exits: p["exits"] = TypedArr("exit_data", list(exits))
     if items: p["interactables"] = TypedArr("interactable_data", list(items))
     if npcs: p["npcs"] = TypedArr("npc_data", list(npcs))
@@ -105,6 +111,25 @@ def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(),
     if crawler_kind: p["crawler_kind"] = SN(crawler_kind)
     if border_gap: p["border_gap"] = True
     if epilogue: p["epilogue"] = True
+    if light_disabled: p["light_disabled"] = True
+    if spread: p["spread"] = spread
     write(f"data/frames/{fid}.tres", "frame_data", p)
 
 SLIDE, SPLASH = 0, 1
+
+def spread_panel(pid, rect, floor_y, entry, style, ambient, tilt=0.0, gap=None, bridge="", lit_bridge=False):
+    p = dict(id=SN(pid), rect=R2(rect), floor_y=float(floor_y), entry=V2(entry), style=SN(style),
+             ambient=float(ambient), tilt=float(tilt))
+    if gap: p["gap"] = V2(gap)
+    if bridge: p["gap_bridge_flag"] = SN(bridge)
+    if lit_bridge: p["gap_lit_bridge"] = True
+    return Sub("spread_panel_data", **p)
+def hop(frm, trigger, to, point, zone=None, flag="", locked=""):
+    p = dict(from_panel=SN(frm), trigger=SN(trigger), to_panel=SN(to), to_point=V2(point))
+    if zone: p["zone_x"] = V2(zone)
+    if flag: p["requires_flag"] = SN(flag)
+    if locked: p["locked_caption"] = locked
+    return Sub("spread_hop", **p)
+def page_spread(panels, hops, page_number=13, fingers=True):
+    return Sub("page_spread_data", panels=TypedArr("spread_panel_data", panels), hops=TypedArr("spread_hop", hops),
+               page_number=page_number, finger_hazard=fingers)

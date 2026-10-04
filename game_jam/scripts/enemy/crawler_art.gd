@@ -8,6 +8,8 @@ const HEIGHT: float = 240.0
 const LINE: float = 6.5
 const JITTER: float = 3.2
 const PALE: Color = Color(0.92, 0.9, 0.82)
+## Where the eyes look (-1..1 each way); set by the view before drawing.
+static var look: Vector2 = Vector2.ZERO
 
 
 ## `rise` 0..1 (puddle .. standing), `facing` -1 / 1, `reach` 0..1 how far the
@@ -93,13 +95,13 @@ static func _head(ci: CanvasItem, rng: RandomNumberGenerator, at: Vector2, f: fl
 	var eyes: Array[Vector3] = [Vector3(-9, -8, 4.5), Vector3(7, -10, 2.6), Vector3(1, 3, 3.4), Vector3(13, 1, 1.8)]
 	for i in 2 + rng.randi() % 3:
 		var e: Vector3 = eyes[i]
-		ci.draw_circle(at + Vector2(e.x * f, e.y), e.z, eye_color)
+		ci.draw_circle(at + Vector2(e.x * f, e.y) + look * 3.0, e.z, eye_color)
 	if mouth > 0.05:
 		var m: PackedVector2Array = PackedVector2Array()
 		for i in 7:
 			m.append(at + Vector2((-14 + i * 4.5) * f, 15.0))
 		for i in range(6, -1, -1):
-			m.append(at + Vector2((-14 + i * 4.5) * f, 17.0 + mouth * rng.randf_range(3, 8)))
+			m.append(at + Vector2((-14 + i * 4.5) * f, 17.0 + mouth * rng.randf_range(4, 13)))
 		InkDraw.fill(ci, m, Color(PALE, 0.85))
 
 

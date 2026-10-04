@@ -9,4 +9,4 @@ title = "Chapter 1: The Rotted Bedchamber"
 first_frame_id = &"ch1_awakening"
 damage_visual_scale = 1.0
 line_jitter = 1.0
-intro_lines = PackedStringArray("The Silent House of Hollow Hill.  Issue #1.", "Everyone in this house was drawn with something to say.", "Everyone... except you.")
+intro_lines = PackedStringArray()

@@ -29,6 +29,7 @@ func _run() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	add_child(main)
 	await get_tree().process_frame
+	EventBus.cutscene_started.connect(func(_id: StringName) -> void: CutsceneSystem.call_deferred("_finish"))
 	EventBus.game_started.emit()
 	EventBus.menu_new_game.emit()
 	# New Game opens with the intro cinematic: skip it like a click would.

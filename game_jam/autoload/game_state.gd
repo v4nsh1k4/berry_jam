@@ -25,6 +25,8 @@ var flags: Dictionary = {}
 var stolen_bubble_ids: Array[StringName] = []
 ## Words given back to their owners. Gone for good: never stealable again.
 var returned_bubble_ids: Array[StringName] = []
+## Cutscenes already watched this run (saved; kept across Restart Chapter).
+var seen: Array[StringName] = []
 ## The reveal has played (the Shadow is the Artist's hand). Until then no word
 ## can be given back.
 var twist_revealed: bool = false
@@ -39,6 +41,7 @@ func reset() -> void:
 	flags.clear()
 	stolen_bubble_ids.clear()
 	returned_bubble_ids.clear()
+	seen.clear()
 	selected_index = -1
 	stolen_bubble_count = 0
 	comic_damage = 0.0

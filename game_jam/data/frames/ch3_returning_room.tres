@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="FrameData" load_steps=17 format=3]
+[gd_resource type="Resource" script_class="FrameData" load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
 [ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
@@ -9,20 +9,25 @@
 [ext_resource type="Resource" path="res://data/bubbles/arthur_push.tres" id="7_arthur_push"]
 [ext_resource type="Resource" path="res://data/bubbles/arthur_wait.tres" id="8_arthur_wait"]
 [ext_resource type="Resource" path="res://data/bubbles/arthur_help.tres" id="9_arthur_help"]
-[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="10_light_spot_data"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_hide.tres" id="10_vane_hide"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_hush.tres" id="11_vane_hush"]
+[ext_resource type="Resource" path="res://data/bubbles/vane_wait.tres" id="12_vane_wait"]
+[ext_resource type="Resource" path="res://data/bubbles/portrait_remember.tres" id="13_portrait_remember"]
+[ext_resource type="Script" path="res://scripts/data/light_spot_data.gd" id="14_light_spot_data"]
 
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_exit_data")
 area = Rect2(1080, 396, 104, 112)
-target_frame_id = &"ch3_torn_return"
-transition_style = 0
-target_spawn = Vector2(170, 466)
+target_frame_id = &"ch3_heart_return"
+transition_style = 1
+target_spawn = Vector2(160, 466)
+required_flag = &"all_returned"
 
 [sub_resource type="Resource" id="Resource_2"]
 script = ExtResource("3_interactable_data")
 id = &"ch3_drawer"
 kind = &"return_spot"
-position = Vector2(930, 300)
+position = Vector2(995, 300)
 size = Vector2(110, 82)
 owner_id = &"drawer"
 text = "drawer"
@@ -33,7 +38,7 @@ caption = "the old drawer"
 script = ExtResource("3_interactable_data")
 id = &"returning_curtain"
 kind = &"hiding_spot"
-position = Vector2(30, 110)
+position = Vector2(20, 110)
 size = Vector2(100, 272)
 text = "curtain"
 
@@ -41,7 +46,7 @@ text = "curtain"
 script = ExtResource("4_npc_data")
 id = &"arthur"
 display_name = "Arthur"
-position = Vector2(560, 404)
+position = Vector2(420, 404)
 visual_style = &"butler"
 bubbles = Array[ExtResource("5_bubble_data")]([ExtResource("6_arthur_open"), ExtResource("7_arthur_push"), ExtResource("8_arthur_wait"), ExtResource("9_arthur_help")])
 lines = PackedStringArray("I used to {word} every door in this house.", "{word} the chairs in, I always said.", "{word} for me, sir. Please.", "Can you {word} me find my words?")
@@ -49,18 +54,55 @@ broken_lines = PackedStringArray("I used to... every d-door. Please.", "...the c
 relief_lines = PackedStringArray("Oh... thank you, sir.", "That's mine. I remember it.", "I can nearly speak again.", "I'm whole. Thank you.")
 plea_lines = PackedStringArray()
 words_stealable = false
+bubble_offsets = PackedVector2Array(-150, -205, -80, -305, 110, -225, 190, -318)
 
 [sub_resource type="Resource" id="Resource_5"]
-script = ExtResource("10_light_spot_data")
+script = ExtResource("4_npc_data")
+id = &"mrs_vane"
+display_name = "Mrs. Vane"
+position = Vector2(820, 404)
+visual_style = &"housekeeper"
+bubbles = Array[ExtResource("5_bubble_data")]([ExtResource("10_vane_hide"), ExtResource("11_vane_hush"), ExtResource("12_vane_wait")])
+lines = PackedStringArray("Don't {word} from me, child.", "{word}, the page is tearing.", "{word}. Don't leave us like this.")
+broken_lines = PackedStringArray("Don't... from me. P-please.", "..., the page is t-tearing...", "... Don't leave us. Please.")
+relief_lines = PackedStringArray("Bless you, child.", "It sounds right again.", "There. That's my voice.")
+plea_lines = PackedStringArray("You took it... I can't finish my sentences.", "Every word you took left a hole in me.", "I keep reaching for it and it isn't there.")
+words_stealable = false
+bubble_offsets = PackedVector2Array(-110, -210, -60, -300, 100, -240)
+
+[sub_resource type="Resource" id="Resource_6"]
+script = ExtResource("4_npc_data")
+id = &"portrait_lady"
+display_name = "The Portrait"
+position = Vector2(210, 160)
+visual_style = &"portrait"
+bubbles = Array[ExtResource("5_bubble_data")]([ExtResource("13_portrait_remember")])
+lines = PackedStringArray("Help me {word} who I was.")
+broken_lines = PackedStringArray("Help me... who I... was?")
+relief_lines = PackedStringArray("I remember now. Thank you.")
+plea_lines = PackedStringArray("I can't... who was I? You took it.", "There is a hole where my words were.")
+words_stealable = false
+reach_y = 270.0
+bubble_offsets = PackedVector2Array(0, -110)
+
+[sub_resource type="Resource" id="Resource_7"]
+script = ExtResource("14_light_spot_data")
 kind = &"candle"
-position = Vector2(380, 288)
+position = Vector2(600, 288)
 radius = 320.0
 energy = 0.85
 
-[sub_resource type="Resource" id="Resource_6"]
-script = ExtResource("10_light_spot_data")
+[sub_resource type="Resource" id="Resource_8"]
+script = ExtResource("14_light_spot_data")
 kind = &"glow"
-position = Vector2(255, 175)
+position = Vector2(210, 175)
+radius = 240.0
+energy = 0.4
+
+[sub_resource type="Resource" id="Resource_9"]
+script = ExtResource("14_light_spot_data")
+kind = &"glow"
+position = Vector2(900, 230)
 radius = 240.0
 energy = 0.4
 
@@ -72,13 +114,13 @@ ambient_light = 0.2
 background_style = &"returning_room"
 player_spawn = Vector2(170, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("Now you know what you are. Give back what you took.", "Select a word (1-6, Q / R), stand under its owner's broken bubble, hold E.")
-hint = "Give Arthur his words, and the drawer its HUSH. When the eraser's shadow falls on the floor, step out of it or hide."
+captions = PackedStringArray("Now you know what you are. Give back what you took.", "Select a word (1-6, Q / R), stand under one of its owner's broken bubbles, hold E.")
+hint = "Give each word to its owner: Arthur, Mrs. Vane, the Portrait, the old drawer. When the eraser's shadow falls, step out of it or hide."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
 interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2"), SubResource("Resource_3")])
-npcs = Array[ExtResource("4_npc_data")]([SubResource("Resource_4")])
-lights = Array[ExtResource("10_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
-events = Array[StringName]([&"artist_hand"])
-glitch = 0.6
+npcs = Array[ExtResource("4_npc_data")]([SubResource("Resource_4"), SubResource("Resource_5"), SubResource("Resource_6")])
+lights = Array[ExtResource("14_light_spot_data")]([SubResource("Resource_7"), SubResource("Resource_8"), SubResource("Resource_9")])
+events = Array[StringName]([&"artist_hand", &"return_gate"])
+glitch = 0.5
 panel_tilt = 0.6
 sketch = 0.15

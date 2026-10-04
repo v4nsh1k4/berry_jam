@@ -46,3 +46,9 @@ extends Resource
 @export var border_gap: bool = false
 ## Arriving here plays the epilogue before the ending card.
 @export var epilogue: bool = false
+
+## The flashlight will not work here ("The ink drinks the light.").
+@export var light_disabled: bool = false
+
+## Non-null: this frame is a page of small panels the player hops between.
+@export var spread: PageSpreadData

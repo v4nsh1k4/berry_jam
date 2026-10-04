@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="CutsceneData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/cutscene_data.gd" id="1_cutscene_data"]
+[ext_resource type="Script" path="res://scripts/data/cutscene_beat.gd" id="2_cutscene_beat"]
+
+[sub_resource type="Resource" id="Resource_1"]
+script = ExtResource("2_cutscene_beat")
+duration = 2.6
+panels = Array[Rect2]([Rect2(0, 0, 0.5, 1), Rect2(0.5, 0, 0.5, 1)])
+draws = PackedStringArray("eraser_dust", "repair_panel")
+caption = "The eraser lifts. The lines come back."
+camera = &"still"
+sfx = &"nib"
+page_turn = true
+
+[sub_resource type="Resource" id="Resource_2"]
+script = ExtResource("2_cutscene_beat")
+duration = 2.8
+panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
+draws = PackedStringArray("whole_cast")
+caption = "Everyone is whole again."
+camera = &"zoom_out"
+sfx = &"chime"
+page_turn = false
+
+[sub_resource type="Resource" id="Resource_3"]
+script = ExtResource("2_cutscene_beat")
+duration = 3.0
+panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
+draws = PackedStringArray("border_gap")
+caption = "And in the border, a gap just your size."
+camera = &"pan_right"
+sfx = &"swoosh"
+page_turn = false
+
+[resource]
+script = ExtResource("1_cutscene_data")
+id = &"c6_repair"
+trigger = "repaired"
+skippable = true
+music_cue = &"repair"
+beats = Array[ExtResource("2_cutscene_beat")]([SubResource("Resource_1"), SubResource("Resource_2"), SubResource("Resource_3")])

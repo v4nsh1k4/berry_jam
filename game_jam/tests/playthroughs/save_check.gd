@@ -22,6 +22,8 @@ func _run() -> void:
 	gs = root.get_node("/root/GameState")
 	fm = root.get_node("/root/FrameManager")
 	bus = root.get_node("/root/EventBus")
+	# Cutscenes have their own test (cutscenes.gd): skip them here.
+	bus.cutscene_started.connect(func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish"))
 	await _wait(0.3)
 	bus.game_started.emit()
 	main = current_scene

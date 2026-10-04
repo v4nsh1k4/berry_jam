@@ -16,12 +16,11 @@ const CARRIED: Dictionary = {
 }
 ## Chapter 3 in story order, for F9.
 const CH3_ROOMS: PackedStringArray = [
-	"ch3_torn_page", "ch3_gallery_words", "ch3_margin", "ch3_ink_heart",
-	"ch3_returning_room", "ch3_torn_return", "ch3_gallery_return", "ch3_heart_return", "ch3_escape",
+	"ch3_gallery_words", "ch3_margin", "ch3_ink_heart", "ch3_returning_room", "ch3_heart_return", "ch3_escape",
 ]
 ## Rooms after the reveal.
 const RETURN_PHASE: PackedStringArray = [
-	"ch3_returning_room", "ch3_torn_return", "ch3_gallery_return", "ch3_heart_return", "ch3_escape",
+	"ch3_returning_room", "ch3_heart_return", "ch3_escape",
 ]
 const FINAL_WORD: String = "hand_erase"
 
