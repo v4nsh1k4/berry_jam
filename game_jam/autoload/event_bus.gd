@@ -149,3 +149,20 @@ signal goal_changed(text: String)
 ## A scare fired; intensity 0..1 scales its shake and flash (accessibility).
 @warning_ignore("unused_signal")
 signal scare(kind: StringName, intensity: float)
+
+# Stage 4D
+## The inventory order changed (reordering words).
+@warning_ignore("unused_signal")
+signal inventory_reordered
+## Something opened: the unified "unlocked" feedback (UnlockFeedback).
+@warning_ignore("unused_signal")
+signal unlocked(data: InteractableData, screen_pos: Vector2)
+## An exit's lock opened (ExitZone draws it open; feedback points at it).
+@warning_ignore("unused_signal")
+signal exit_unlocked(exit: ExitData, screen_pos: Vector2)
+## A GameState flag became true for the first time.
+@warning_ignore("unused_signal")
+signal flag_set(flag: StringName)
+## What is feeding the noticed meter right now (its two HUD icons).
+@warning_ignore("unused_signal")
+signal notice_sources(light: bool, noise: bool)

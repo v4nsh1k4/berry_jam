@@ -57,7 +57,9 @@ static func margin(ci: FrameBackground, tick: int) -> void:
 		InkDraw.line(ci, r.position, r.end, 3.0, s + 50)
 		InkDraw.line(ci, Vector2(r.end.x, r.position.y), Vector2(r.position.x, r.end.y), 3.0, s + 51)
 	var font: Font = ThemeDB.fallback_font
-	ci.draw_string(font, Vector2(470, 230), "fix this", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(InkDraw.INK, 0.7))
-	ci.draw_string(font, Vector2(920, 200), "erase?", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(InkDraw.INK, 0.7))
-	ci.draw_string(font, Vector2(980, 300), "the red one", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(InkDraw.INK, 0.6))
+	# The Artist's pencil notes in the margin (atmosphere, signed so it's clear
+	# whose they are and who they mean).
+	ci.draw_string(font, Vector2(430, 230), "Artist's note: fix this page", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(InkDraw.INK, 0.7))
+	ci.draw_string(font, Vector2(820, 200), "erase the red one?", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(InkDraw.INK, 0.7))
+	ci.draw_string(font, Vector2(860, 300), "...no. It gave them back.", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(InkDraw.INK, 0.6))
 	FrameBackground.doorway(ci, Rect2(1068, 150, 92, 232), s + 60)

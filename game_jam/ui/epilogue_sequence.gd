@@ -41,7 +41,7 @@ func _ready() -> void:
 		{start = 0.0, end = T_PAGE2, caption = "Through the gap in the border, there was morning.", panels = [
 			{rect = Rect2(0, 0, 0.62, 1), src = Rect2(260, 60, 860, 640), scene = 0, zoom = 1.04},
 			{rect = Rect2(0.62, 0, 0.38, 1), src = Rect2(380, 120, 420, 600), scene = 1, tilt = 1.5, zoom = 1.1}]},
-		{start = T_PAGE2, end = T_PAGE3, caption = "I gave every word back. The book could close.", panels = [
+		{start = T_PAGE2, end = T_PAGE3, caption = "Every word went back. The Artist's hand set down its pencil.", panels = [
 			{rect = Rect2(0, 0, 1, 0.55), src = Rect2(0, 80, 1280, 580), scene = 1, zoom = 1.05},
 			{rect = Rect2(0, 0.55, 0.5, 0.45), src = Rect2(430, 260, 260, 200), scene = 1, tilt = -1.5, zoom = 1.2},
 			{rect = Rect2(0.5, 0.55, 0.5, 0.45), src = Rect2(200, 150, 340, 230), scene = 1, tilt = 1.5, zoom = 1.15}]},
@@ -117,7 +117,8 @@ func _escape(ci: CanvasItem, t: float, tick: int) -> void:
 	var gap: Rect2 = Rect2(880, 560 - 360 * open, 90, 360 * open)
 	ci.draw_rect(Rect2(910, -100, 24, s.y + 200), InkDraw.INK)
 	ci.draw_rect(gap, Color(1.0, 0.97, 0.86))
-	ci.draw_colored_polygon(PackedVector2Array([gap.position, gap.position + Vector2(0, gap.size.y),
+	if open > 0.02:
+		ci.draw_colored_polygon(PackedVector2Array([gap.position, gap.position + Vector2(0, gap.size.y),
 		Vector2(gap.position.x - 700 * open, 600), Vector2(gap.position.x - 700 * open, gap.position.y - 40)]), Color(1.0, 0.95, 0.75, 0.4))
 	var x: float = lerpf(380.0, 915.0, smoothstep(3.0, 8.5, t))
 	RevealArt.red_figure(ci, Vector2(x, 560), 2.0 * (1.0 - smoothstep(7.5, 8.8, t) * 0.4), tick)

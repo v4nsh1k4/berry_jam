@@ -35,6 +35,8 @@ func _update_group() -> void:
 
 
 func receive_word(bubble: BubbleData) -> void:
+	if bubble != null:
+		bubble = InventorySlots.word_for_owner(data.owner_id)
 	if bubble == null or bubble.stolen_from != data.owner_id or not GameState.can_return():
 		react_wrong()
 		EventBus.ability_failed.emit(bubble, data.id)

@@ -37,6 +37,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _brain.is_frozen():
 		_eye_light.energy = 0.3 if randf() < 0.5 else 0.0
+		queue_redraw()
 		return
 	_drip_t += delta
 	if _pen > 0.0:
@@ -80,6 +81,8 @@ func _draw() -> void:
 	InkDraw.gap_ratio = 0.45 * _pen
 	CrawlerArt.draw(self, _brain.rise, _pose_seed, _brain.facing, reach, coil, mouth, _drip_t, InkDraw.RED if hunting else CrawlerArt.PALE)
 	InkDraw.gap_ratio = 0.0
+	if _brain.is_frozen():
+		FrostArt.draw(self, CrawlerArt.head_position(_brain.rise, _brain.facing, coil) + Vector2(0, 40), 70.0, InkDraw.boil_tick())
 
 
 ## Pencil construction lines under the ink: it is being drawn as it moves.

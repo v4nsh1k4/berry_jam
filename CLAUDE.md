@@ -83,8 +83,11 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 | 4B | Story reorder (no returning before the reveal), Gallery ability puzzle, the Ink Heart and the final steal (ERASE), the reveal, the return phase with the Artist's hand, the final word and repair, the Last Page, epilogue, intro cinematic, save v2 migration, F9 debug jump |
 | 4C | Pacing pass to ~15 min (Torn Page cut, one batched Returning Room, gallery return removed, Ch1 intro captions cut), CutsceneSystem + C1-C6, reveal rewrite (9 captions, ~35 s, goal line), light puzzles (4 in Ch2, 3 in the spread, light disabled in the Ink Heart), the page spread (Gallery of Words), scarier monster, one major + one minor jumpscare, MusicManager, intro/ending as comic pages, save v3, F6-F10 debug keys |
 
-Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B.
-Stage 4C is uncommitted until the user asks.
+| 4D | 22 playtest fixes: real Study and Clock dial locks (TRY + "?"), every clue used (hallway, plaque, clock), decoy doors removed, forgiving spread jump (buffer + coyote, W/Up), no duplicate words (x2 slots), WAIT made useful (pendulum, gutter fingers) with a frost effect, unified unlock feedback (captions, pop-ups, sound, pulse, padlocks that drop, gated exit doors, off-screen arrow), word tooltips + selected-word line, reorder (drag, Shift+Q/R), controls card on New Game, noticed-meter cause icons + noise from running, margin doodles, clean chapter title cards, reveal rebuilt (morph, label card, recap), five one-time scares, return/erase music + build-up layers, the Artist's pencil, save v4 |
+
+Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B,
+Stage 4C, the study-lock cut (since reverted by 4D). Stage 4D is uncommitted
+until the user asks.
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
 Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
@@ -118,7 +121,12 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   `scare_check` (both scares, once only), `music_check` (render time, slowest
   frame, clipping, loop seams), `cinematics_check` (intro and ending pages).
   Older playthroughs skip cutscenes by connecting `cutscene_started` to
-  `CutsceneSystem._finish`.
+  `CutsceneSystem._finish`. Stage 4D added `gates_check` (Study and Clock
+  locks incl. wrong codes and save/load, unlock captions, the gallery lever,
+  the cellar marker after reload / save-load / light on-off, the spread
+  door's padlock) and `ui_check` (controls card, title card, doodles, hover
+  tooltip + x2, meter icons, the final room's hand). New Game now waits on
+  the controls card: tests press it (`MenuLayer/ControlsCard._accept`).
   They print a log and save screenshots to `$SHOT_DIR`. Read the screenshots,
   because visual bugs (cyan glitch blocks, a pink vignette flood) only showed
   up there. `tests/visual/art_preview.gd` renders any drawing call to a PNG.
@@ -135,8 +143,8 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
 - Debug builds only: **jump to any room**. On the web add `?frame=ch3_margin`
   (optionally `&words=arthur_open,vane_hide` and `&twist=1`); on desktop run
   with `-- --frame=ch3_margin [--words=...] [--twist=1]`. **In game (debug
-  builds, e.g. the editor's ▶): F6** next cutscene, **F7** Clock Room
-  jumpscare, **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
+  builds, e.g. the editor's ▶): F6** next cutscene, **F7** next jumpscare
+  (cycles all five, right where you are), **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
   spread (all in `main._unhandled_key_input`). `DebugJump` adds the
   words a player would carry; return-phase rooms also get ERASE and
   `twist_revealed`.
@@ -168,7 +176,7 @@ box). Don't name test methods after `SceneTree` methods.
 | `TransitionManager` | SLIDE (page sheet) and INK_SPLASH (shader) wipes around a swap |
 | `AbilityRegistry` | ability id → `AbilityData` + handler instance, `speak()`, cooldowns (`ABILITY_PATHS` list) |
 | `CutsceneSystem` | CanvasLayer 55. Loads `data/cutscenes/*.tres` (`CUTSCENE_PATHS`), plays one when its trigger fires (`first_steal`, `resolved:<id>`, `frame:<id>`, `repaired`), pauses the tree, skippable after 0.6 s, marks it in `GameState.seen` |
-| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame (`MusicSynth`), crossfades, intensity/hunt layers, stingers, ducking, focus-loss mute; music volume/mute in `settings.cfg` |
+| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame (`MusicRenderer` + `MusicSynth`/`MusicSynth2`), crossfades, build-up layers (pulse → strings swell → hunt), stingers, ducking, focus-loss mute; music volume/mute in `settings.cfg` |
 
 ### Scene tree (`scenes/main.tscn`) and canvas layers
 World (layer 0: the `Frame` under `World/FrameRoot`, plus `World/Player`; the
@@ -176,10 +184,10 @@ Frame's `CanvasModulate` darkens only this layer) → PageLayer 10 (follows
 the viewport so it shakes and tilts with the world: `GlitchOverlay`,
 `InkBleed`, `PageOverlay` = white gutter, border, cracks, captions) → HUDLayer
 20 (`InventoryStrip`, `NoticeMeter`, `InteractPrompt`, `GoalLine`) → FXLayer 25
-(`DangerVignette`, `FeedbackFx`, `JumpscareOverlay`) → LockLayer 40 →
+(`DangerVignette`, `FeedbackFx`, `UnlockFeedback`, `JumpscareOverlay`) → LockLayer 40 →
 TransitionManager 50 → CutsceneSystem 55 →
 MenuLayer 60 (IntroCinematic, IntroSequence, RevealSequence,
-EpilogueSequence, EndCard, MainMenu, PauseMenu) → StartLayer 100. The panel
+EpilogueSequence, EndCard, MainMenu, ControlsCard, PauseMenu) → StartLayer 100. The panel
 is the fixed `Frame.PANEL_RECT` = (48, 32, 1184×528) on a 1280×720 page. All
 room data is in **panel coordinates**. The floor is y ≈ 380 and feet walk in
 y 400-504.
@@ -201,9 +209,11 @@ words carried in stay, this chapter's (or this phase's) thefts and returns are
 undone. **Autosave** (`user://ink_bleed_save.json`, IndexedDB on the web)
 happens on every frame change, theft, solved object and quit to menu.
 
-**Save format v3** (`SaveSystem.VERSION`): v2 added `twist_revealed`; v3 adds
-`seen` (watched cutscenes and fired scares; v2 saves migrate with an empty
-list). `SaveSystem.migrate()` upgrades v1 (Stage 4A) saves: Chapters 1-2 as they are;
+**Save format v4** (`SaveSystem.VERSION`): v2 added `twist_revealed`; v3
+added `seen` (watched cutscenes and fired scares); v4 (Stage 4D) only
+migrates flags: a save with `clock_read` also gets `clock_solved` (reading the
+clock used to open its door; now the dial box does). Inventory order is the
+saved order (reordering persists). One-time hints live in progress.cfg. `SaveSystem.migrate()` upgrades v1 (Stage 4A) saves: Chapters 1-2 as they are;
 a save inside Chapter 3 restarts at Chapter 3's `chapter_start` (so the reveal
 is never skipped); unusable or future-version saves count as "no save". A save
 naming a frame that no longer exists (Stage 4C removed `ch3_torn_page`,
@@ -430,6 +440,55 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   polygons). Room art is in `scripts/frame/backgrounds/` (one file per chapter
   or room group).
 
+- **Stage 4D systems.**
+  - *Unlock feedback* (`scripts/systems/unlock_feedback.gd`, FXLayer):
+    `Interactable.resolve` emits `EventBus.unlocked(data, pos)` for door,
+    symbol_lock, lever, latch, secret_door, drawer, light kinds, pushable;
+    doors/locks whose `requires_flag` comes true emit it too (their padlock
+    drops: `Interactable.unbolt`, `InteractableArt.padlock`); gated exits
+    emit `exit_unlocked`. One caption (InteractableData.unlock_caption or a
+    default per kind; an opened way beats an unbolted door beats the object),
+    a pop-up, a sound, a pulse ring, and "somewhere nearby" + an arrow when
+    the thing is off the panel or in another spread panel.
+    `GameState.set_flag` emits **`EventBus.flag_set`** the first time.
+  - *Gated exits* (`ExitZone` + `ExitDoorArt`): an exit with required_flag
+    whose opener is not an object at the exit draws its own door + padlock,
+    swings open on the flag and stays open. Solved shadow puzzles / lenses
+    carry a glow light so their marker shows in the dark.
+  - *Dial locks*: `SymbolLockUI` pauses the world, needs TRY (Enter/Space/
+    button), "?" on a wrong code, title = the lock's caption.
+    `GrandfatherClock` (kind clock) owns the pendulum; marks are steady only
+    while it is frozen or passing the middle; reading sets `clock_read`; the
+    `clock_dials` symbol_lock sets `clock_solved` (the exit's flag).
+  - *Inventory*: `InventorySlots` groups same-word bubbles into one slot
+    (x2), picks the right owner's bubble on give-back, reorders
+    (`move_slot`); `add_bubble` refuses an id already held. The strip shows
+    a hover tooltip and the selected word's effect line; drag or Shift+Q/R
+    reorders. `Hints.once(id, text)` = one-time hints (progress.cfg).
+  - *Spread jump*: `SpreadJump` (buffer 0.12 s, coyote 0.12 s, 0.7 s / 90 px
+    hop, Space or W/Up); tears drop only after the coyote grace.
+  - *Noticed meter*: running steps within 430 px add 0.07 each
+    (`NoticeSystem._on_footstep`); `EventBus.notice_sources` lights the
+    torch / footprint icons (`NoticeIcons`); a quiet tick per 12%.
+  - *Scares* (`ui/jumpscare_overlay.gd` + `ui/scare_art.gd`): a table of five
+    (hallway lights-out face, gallery portrait, passage wardrobe, clock face
+    + Crawler strike, spread hand slam), each triggered by a room flag, then
+    waiting for a fair moment (no menu/cutscene/turn/dials, no Crawler
+    stalking or hunting, not mid-hop, 60 s since the last); saved in
+    `GameState.seen`; never in the return phase; F7 cycles them.
+  - *Reveal* (`ui/reveal_sequence.gd` + `ui/reveal_beats.gd`): beats with
+    reading-time durations (min 2.5 s): morph (the Shadow's silhouette, a
+    `Ghost` child, dissolves into the hand), the 7 captions, the label card
+    "THE MONSTER WAS THE ARTIST'S HAND.", the recap card.
+  - *The Artist's tool*: `HandArt` draws ONE pencil (nib one end, eraser the
+    other) inside the grip; `tool` &"pen" or &"eraser" picks which end is on
+    the page; `pencil_lying` when set down.
+  - *Music*: `return` (return phase), `erase` (heart_return; `hand_erase`
+    boosts the tension layer), `warm` after the repair; `layer_pulse` added.
+  - *UI*: `ControlsCard` (New Game waits for OK; the menu's Controls page uses
+    its grid), `IntroSequence` = the chapter title card, `PageDoodles` on
+    frames with `doodles`.
+
 ### Split precedents (for the 250-line rule)
 `InventoryArt` (strip drawing), `InteractableArt` / `InteractableArt2`, the
 `HidingSpot` / `ReturnSpot` subclasses chosen by `Frame.KIND_CLASSES`, the
@@ -437,7 +496,9 @@ Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 (GameState serialisation), `HandArt` / `HandFloorArt`, `RevealArt`,
 `RealWorldArt` (intro + epilogue), `BgCh3End`, `CutsceneArt`/`CutsceneArt2`,
 `SfxSynth2`, `LightPuzzle`/`LightPuzzleArt`, `SpreadController`/`SpreadArt`/
-`SpreadPanelView`/`SpreadFingers`, `RevealArtTear`, `ComicPages`.
+`SpreadPanelView`/`SpreadFingers`, `RevealArtTear`, `ComicPages`, `RevealBeats`,
+`ScareArt`, `MusicRenderer`/`MusicSynth2`, `GrandfatherClock`, `InventorySlots`,
+`ExitDoorArt`, `NoticeIcons`, `PageDoodles`, `SpreadJump`.
 
 ## 7. Content, chapter by chapter
 
@@ -445,8 +506,8 @@ Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 bedchamber (locked drawer holding HUSH, the Crawler's silhouette at the window,
 Arthur far away) → landing (Arthur: **OPEN, PUSH**, WAIT, HELP; study door
 needs OPEN) → study corridor (portrait gives **REMEMBER**; the ink-hand moment)
-→ study (PUSH the cabinet; REMEMBER shows **eye, moon, key** and its
-`sets_flag` opens the carved `secret_door`: the dial lock was cut in 4C) →
+→ study (PUSH the cabinet; REMEMBER shows the sketch **eye, moon, key** with
+an arrow to the dial door; only the dials (TRY) set `study_lock_open`) →
 back stair (flashlight pickup sets `has_flashlight`) → `ch1_end` hands off to
 Chapter 2.
 
@@ -457,8 +518,10 @@ door; sweep for the light-revealed `lever`, then sneak past) → servants'
 passage (scripted stalker; hide; then burn back the `light_ink` growth over
 the exit, which regrows in the dark) → pantry (C3 flashback; Mrs. Vane:
 **HIDE, HUSH, WAIT**; the pantry-fingers scare on the first theft) → clock
-room (patrolling Crawler; light the clock face: it unbolts the exit, then the
-**major jumpscare**: the Crawler appears behind you and hunts) → cellar stair
+room (patrolling Crawler; light the clock face (WAIT on the pendulum holds
+the marks still) → the **major jumpscare**: the Crawler appears behind you and
+hunts → the dial box beside the clock: **hand, spiral, house**, read from XII
+clockwise as the hallway wall says; it unbolts the exit) → cellar stair
 (`shadow_puzzle`: stand on the chalk X, light the iron key until its shadow
 fits the keyhole; then OPEN, then a short chase) → `ch2_end` (C4) hands off
 to Chapter 3. Only OPEN and the flashlight are required here.
@@ -490,16 +553,10 @@ by the shadow puzzle.
 
 ## 8. Open issues and next steps
 
-1. Stage 4C is complete; nothing is stubbed. Runtime ≈15:45 (estimate) after
-   cutting the Ch1 study dial lock (memories with `sets_flag` now emit
-   `interactable_resolved`, so secret doors open on REMEMBER). Further cuts
-   would remove a beat and need the user's say (Bedchamber drawer detour,
-   Margin chase length). The symbol-lock UI is now unused but kept.
-   Tuning knobs: the hand (`data/hand/hand_pressure.tres`), the Heart's
-   listen cycle (`heart_shadow.gd`), the reveal timeline (`reveal_sequence.gd`
-   consts), cutscenes (`gen_cutscenes.py`), light hold times (`light_hold` in
-   the chapter generators), `SpreadFingers.FILL_TIME`, music levels
-   (`MusicManager.BASE_DB`), `JumpscareOverlay.intensity`.
+1. Stage 4D is complete; nothing is stubbed. Runtime ≈ 16-16½ min (estimate:
+   the restored Study and new Clock dial locks add about a minute; cutscenes
+   were trimmed 15%). Further cuts would remove a beat (bedchamber drawer
+   detour, Margin chase length) and need the user's say.
 2. `ink_crawler.gd` is 261 lines (it was 254 before 4C; `appear_at` added 7).
    Next time it grows, split the senses (`_can_see`, notice/footstep
    handlers) into a helper.

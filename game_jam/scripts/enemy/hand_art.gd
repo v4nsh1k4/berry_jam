@@ -27,8 +27,8 @@ static func tool_tip(size: float, tool: StringName) -> Vector2:
 	return (DIR * 0.72 + _side() * 0.02) * size
 
 
-## `grip` 0 = closed round the tool, 1 = open and empty. `tool` is &"pen",
-## &"eraser" or &"none". `shadow` 0..1 adds the Ink Shadow's look (pale eyes,
+## `grip` 0 = closed round the tool, 1 = open and empty. `tool` is &"pen"
+## (pencil nib-down), &"eraser" (the same pencil turned eraser-down) or &"none". `shadow` 0..1 adds the Ink Shadow's look (pale eyes,
 ## drips, a rougher line) for the moment it resolves into a hand.
 static func draw(ci: CanvasItem, at: Vector2, size: float, seed_value: int, grip: float = 0.0,
 		tool: StringName = &"pen", shadow: float = 0.0, alpha: float = 1.0) -> void:
@@ -53,8 +53,9 @@ static func draw(ci: CanvasItem, at: Vector2, size: float, seed_value: int, grip
 		palm.append(palm_c + p * rng.randf_range(0.94, 1.06))
 	InkDraw.fill(ci, palm, ink)
 	InkDraw.polyline(ci, palm, size * 0.012, seed_value, true, ink, jitter)
-	if tool == &"pen":
-		_pen(ci, at, size, d, n, ink, pale)
+	if tool == &"pen" or tool == &"eraser":
+		# One pencil, gripped: nib to the page, or turned round eraser-first.
+		_pencil(ci, at, size, d, n, tool, alpha)
 	# Thumb and four fingers; a closed grip curls them round the tool.
 	var curl: float = -lerpf(0.42, 0.05, grip)
 	var width: float = size * 0.065
@@ -68,8 +69,6 @@ static func draw(ci: CanvasItem, at: Vector2, size: float, seed_value: int, grip
 	for i in 4:
 		var k: Vector2 = palm_c + d * size * 0.12 + n * size * (-0.11 + i * 0.075)
 		ci.draw_arc(k, size * 0.025, d.angle() + PI * 0.6, d.angle() + PI * 1.4, 6, pale, maxf(1.0, size * 0.005), true)
-	if tool == &"eraser":
-		eraser(ci, at + tool_tip(size, &"eraser"), size, alpha, seed_value)
 	if shadow > 0.01:
 		_shadow_marks(ci, rng, palm_c, size, shadow * alpha)
 
@@ -94,24 +93,46 @@ static func _finger(ci: CanvasItem, base: Vector2, angle: float, length: float, 
 	CrawlerArt.nib(ci, pts[pts.size() - 1], tip_angle, width * 0.55)
 
 
-## A long dip pen held between thumb and index, nib to the page.
-static func _pen(ci: CanvasItem, at: Vector2, size: float, d: Vector2, n: Vector2, ink: Color, pale: Color) -> void:
+## The Artist's one tool: a long pencil with a pen nib at one end and an
+## eraser at the other, drawn BEFORE the fingers so they close over it (it
+## moves with the grip). `tool` says which end is on the page.
+static func _pencil(ci: CanvasItem, at: Vector2, size: float, d: Vector2, n: Vector2, tool: StringName, alpha: float) -> void:
+	var tip: Vector2 = at + tool_tip(size, tool)
 	var back: Vector2 = at - d * size * 0.15 + n * size * 0.22
-	var tip: Vector2 = at + tool_tip(size, &"pen")
-	ci.draw_line(back, tip - d * size * 0.06, ink, size * 0.05, true)
-	ci.draw_line(back + n * size * 0.008, tip - d * size * 0.08, pale, maxf(1.0, size * 0.006), true)
-	CrawlerArt.nib(ci, tip - d * size * 0.07, d.angle(), size * 0.022)
+	var axis: Vector2 = (tip - back).normalized()
+	var tail: Vector2 = back - axis * size * 0.18
+	var ink: Color = Color(InkDraw.INK, alpha)
+	var body: Color = Color(0.32, 0.3, 0.34, alpha)
+	var width: float = size * 0.055
+	var page_end: Vector2 = tip - axis * size * 0.07
+	ci.draw_line(tail, page_end, ink, width + 4.0, true)
+	ci.draw_line(tail, page_end, body, width, true)
+	ci.draw_line(tail + axis.orthogonal() * width * 0.25, page_end + axis.orthogonal() * width * 0.25, Color(PALE, 0.5 * alpha), maxf(1.0, size * 0.005), true)
+	var nib_end: Vector2 = page_end if tool == &"pen" else tail
+	var rub_end: Vector2 = tail if tool == &"pen" else page_end
+	var nib_dir: Vector2 = axis if tool == &"pen" else -axis
+	CrawlerArt.nib(ci, nib_end + nib_dir * size * 0.005, nib_dir.angle(), size * 0.024)
+	_eraser_cap(ci, rub_end, -nib_dir, size, alpha)
 
 
-## A rubber eraser block, its working edge greyed with rubbed-off ink.
-static func eraser(ci: CanvasItem, c: Vector2, size: float, alpha: float, seed_value: int) -> void:
-	var d: Vector2 = DIR
-	var n: Vector2 = _side()
-	var half_l: Vector2 = n * size * 0.2
-	var half_w: Vector2 = d * size * 0.09
-	var block: PackedVector2Array = PackedVector2Array([c - half_l - half_w, c + half_l - half_w, c + half_l + half_w, c - half_l + half_w])
-	InkDraw.shape(ci, block, maxf(2.0, size * 0.01), seed_value, Color(ERASER, alpha), Color(InkDraw.INK, alpha))
-	ci.draw_line(c - half_l * 0.9 + half_w * 0.8, c + half_l * 0.9 + half_w * 0.8, Color(0.45, 0.44, 0.44, alpha), size * 0.025, true)
+## The eraser end of the pencil: a metal ferrule and a worn rubber cap.
+static func _eraser_cap(ci: CanvasItem, at: Vector2, dir: Vector2, size: float, alpha: float) -> void:
+	var side: Vector2 = dir.orthogonal() * size * 0.05
+	var ferrule: Vector2 = at + dir * size * 0.035
+	var cap: Vector2 = ferrule + dir * size * 0.09
+	ci.draw_colored_polygon(PackedVector2Array([at - side, ferrule - side, ferrule + side, at + side]), Color(0.6, 0.6, 0.62, alpha))
+	ci.draw_colored_polygon(PackedVector2Array([ferrule - side, cap - side * 0.9, cap + side * 0.9, ferrule + side]), Color(ERASER, alpha))
+	ci.draw_polyline(PackedVector2Array([at - side, cap - side * 0.9, cap + side * 0.9, at + side, at - side]), Color(InkDraw.INK, alpha), maxf(1.5, size * 0.006), true)
+	ci.draw_line(cap - side * 0.8, cap + side * 0.8, Color(0.45, 0.44, 0.44, alpha), size * 0.012, true)
+
+
+## The same pencil lying on the floor (the hand has set it down).
+static func pencil_lying(ci: CanvasItem, c: Vector2, size: float, alpha: float = 1.0) -> void:
+	var half: Vector2 = Vector2(size * 0.32, 0)
+	ci.draw_line(c - half, c + half, Color(InkDraw.INK, alpha), size * 0.055 + 4.0, true)
+	ci.draw_line(c - half, c + half, Color(0.32, 0.3, 0.34, alpha), size * 0.055, true)
+	CrawlerArt.nib(ci, c - half, PI, size * 0.024)
+	_eraser_cap(ci, c + half, Vector2.RIGHT, size, alpha)
 
 
 ## Leftovers of the Shadow: pale eyes on the back of the hand, ink dripping.

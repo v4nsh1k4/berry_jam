@@ -93,11 +93,16 @@ static func _clock(ci: Interactable, r: Rect2, s: int) -> void:
 	var face_c: Vector2 = Vector2(w * 0.5, 66)
 	InkDraw.ellipse(ci, face_c, Vector2(44, 44), 4.0, s + 1, Color(0.85, 0.83, 0.77))
 	InkDraw.rect(ci, Rect2(16, 128, w - 32, r.size.y - 150), 3.0, s + 2, VOID)
+	# XII at the top: the clock is read from twelve.
+	ci.draw_string(ThemeDB.fallback_font, face_c + Vector2(-8, -30), "XII", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(InkDraw.INK, 0.8))
 	if ci.reveal > 0.02:
+		var steady: float = (ci as GrandfatherClock).steady if ci is GrandfatherClock else 1.0
 		var marks: PackedStringArray = ci.data.symbols
 		for i in marks.size():
-			var a: float = -PI * 0.5 + TAU * i / maxf(marks.size(), 1.0)
-			SymbolArt.draw(ci, StringName(marks[i]), face_c + Vector2(cos(a), sin(a)) * 25.0, 11.0, s + 3 + i, Color(InkDraw.INK, ci.reveal), 2.5)
+			# The face shudders while the pendulum swings: the marks jitter and fade.
+			var a: float = -PI * 0.5 + TAU * i / maxf(marks.size(), 1.0) + (1.0 - steady) * sin(s * 0.37 + i) * 0.9
+			var alpha: float = ci.reveal * lerpf(0.25, 1.0, steady)
+			SymbolArt.draw(ci, StringName(marks[i]), face_c + Vector2(cos(a), sin(a)) * 25.0, 11.0, s + 3 + i, Color(InkDraw.INK, alpha), 2.5)
 	else:
 		ci.draw_string(ThemeDB.fallback_font, face_c + Vector2(-5, 8), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(InkDraw.INK, 0.5))
 

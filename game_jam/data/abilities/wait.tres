@@ -7,7 +7,7 @@
 script = ExtResource("1_ability_data")
 id = &"wait"
 display_name = "Wait"
-description = "Freezes one moving thing nearby for a few seconds."
+description = "Freezes one moving thing for 5 seconds: a pendulum, the gutter fingers, even the Crawler mid-lunge."
 icon_word = "WAIT"
 target_type = 1
 cooldown = 15.0

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="FrameData" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="FrameData" load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/frame_data.gd" id="1_frame_data"]
 [ext_resource type="Script" path="res://scripts/data/exit_data.gd" id="2_exit_data"]
@@ -18,7 +18,7 @@ area = Rect2(1080, 396, 104, 112)
 target_frame_id = &"ch2_cellar"
 transition_style = 0
 target_spawn = Vector2(200, 466)
-required_flag = &"clock_read"
+required_flag = &"clock_solved"
 
 [sub_resource type="Resource" id="Resource_3"]
 script = ExtResource("3_interactable_data")
@@ -27,11 +27,22 @@ kind = &"clock"
 position = Vector2(540, 70)
 size = Vector2(120, 310)
 revealed_by_light = true
-symbols = PackedStringArray("spiral", "hand", "house")
+symbols = PackedStringArray("hand", "spiral", "house")
 sets_flag = &"clock_read"
-caption = "The clock strikes once. Across the room, a bolt slides back."
+caption = "Three marks on the face. The dial box beside the clock wants them, in the right order."
 
 [sub_resource type="Resource" id="Resource_4"]
+script = ExtResource("3_interactable_data")
+id = &"clock_dials"
+kind = &"symbol_lock"
+text = "panel"
+position = Vector2(690, 262)
+size = Vector2(110, 64)
+symbols = PackedStringArray("hand", "spiral", "house")
+sets_flag = &"clock_solved"
+caption = "THE CLOCK'S MARKS"
+
+[sub_resource type="Resource" id="Resource_5"]
 script = ExtResource("3_interactable_data")
 id = &"clock_curtain"
 kind = &"hiding_spot"
@@ -39,14 +50,14 @@ position = Vector2(230, 110)
 size = Vector2(130, 272)
 text = "curtain"
 
-[sub_resource type="Resource" id="Resource_5"]
+[sub_resource type="Resource" id="Resource_6"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
 position = Vector2(120, 300)
 radius = 180.0
 energy = 0.3
 
-[sub_resource type="Resource" id="Resource_6"]
+[sub_resource type="Resource" id="Resource_7"]
 script = ExtResource("4_light_spot_data")
 kind = &"glow"
 position = Vector2(1130, 300)
@@ -61,10 +72,10 @@ ambient_light = 0.05
 background_style = &"clock_room"
 player_spawn = Vector2(170, 466)
 walk_area = Rect2(40, 400, 1104, 104)
-captions = PackedStringArray("The clock has no hands. Its face only shows in the light.", "It patrols here. The far door stays bolted until the clock is read.")
-hint = "Say HUSH or WAIT first, then light the clock face for a moment. Hide behind the curtain afterwards."
+captions = PackedStringArray("The clock has no hands. Its face only shows in the light.", "It patrols here. The far door is bolted to the clock's dial box.")
+hint = "Light the clock face (WAIT on the pendulum holds the marks still), then set the dial box: read the marks from XII, clockwise."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
-interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4")])
-lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
+interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3"), SubResource("Resource_4"), SubResource("Resource_5")])
+lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_6"), SubResource("Resource_7")])
 crawler_spawn = Vector2(980, 492)
 crawler_patrol = true

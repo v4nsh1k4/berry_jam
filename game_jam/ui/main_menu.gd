@@ -1,18 +1,6 @@
 extends Control
 ## Title page with Start / Continue / Controls / Credits.
 
-## "key | what it does" per line, split into a two-column grid at runtime so
-## it lines up in any font. (Plain text on purpose: a typed constant of packed
-## arrays reads back empty in Godot 4.7.2 exported builds.)
-const CONTROLS_TEXT: String = """A / D  or  arrows | walk
-W / S | step nearer / further
-Shift | run (loud: it can hear you)
-Hold E under a word | steal it (step left / right to choose)
-1 - 6,  Q / R,  wheel | choose a stolen word (or click a slot)
-E | say it at what is in front of you, or into the room
-F  or  left click | flashlight, aimed with the mouse
-Esc  or  P | pause"""
-
 const CREDITS_TEXT: String = """INK-BLEED
 Made for the Infinium 26 game jam by the Berry Jam team.
 
@@ -95,19 +83,7 @@ func _build_main() -> Control:
 func _build_controls_page() -> Control:
 	var box: VBoxContainer = _centered_column()
 	box.add_child(UiTheme.make_label("CONTROLS", 48))
-	var panel: PanelContainer = PanelContainer.new()
-	var grid: GridContainer = GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 28)
-	grid.add_theme_constant_override("v_separation", 6)
-	for line in CONTROLS_TEXT.split("\n"):
-		var parts: PackedStringArray = line.split("|")
-		var key: Label = UiTheme.make_label(parts[0].strip_edges(), 19, HORIZONTAL_ALIGNMENT_LEFT)
-		key.add_theme_color_override("font_color", InkDraw.RED)
-		grid.add_child(key)
-		grid.add_child(UiTheme.make_label(parts[1].strip_edges() if parts.size() > 1 else "", 19, HORIZONTAL_ALIGNMENT_LEFT))
-	panel.add_child(grid)
-	box.add_child(panel)
+	box.add_child(ControlsCard.grid())
 	box.add_child(UiTheme.make_button("Back", _show_page.bind("main")))
 	return box
 

@@ -40,8 +40,25 @@ static func _door(ci: Interactable, r: Rect2, s: int) -> void:
 	var mid: float = r.size.x * 0.5
 	InkDraw.rect(ci, r, 4.0, s + 4, WOOD)
 	InkDraw.line(ci, Vector2(mid, 4), Vector2(mid, r.size.y - 4), 3.0, s + 5)
-	InkDraw.ellipse(ci, Vector2(mid, r.size.y * 0.47), Vector2(9, 10), 3.0, s + 6)
-	InkDraw.rect(ci, Rect2(mid - 13, r.size.y * 0.47 + 6, 26, 30), 3.0, s + 7, InkDraw.INK)
+	# Just handles: the padlock (if any) is what says it's locked.
+	ci.draw_circle(Vector2(mid - 10, r.size.y * 0.5), 5.0, InkDraw.INK)
+	ci.draw_circle(Vector2(mid + 10, r.size.y * 0.5), 5.0, InkDraw.INK)
+	padlock(ci, Vector2(mid, r.size.y * 0.5 + 34), s)
+
+
+## A padlock on a bolted door (requires_flag not yet set). When the flag
+## comes true it drops off and fades (Interactable.unbolt); then it's gone
+## for good, so the change shows on every revisit.
+static func padlock(ci: Interactable, at: Vector2, s: int) -> void:
+	var bolted: bool = ci.data.requires_flag != &"" and not GameState.has_flag(ci.data.requires_flag)
+	if not bolted and ci.unbolt <= 0.0:
+		return
+	var fall: float = 1.0 - ci.unbolt if not bolted else 0.0
+	var p: Vector2 = at + Vector2(fall * 18.0, fall * fall * 140.0)
+	var a: float = 1.0 - fall
+	InkDraw.ellipse(ci, p + Vector2(0, -14), Vector2(11, 12), 4.0, s + 8, Color.TRANSPARENT, Color(InkDraw.INK, a))
+	InkDraw.rect(ci, Rect2(p + Vector2(-16, -6), Vector2(32, 26)), 3.0, s + 9, Color(0.55, 0.53, 0.5, a), Color(InkDraw.INK, a))
+	ci.draw_circle(p + Vector2(0, 6), 3.5, Color(InkDraw.INK, a))
 
 
 ## Small chest of drawers; the top drawer is locked until OPEN.
@@ -87,6 +104,15 @@ static func _memory(ci: Interactable, r: Rect2, s: int) -> void:
 	for i in symbols.size():
 		var center: Vector2 = Vector2(cell * (i + 0.5), r.size.y * 0.5)
 		SymbolArt.draw(ci, StringName(symbols[i]), center, minf(cell, r.size.y) * 0.34, s + i * 5, ink)
+	if ci.data.points_to != Vector2.ZERO:
+		# A dashed ink arrow to the lock it opens.
+		var from: Vector2 = r.get_center() + ci.data.points_to.normalized() * (r.size.x * 0.6)
+		var to: Vector2 = r.get_center() + ci.data.points_to
+		for k in 8:
+			if k % 2 == 0:
+				ci.draw_line(from.lerp(to, k / 8.0), from.lerp(to, (k + 1) / 8.0), ink, 3.0, true)
+		var d: Vector2 = (to - from).normalized()
+		InkDraw.polyline(ci, PackedVector2Array([to - d * 16 + d.orthogonal() * 10, to, to - d * 16 - d.orthogonal() * 10]), 3.0, s + 40, false, ink)
 
 
 ## Small table; the torch lies on it until taken.
@@ -118,3 +144,4 @@ static func _symbol_lock(ci: Interactable, r: Rect2, s: int) -> void:
 		var c: Vector2 = Vector2(plate.position.x + plate.size.x * (i + 0.5) / 3.0, plate.get_center().y)
 		InkDraw.ellipse(ci, c, Vector2(15, 15), 2.5, s + 4 + i)
 		ci.draw_string(ThemeDB.fallback_font, c + Vector2(-5, 7), "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, InkDraw.INK)
+	padlock(ci, Vector2(r.size.x * 0.5, plate.end.y + 40), s)

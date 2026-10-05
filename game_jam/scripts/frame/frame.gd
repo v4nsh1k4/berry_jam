@@ -28,6 +28,7 @@ const KIND_CLASSES: Dictionary = {
 	&"shadow_puzzle": preload("res://scripts/interactables/light_puzzle.gd"),
 	&"lit_writing": preload("res://scripts/interactables/light_puzzle.gd"),
 	&"lever": preload("res://scripts/interactables/light_puzzle.gd"),
+	&"clock": preload("res://scripts/interactables/clock.gd"),
 }
 
 var data: FrameData

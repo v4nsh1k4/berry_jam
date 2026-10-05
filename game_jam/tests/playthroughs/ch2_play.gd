@@ -86,6 +86,7 @@ func _run() -> void:
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
 	# New Game opens with the intro cinematic: skip it like a click would.
+	current_scene.get_node("MenuLayer/ControlsCard").call("_accept")
 	current_scene.get_node("MenuLayer/IntroCinematic").call("_finish")
 	main = current_scene
 	main.get_node("MenuLayer/MainMenu").hide()
@@ -190,10 +191,19 @@ func _run() -> void:
 	await _tap("interact")
 	_aim(Vector2(600, 140))
 	await _tap("toggle_light")
-	await _wait(1.5)
+	await _wait(3.0)
 	await _shot("07_clock.png")
 	await _tap("toggle_light")
 	_log("clock_read=" + str(gs.has_flag(&"clock_read")) + " crawler=" + _cstate())
+	# The dial box beside the clock: hand, spiral, house (from XII, clockwise).
+	await _at(745)
+	await _tap("interact")
+	await _wait(0.2)
+	var ui = main.get_node("LockLayer/SymbolLockUI")
+	ui._dials.assign([3, 4, 5])
+	await _tap("ui_accept")
+	await _wait(1.0)
+	_log("clock dials solved=" + str(gs.has_flag(&"clock_solved")))
 	await _wait(0.6)
 	_select_word("WAIT")
 	await _tap("interact")

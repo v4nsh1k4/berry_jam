@@ -1,7 +1,11 @@
 class_name ExitZone
 extends Area2D
 ## Walk-in area that reports an ExitData through EventBus. Draws a small
-## ink arrow on the floor, which only shows up under the flashlight.
+## ink arrow on the floor, which only shows up under the flashlight. A gated
+## exit (required_flag) whose lock is not some object at the exit itself (a
+## lever elsewhere, the clock's dials, everyone made whole...) draws its own
+## door with a padlock; when the flag comes true the padlock drops, the door
+## swings open (and stays drawn open), and EventBus.exit_unlocked fires.
 
 var exit_data: ExitData
 
@@ -17,6 +21,10 @@ var _sent: bool = false
 ## Seconds before the "it won't open" caption may show again.
 var _locked_note: float = 0.0
 var _tick: int = -1
+## Draws its own gated door (see above).
+var _gated_door: bool = false
+## 0..1 the door's opening animation (1 = open).
+var _open: float = 1.0
 
 
 func setup(data: ExitData) -> void:
@@ -30,6 +38,35 @@ func setup(data: ExitData) -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_unlocked_last = _is_unlocked()
+	_open = 1.0 if _unlocked_last else 0.0
+	if data.required_flag != &"":
+		EventBus.flag_set.connect(_on_flag_set)
+		_find_gate.call_deferred()
+
+
+## Draw a door only if no object near the exit is what opens it.
+func _find_gate() -> void:
+	var frame: Frame = get_parent().get_parent() as Frame
+	if frame == null or frame.data == null or frame.data.spread != null:
+		return
+	_gated_door = true
+	for item in frame.data.interactables:
+		if item.sets_flag == exit_data.required_flag and absf(item.position.x + item.size.x * 0.5 - position.x) < 220.0:
+			_gated_door = false
+	queue_redraw()
+
+
+func _door_rect() -> Rect2:
+	var right: bool = position.x > Frame.PANEL_RECT.size.x * 0.5
+	return Rect2(Vector2(1068 if right else 22, 150) - position, Vector2(92, 232))
+
+
+func _on_flag_set(flag: StringName) -> void:
+	if flag != exit_data.required_flag:
+		return
+	create_tween().tween_property(self, "_open", 1.0, 0.8)
+	var at: Vector2 = get_global_transform_with_canvas() * (_door_rect().get_center() if _gated_door else Vector2.ZERO)
+	EventBus.exit_unlocked.emit(exit_data, at)
 
 
 func _is_unlocked() -> bool:
@@ -88,6 +125,8 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	if exit_data == null:
 		return
+	if _gated_door:
+		ExitDoorArt.draw(self, _door_rect(), _open, _tick)
 	var dir: float = 1.0 if exit_data.area.get_center().x > Frame.PANEL_RECT.size.x * 0.5 else -1.0
 	var tip: Vector2 = Vector2(18.0 * dir, 30.0)
 	var tail: Vector2 = Vector2(-18.0 * dir, 30.0)

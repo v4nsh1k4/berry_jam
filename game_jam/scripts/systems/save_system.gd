@@ -7,7 +7,7 @@ extends RefCounted
 ## migrated by migrate().
 
 const SAVE_PATH: String = "user://ink_bleed_save.json"
-const VERSION: int = 3
+const VERSION: int = 4
 ## Survives new games: things the player has already seen (the reveal can be
 ## skipped on later viewings) and whether they finished the game.
 const PROGRESS_PATH: String = "user://progress.cfg"
@@ -47,6 +47,8 @@ static func migrate(data: Dictionary) -> Dictionary:
 	var version: int = int(data.get("version", 0))
 	if version == VERSION:
 		return data
+	if version == 3:
+		return _migrate_v3(data)
 	if version == 2:
 		return _migrate_v2(data)
 	if version != 1:
@@ -76,6 +78,21 @@ static func _migrate_v2(data: Dictionary) -> Dictionary:
 	var migrated: Dictionary = data.duplicate(true)
 	if not migrated.has("seen"):
 		migrated["seen"] = []
+	return _migrate_v3(migrated)
+
+
+## v3 -> v4 (Stage 4D): reading the Clock Room's face used to open its door
+## (flag clock_read); now the dial box does (clock_solved). A save past the
+## clock keeps its open door. (Hints and scares need nothing: the first is
+## remembered in progress.cfg, the second simply hasn't fired yet.)
+static func _migrate_v3(data: Dictionary) -> Dictionary:
+	var migrated: Dictionary = data.duplicate(true)
+	for snapshot in [migrated, migrated.get("chapter_start", {})]:
+		if typeof(snapshot) != TYPE_DICTIONARY:
+			continue
+		var flags: Array = (snapshot as Dictionary).get("flags", [])
+		if flags.has("clock_read") and not flags.has("clock_solved"):
+			flags.append("clock_solved")
 	migrated["version"] = VERSION
 	return migrated
 

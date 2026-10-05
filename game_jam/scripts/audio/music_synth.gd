@@ -18,6 +18,7 @@ const FADE: float = 0.5
 const TRACKS: Dictionary = {
 	&"menu": 16.0, &"ch1": 12.0, &"ch2": 12.0, &"ch3": 12.0, &"reveal": 24.0,
 	&"warm": 16.0, &"ending": 16.0, &"layer_intensity": 8.0, &"layer_hunt": 8.0,
+	&"return": 20.0, &"erase": 12.0, &"layer_pulse": 8.0,
 }
 const MOTIF: PackedInt32Array = [76, 72, 69, 71, 72, 69, 64, 65, 76, 72, 69, 71, 69, 68, 64, -1]
 const MOTIF_MAJOR: PackedInt32Array = [76, 73, 69, 71, 73, 69, 64, 66, 76, 73, 69, 71, 69, 68, 64, -1]
@@ -64,6 +65,8 @@ static func render(track: StringName, buf: PackedFloat32Array, from: int, to: in
 			_melody(buf, from, to, slow, 1.0, 0.12, 3.0, 0.08)
 		&"layer_intensity":
 			_tremolo(buf, from, to)
+		&"return", &"erase", &"layer_pulse":
+			MusicSynth2.render(track, buf, from, to)
 		&"layer_hunt":
 			for i in 20:
 				_kick(buf, from, to, i * 0.4, 0.24, 90.0)

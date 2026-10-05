@@ -13,6 +13,7 @@ const REACH: float = 75.0
 var controller: SpreadController
 var enabled: bool = true
 var meter: float = 0.0
+var _frozen: float = 0.0
 
 var _phase: int = 0
 var _t: float = 0.0
@@ -20,8 +21,28 @@ var _x: float = 0.0
 var _base_y: float = 0.0
 
 
+func _ready() -> void:
+	add_to_group(&"freezable")
+
+
+## WAIT: only while the fingers are actually out.
+func can_freeze() -> bool:
+	return _phase != 0 and _frozen <= 0.0
+
+
+func freeze(duration: float) -> void:
+	_frozen = duration
+
+
 func _process(delta: float) -> void:
 	if not enabled or controller.current == null:
+		return
+	if _frozen > 0.0:
+		_frozen -= delta
+		queue_redraw()
+		if _frozen <= 0.0:
+			_phase = 0
+			meter = 0.2
 		return
 	if _phase == 0:
 		var lit: bool = LightingSystem.is_light_on and GameState.is_playing and not GameState.modal_open
@@ -66,6 +87,8 @@ func _hit_check() -> void:
 func _draw() -> void:
 	if _phase == 0:
 		return
+	if _frozen > 0.0:
+		FrostArt.draw(self, Vector2(_x, _base_y - 40.0), 60.0, InkDraw.boil_tick(), minf(_frozen, 1.0))
 	var reach: float = (_t / TELEGRAPH) * 50.0 if _phase == 1 else 50.0 + 100.0 * sin(clampf(_t / STAB_TIME, 0.0, 1.0) * PI)
 	for i in 3:
 		var base: Vector2 = Vector2(_x + (i - 1) * 22.0, _base_y)

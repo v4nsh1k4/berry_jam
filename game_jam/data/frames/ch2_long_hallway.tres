@@ -17,11 +17,11 @@ required_flag = &"hall_panel_open"
 script = ExtResource("3_interactable_data")
 id = &"hall_writing"
 kind = &"writing"
-position = Vector2(300, 110)
-size = Vector2(560, 80)
+position = Vector2(170, 100)
+size = Vector2(820, 80)
 revealed_by_light = true
-text = "SHE KEEPS THE KEYS.
-HE KEEPS THE TIME."
+text = "MRS. VANE KEEPS THE CELLAR KEY AS A SHADOW.
+READ ARTHUR'S CLOCK FROM XII, CLOCKWISE."
 
 [sub_resource type="Resource" id="Resource_3"]
 script = ExtResource("3_interactable_data")
@@ -54,3 +54,4 @@ hint = "Shine the light on the ink over the far door and hold it there until it 
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
 interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2"), SubResource("Resource_3")])
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_4")])
+doodles = true

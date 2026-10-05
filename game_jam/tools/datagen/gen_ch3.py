@@ -99,7 +99,7 @@ frame("ch3_gallery_words", "The Gallery of Words", "spread", 0.03, (60, 200),
                   prompt="Bolted from somewhere else. Then it will need a word.")],
       npcs=[owner(**dict(VANE, pos=(130, 200), show_bubbles=False, scale=0.8)),
             owner(**dict(LADY, pos=(250, 130), show_bubbles=False, scale=0.6))],
-      glitch=0.2, sketch=0.15, spread=SPREAD, walk=(0, 0, 1184, 528))
+      glitch=0.2, sketch=0.15, spread=SPREAD, walk=(0, 0, 1184, 528), doodles=True)
 
 # 3. The Margin: the Ink Shadow's chase.
 frame("ch3_margin", "The Margin", "margin", 0.12, (320, 466),
@@ -172,4 +172,4 @@ frame("ch3_outside", "", "plain", 1.0, (170, 466), [], "", ending="THE END", epi
 write("data/chapters/ch3.tres", "chapter_data", dict(
     id=SN("ch3"), title="Chapter 3: The Ink Heart", first_frame_id=SN("ch3_gallery_words"),
     damage_visual_scale=1.6, line_jitter=1.6, allows_return=True, return_frame_id=SN("ch3_returning_room"),
-    intro_lines=PSA(["Issue #3. The panels won't hold."])))
+    intro_lines=PSA([])))

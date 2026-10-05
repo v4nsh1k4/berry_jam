@@ -83,7 +83,7 @@ def light(kind, pos, radius, energy):
 def item(**p):
     for k in ("id", "kind", "sets_flag", "requires_flag", "owner_id"):
         if k in p: p[k] = SN(p[k])
-    for k in ("position", "size", "push_offset"):
+    for k in ("position", "size", "push_offset", "points_to"):
         if k in p: p[k] = V2(p[k])
     if "stand_spot" in p: p["stand_spot"] = R2(p["stand_spot"])
     if "light_hold" in p: p["light_hold"] = float(p["light_hold"])
@@ -93,7 +93,7 @@ def item(**p):
     return Sub("interactable_data", **p)
 def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(), items=(), npcs=(), events=(), ending="",
           next_chapter="", crawler=None, patrol=False, glitch=0.0, tilt=0.0, sketch=0.0, crawler_kind="",
-          border_gap=False, epilogue=False, light_disabled=False, spread=None, walk=(40, 400, 1104, 104)):
+          border_gap=False, epilogue=False, light_disabled=False, spread=None, walk=(40, 400, 1104, 104), doodles=False):
     p = dict(id=SN(fid), display_name=name, ambient_light=float(ambient), background_style=SN(style),
              player_spawn=V2(spawn), walk_area=R2(walk), captions=PSA(captions), hint=hint)
     if exits: p["exits"] = TypedArr("exit_data", list(exits))
@@ -113,6 +113,7 @@ def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(),
     if epilogue: p["epilogue"] = True
     if light_disabled: p["light_disabled"] = True
     if spread: p["spread"] = spread
+    if doodles: p["doodles"] = True
     write(f"data/frames/{fid}.tres", "frame_data", p)
 
 SLIDE, SPLASH = 0, 1

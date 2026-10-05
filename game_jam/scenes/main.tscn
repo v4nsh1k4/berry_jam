@@ -1,8 +1,10 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="Script" path="res://ui/goal_line.gd" id="40_goal"]
 [ext_resource type="Script" path="res://ui/jumpscare_overlay.gd" id="41_scare"]
+[ext_resource type="Script" path="res://scripts/systems/unlock_feedback.gd" id="42_unlock"]
+[ext_resource type="Script" path="res://ui/controls_card.gd" id="43_controls"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://ui/page_overlay.gd" id="3_overlay"]
 [ext_resource type="PackedScene" path="res://ui/start_screen.tscn" id="4_start"]
@@ -86,6 +88,9 @@ script = ExtResource("17_vignette")
 [node name="FeedbackFx" type="Node2D" parent="FXLayer"]
 script = ExtResource("10_fx")
 
+[node name="UnlockFeedback" type="Node2D" parent="FXLayer"]
+script = ExtResource("42_unlock")
+
 [node name="JumpscareOverlay" type="Node2D" parent="FXLayer"]
 script = ExtResource("41_scare")
 
@@ -143,6 +148,9 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("12_menu")
+
+[node name="ControlsCard" type="Control" parent="MenuLayer"]
+script = ExtResource("43_controls")
 
 [node name="PauseMenu" type="Control" parent="MenuLayer"]
 layout_mode = 3

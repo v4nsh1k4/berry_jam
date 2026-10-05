@@ -9,12 +9,15 @@ extends Node2D
 ## behaviour are subclasses: HidingSpot, ReturnSpot (see Frame.KIND_CLASSES).
 
 const PUSH_TIME: float = 0.4
+## Kinds whose opening gets the unified feedback (UnlockFeedback).
+const UNLOCK_KINDS: Array[StringName] = [&"door", &"symbol_lock", &"lever", &"latch", &"secret_door", &"drawer",
+	&"light_ink", &"lens", &"shadow_puzzle", &"pushable"]
+## Kinds drawn with a padlock until their requires_flag is set.
+const BOLTED_KINDS: Array[StringName] = [&"door", &"symbol_lock"]
 ## Kinds that react to E without a word.
 const PLAIN_KINDS: Array[StringName] = [&"inspect", &"pickup", &"symbol_lock", &"hiding_spot", &"lever"]
 ## Kinds that are never a target for E.
 const PASSIVE_KINDS: Array[StringName] = [&"memory", &"writing", &"clock", &"secret_door", &"light_ink", &"lens", &"shadow_puzzle"]
-## Seconds of light the clock needs before its face counts as read.
-const CLOCK_READ_TIME: float = 1.0
 
 var data: InteractableData
 var resolved: bool = false
@@ -25,12 +28,13 @@ var memory_alpha: float = 0.0:
 		if _glow != null:
 			_glow.energy = value * 0.9
 		queue_redraw()
+## 1 -> 0 while the padlock falls off (its requires_flag just came true).
+var unbolt: float = 0.0
 ## 0..1 how much the flashlight is revealing this (revealed_by_light only).
 var reveal: float = 0.0
 var _wiggle: float = 0.0
 ## Glow light (memory sketches, return spots).
 var _glow: PointLight2D
-var _lit_time: float = 0.0
 var _tick: int = -1
 
 
@@ -48,15 +52,13 @@ func setup(interactable: InteractableData) -> void:
 		_glow.position = data.size * 0.5
 		_glow.energy = 0.0
 		add_child(_glow)
-	elif data.kind == &"clock":
-		var pendulum: Pendulum = Pendulum.new()
-		pendulum.position = Vector2(data.size.x * 0.5, data.size.y * 0.42)
-		add_child(pendulum)
 	_update_group()
 	if data.kind == &"symbol_lock":
 		EventBus.symbol_lock_solved.connect(_on_symbol_lock_solved)
 	if data.kind == &"secret_door":
 		EventBus.interactable_resolved.connect(_on_any_resolved)
+	if BOLTED_KINDS.has(data.kind) and data.requires_flag != &"" and not GameState.has_flag(data.requires_flag):
+		EventBus.flag_set.connect(_on_flag_set)
 
 
 
@@ -106,7 +108,9 @@ func interact_plain() -> void:
 	match data.kind:
 		&"inspect":
 			EventBus.caption_requested.emit(data.caption, 3.5)
-		&"pickup", &"lever":
+		&"lever":
+			resolve()
+		&"pickup":
 			resolve()
 			if data.caption != "":
 				EventBus.caption_requested.emit(data.caption, 4.0)
@@ -122,6 +126,8 @@ func resolve() -> void:
 		GameState.set_flag(data.sets_flag)
 	var screen_pos: Vector2 = get_global_transform_with_canvas() * (data.size * 0.5)
 	EventBus.interactable_resolved.emit(data.id, data.kind, screen_pos)
+	if UNLOCK_KINDS.has(data.kind):
+		EventBus.unlocked.emit(data, screen_pos)
 	if data.reward_bubble != null and not GameState.is_bubble_stolen(data.reward_bubble.id):
 		GameState.add_bubble(data.reward_bubble, screen_pos)
 		EventBus.caption_requested.emit("A crumpled word was hidden inside: \"%s\"." % data.reward_bubble.text, 3.5)
@@ -139,6 +145,8 @@ func can_remember() -> bool:
 
 
 func reveal_memory(duration: float) -> void:
+	if data.caption != "":
+		EventBus.caption_requested.emit(data.caption, maxf(duration, 3.5))
 	var tween: Tween = create_tween()
 	tween.tween_property(self, "memory_alpha", 1.0, 0.5)
 	tween.tween_interval(maxf(duration, 1.0))
@@ -162,6 +170,15 @@ func _on_symbol_lock_solved(lock_id: StringName) -> void:
 		resolve()
 
 
+## The bolt condition came true while the player is here: the padlock falls.
+func _on_flag_set(flag: StringName) -> void:
+	if flag != data.requires_flag or resolved:
+		return
+	EventBus.flag_set.disconnect(_on_flag_set)
+	create_tween().tween_property(self, "unbolt", 0.0, 0.9).from(1.0)
+	EventBus.unlocked.emit(data, get_global_transform_with_canvas() * (data.size * 0.5))
+
+
 ## A secret door opens itself once the flag it waits on is set.
 func _on_any_resolved(_id: StringName, _kind: StringName, _pos: Vector2) -> void:
 	if not resolved and data.requires_flag != &"" and GameState.has_flag(data.requires_flag):
@@ -177,17 +194,11 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
-## Fades in while the cone is on it, out when it leaves. The clock also
-## counts lit time and sets its flag once read.
+## Fades in while the cone is on it, out when it leaves.
 func _update_reveal(delta: float) -> void:
 	var lamp: Flashlight = get_tree().get_first_node_in_group(&"flashlight") as Flashlight
 	var lit: bool = lamp != null and lamp.illuminates_rect(Rect2(global_position, data.size * global_scale))
 	reveal = move_toward(reveal, 1.0 if lit else 0.0, delta * (3.0 if lit else 1.2))
-	if data.kind == &"clock" and lit and not resolved:
-		_lit_time += delta
-		if _lit_time >= CLOCK_READ_TIME:
-			resolve()
-			EventBus.caption_requested.emit(data.caption if data.caption != "" else "Three marks on the clock face. Remember them.", 4.0)
 	_update_group()
 
 

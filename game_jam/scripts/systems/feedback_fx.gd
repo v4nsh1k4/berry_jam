@@ -3,16 +3,12 @@ extends Node2D
 ## ("CREAK", "THUD", "SNATCH!") and a short hit-stop when a word is stolen.
 
 const HIT_STOP: float = 0.08
-const WORDS: Dictionary = {
-	&"door": "CREAK", &"symbol_lock": "CLICK!", &"pushable": "SCRAPE", &"drawer": "CLACK", &"pickup": "!",
-}
 
 static var _dot: ImageTexture
 
 
 func _ready() -> void:
 	EventBus.bubble_stolen.connect(_on_bubble_stolen)
-	EventBus.interactable_resolved.connect(_on_interactable_resolved)
 	EventBus.ability_failed.connect(_on_ability_failed)
 	EventBus.player_caught.connect(_on_player_caught)
 	EventBus.bubble_returned.connect(_on_bubble_returned)
@@ -41,12 +37,6 @@ func _on_bubble_stolen(_bubble: BubbleData, from: Vector2) -> void:
 	splash(from, 22, InkDraw.RED)
 	popup("SNATCH!", from + Vector2(0, -40), 1.0, InkDraw.RED)
 	_hit_stop()
-
-
-func _on_interactable_resolved(_id: StringName, kind: StringName, screen_pos: Vector2) -> void:
-	if WORDS.has(kind):
-		popup(WORDS[kind], screen_pos + Vector2(70, -90))
-		splash(screen_pos, 14)
 
 
 func _on_ability_failed(_bubble: BubbleData, _target_id: StringName) -> void:

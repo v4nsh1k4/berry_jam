@@ -1,15 +1,13 @@
 extends Control
-## Text-only intro: chapter captions one at a time on a dark page. Click,
-## Space or E advances; each line also moves on by itself.
-## (A New Game plays IntroCinematic first, then these captions for Chapter 1.)
+## The chapter title card: "CHAPTER 2: THE HALLWAY OF SHADOWS" on a dark page,
+## held HOLD seconds, skippable (click, Space or E). Shown once per chapter
+## start (New Game after the cinematic, and each chapter hand-off), never on a
+## room reload or Continue. (ChapterData.intro_lines are no longer shown.)
 
-const AUTO_ADVANCE: float = 4.5
+const HOLD: float = 2.5
 
-var _lines: PackedStringArray = PackedStringArray()
 var _title: String = ""
-var _index: int = -1
-var _alpha: float = 0.0
-var _time_on_line: float = 0.0
+var _t: float = -1.0
 
 
 func _ready() -> void:
@@ -18,29 +16,24 @@ func _ready() -> void:
 
 
 func play(chapter: ChapterData) -> void:
-	_lines = chapter.intro_lines
-	_title = chapter.title
-	_index = -1
+	_title = chapter.title.to_upper()
+	_t = 0.0
 	show()
-	_next()
 
 
 func _next() -> void:
-	_index += 1
-	_time_on_line = 0.0
-	if _index >= _lines.size():
-		hide()
-		EventBus.intro_finished.emit()
+	if _t < 0.0:
 		return
-	_alpha = 0.0
-	create_tween().tween_property(self, "_alpha", 1.0, 0.6)
+	_t = -1.0
+	hide()
+	EventBus.intro_finished.emit()
 
 
 func _process(delta: float) -> void:
-	if not visible:
+	if not visible or _t < 0.0:
 		return
-	_time_on_line += delta
-	if _time_on_line > AUTO_ADVANCE:
+	_t += delta
+	if _t > HOLD:
 		_next()
 	queue_redraw()
 
@@ -59,16 +52,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.07, 0.06, 0.08))
-	if _index < 0 or _index >= _lines.size():
+	if _t < 0.0:
 		return
+	var a: float = clampf(_t / 0.4, 0.0, 1.0) * clampf((HOLD - _t) / 0.3 + 0.2, 0.0, 1.0)
 	var font: Font = ThemeDB.fallback_font
 	var tick: int = InkDraw.boil_tick()
-	var tw: float = font.get_string_size(_title, HORIZONTAL_ALIGNMENT_LEFT, -1, 22).x
-	draw_string(font, Vector2(size.x * 0.5 - tw * 0.5, 90), _title, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(InkDraw.PAPER, 0.7))
-	var line: String = _lines[_index]
-	var text_size: Vector2 = font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 28)
-	var box: Rect2 = Rect2(size * 0.5 - text_size * 0.5 - Vector2(30, 20), text_size + Vector2(60, 40))
-	InkDraw.rect(self, box, 4.0, tick, Color(InkDraw.PAPER, _alpha), Color(InkDraw.INK, _alpha))
-	draw_string(font, box.position + Vector2(30, 20 + font.get_ascent(28)), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color(InkDraw.INK, _alpha))
-	var hint: String = "click / space"
-	draw_string(font, Vector2(size.x - 170, size.y - 40), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(InkDraw.PAPER, 0.5))
+	var parts: PackedStringArray = _title.split(":", true, 1)
+	var head: String = parts[0]
+	var name: String = parts[1].strip_edges() if parts.size() > 1 else ""
+	var w: float = maxf(font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 52).x, 400.0)
+	var box: Rect2 = Rect2(size * 0.5 - Vector2(w * 0.5 + 50, 90), Vector2(w + 100, 180))
+	InkDraw.rect(self, box, 6.0, tick, Color(InkDraw.PAPER, a), Color(InkDraw.INK, a))
+	var hw: float = font.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+	draw_string(font, Vector2(size.x * 0.5 - hw * 0.5, box.position.y + 52), head, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(InkDraw.INK, 0.7 * a))
+	var nw: float = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 52).x
+	BubbleArt.draw_bold(self, Vector2(size.x * 0.5 - nw * 0.5, box.position.y + 128), name, 52, Color(InkDraw.INK, a))
+	draw_string(font, Vector2(size.x - 170, size.y - 40), "click / space", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(InkDraw.PAPER, 0.4))

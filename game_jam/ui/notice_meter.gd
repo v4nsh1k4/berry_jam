@@ -5,6 +5,10 @@ extends Node2D
 const MAX_RADIUS: float = 44.0
 
 var _notice: float = 0.0
+var _light: bool = false
+var _noise: bool = false
+## Last meter level a tick sound played at (a quiet tick per 12%).
+var _ticked: float = 0.0
 var _tick: int = -1
 
 
@@ -13,6 +17,7 @@ func _ready() -> void:
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.returned_to_menu.connect(hide)
 	EventBus.light_toggled.connect(_on_light_toggled)
+	EventBus.notice_sources.connect(_on_sources)
 	hide()
 
 
@@ -25,7 +30,18 @@ func _on_light_toggled(_on: bool) -> void:
 		_on_frame_changed(FrameManager.current_frame.data)
 
 
+func _on_sources(light: bool, noise: bool) -> void:
+	_light = light
+	_noise = noise
+	queue_redraw()
+
+
 func _on_notice_changed(amount: float) -> void:
+	if amount > _ticked + 0.12:
+		_ticked = amount
+		AudioManager.play(&"click", -19.0, 0.2)
+	elif amount < _ticked - 0.12:
+		_ticked = amount
 	_notice = amount
 	queue_redraw()
 
@@ -53,3 +69,4 @@ func _draw() -> void:
 	var label: String = "NOTICED!" if _notice >= 1.0 else "NOTICE"
 	var w: float = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 	draw_string(font, Vector2(-w * 0.5, MAX_RADIUS + 20), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, InkDraw.RED if _notice >= 1.0 else InkDraw.INK)
+	NoticeIcons.draw(self, Vector2(-MAX_RADIUS - 34, -14), _light, Vector2(-MAX_RADIUS - 34, 22), _noise, _tick)

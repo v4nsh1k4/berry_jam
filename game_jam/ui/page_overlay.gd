@@ -12,6 +12,7 @@ const MAX_CRACKS: int = 7
 
 var _title: String = ""
 var _captions: PackedStringArray = PackedStringArray()
+var _doodles: bool = false
 ## Spread pages fill the whole panel: their captions teach, then get out of
 ## the way after this many seconds.
 const SPREAD_CAPTION_TIME: float = 9.0
@@ -45,6 +46,7 @@ func _on_frame_changed(data: FrameData) -> void:
 	_gap = 1.0 if _gap_frame and GameState.has_flag(&"comic_repaired") else 0.0
 	_title = data.display_name.to_upper()
 	_captions = data.captions
+	_doodles = data.doodles
 	_captions_left = SPREAD_CAPTION_TIME if data.spread != null else -1.0
 	_toast = ""
 	_toast_left = 0.0
@@ -110,6 +112,8 @@ func _draw() -> void:
 		# Thin red edge just inside the border: comic damage made visible.
 		InkDraw.rect(self, panel.grow(-5.0 - _damage * 2.0), 0.6 + _damage * 3.0, _tick * 7 + 3, Color.TRANSPARENT, Color(InkDraw.RED, 0.85), 1.2 + _damage * 2.0)
 	_draw_cracks(panel)
+	if _doodles:
+		PageDoodles.draw(self, panel, page.size, _tick)
 	if _gap > 0.0:
 		_draw_gap(panel)
 

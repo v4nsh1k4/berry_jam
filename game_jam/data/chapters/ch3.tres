@@ -11,4 +11,4 @@ damage_visual_scale = 1.6
 line_jitter = 1.6
 allows_return = true
 return_frame_id = &"ch3_returning_room"
-intro_lines = PackedStringArray("Issue #3. The panels won't hold.")
+intro_lines = PackedStringArray()

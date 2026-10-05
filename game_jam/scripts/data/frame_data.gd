@@ -52,3 +52,5 @@ extends Resource
 
 ## Non-null: this frame is a page of small panels the player hops between.
 @export var spread: PageSpreadData
+## Draw faint margin doodles round this panel (PageDoodles).
+@export var doodles: bool = false

@@ -253,3 +253,4 @@ npcs = Array[ExtResource("4_npc_data")]([SubResource("Resource_9"), SubResource(
 glitch = 0.2
 sketch = 0.15
 spread = SubResource("Resource_11")
+doodles = true

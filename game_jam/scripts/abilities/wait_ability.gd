@@ -1,7 +1,9 @@
 extends AbilityHandler
-## WAIT: freezes ONE moving thing for `duration` seconds: a risen Crawler if
-## there is one (it is the thing that matters), otherwise whatever moving
-## thing is nearest (a pendulum...). "?" if nothing here moves.
+## WAIT: freezes ONE moving thing for `duration` seconds: the nearest one
+## (a pendulum, the gutter fingers, the Artist's hand), except that a Crawler
+## that is hunting or close always comes first. "?" if nothing here moves.
+
+const CRAWLER_FIRST_WITHIN: float = 380.0
 
 
 func execute(_bubble: BubbleData, _target: Interactable, tree: SceneTree) -> bool:
@@ -15,7 +17,7 @@ func execute(_bubble: BubbleData, _target: Interactable, tree: SceneTree) -> boo
 		if not thing.call("can_freeze"):
 			continue
 		var d: float = player.global_position.distance_to(thing.global_position)
-		if thing.is_in_group(&"crawler"):
+		if thing.is_in_group(&"crawler") and (d < CRAWLER_FIRST_WITHIN or thing.call("is_hunting")):
 			d -= 100000.0
 		if d < best_distance:
 			best = thing

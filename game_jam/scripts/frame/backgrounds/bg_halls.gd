@@ -58,8 +58,11 @@ static func study_corridor(ci: FrameBackground, tick: int) -> void:
 static func hallway(ci: FrameBackground, tick: int) -> void:
 	var s: int = tick * 13
 	_wainscot(ci, s)
+	# Plain panelling and small portraits: no false doors.
 	for i in 5:
-		FrameBackground.doorway(ci, Rect2(160 + i * 210, 170, 70, 210), s + i * 4)
+		var c: Vector2 = Vector2(195 + i * 210, 190)
+		InkDraw.rect(ci, Rect2(c - Vector2(30, 38), Vector2(60, 76)), 3.0, s + i * 4, Color(0.72, 0.7, 0.64))
+		InkDraw.ellipse(ci, c + Vector2(0, -6), Vector2(13, 17), 2.0, s + i * 4 + 1)
 
 
 static func _wainscot(ci: FrameBackground, s: int) -> void:

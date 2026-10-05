@@ -130,7 +130,7 @@ func _steal(bubble: SpeechBubble) -> void:
 ## mends); otherwise "?".
 func _give_back(bubble: SpeechBubble) -> void:
 	_clear_hold()
-	var word: BubbleData = GameState.selected_bubble()
+	var word: BubbleData = InventorySlots.word_for_owner(bubble.data.stolen_from)
 	if word == null or word.stolen_from != bubble.data.stolen_from or not GameState.is_bubble_stolen(word.id):
 		bubble.refuse()
 		EventBus.ability_failed.emit(word, &"")

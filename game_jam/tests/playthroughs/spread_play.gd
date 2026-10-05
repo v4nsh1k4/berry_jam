@@ -73,6 +73,7 @@ func _run() -> void:
 	main = current_scene
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
+	main.get_node("MenuLayer/ControlsCard").call("_accept")
 	main.get_node("MenuLayer/IntroCinematic").call("_finish")
 	main.get_node("MenuLayer/MainMenu").hide()
 	bus.intro_finished.emit()

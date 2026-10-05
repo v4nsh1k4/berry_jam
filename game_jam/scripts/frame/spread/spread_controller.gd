@@ -12,8 +12,6 @@ extends Node2D
 ## panel only lights its own bit. The torch lights every bit, so it reaches
 ## across panels.
 
-const JUMP_TIME: float = 0.55
-const JUMP_HEIGHT: float = 70.0
 const HOP_TIME: float = 0.45
 const DEPTH: float = 8.0
 const EDGE: float = 14.0
@@ -21,12 +19,15 @@ const GUTTER_BIT: int = 1 << 6
 
 var data: PageSpreadData
 var current: SpreadPanelData
-var airborne: bool = false
+var airborne: bool:
+	get:
+		return _jumper.airborne
 var hopping: bool = false
 ## 0..1 how lit the pencil plank is (for drawing).
 var plank_lit: float = 0.0
 
 var _player: Player
+var _jumper: SpreadJump = SpreadJump.new()
 var _entry: Vector2
 var _views: Array[SpreadPanelView] = []
 var _note_cooldown: float = 0.0
@@ -34,6 +35,7 @@ var _note_cooldown: float = 0.0
 
 func setup(spread: PageSpreadData) -> void:
 	data = spread
+	add_child(_jumper)
 	var gutter: SpreadPanelView = SpreadPanelView.new()
 	gutter.controller = self
 	gutter.light_mask = 1 | GUTTER_BIT
@@ -83,6 +85,7 @@ func _assign_masks() -> void:
 		if index >= 0:
 			_set_mask_recursive(node as CanvasItem, 1 | _bit(index))
 	_player = get_tree().get_first_node_in_group(&"player") as Player
+	_jumper.setup(_player)
 	if _player != null:
 		_enter(_panel_at(to_local(_player.global_position)), to_local(_player.global_position))
 
@@ -133,6 +136,7 @@ func _physics_process(delta: float) -> void:
 	if _player == null or current == null:
 		return
 	_update_plank(delta)
+	_jumper.update(delta, _player.can_act() and not hopping)
 	if hopping or not _player.can_act():
 		return
 	var p: Vector2 = to_local(_player.global_position)
@@ -144,15 +148,20 @@ func _physics_process(delta: float) -> void:
 		return
 	if Input.is_action_pressed("move_down") and p.y >= band.end.y - 1.0 and _try_hop(&"down", p):
 		return
-	if Input.is_action_just_pressed("jump"):
-		if not _try_hop(&"jump", p) and not airborne:
-			_jump()
+	if not airborne and _jumper.take_press():
+		if not _try_hop(&"jump", p):
+			_jumper.jump()
 		return
-	if not airborne:
-		if _try_hop(&"fall", p):
-			return
-		if current.gap != Vector2.ZERO and p.x > current.gap.x and p.x < current.gap.y and not is_bridged(current):
+	if airborne:
+		return
+	# A tear: a short grace to jump, then drop (through to the panel below if
+	# a fall hop leads there, else into the gutter).
+	if current.gap != Vector2.ZERO and p.x > current.gap.x and p.x < current.gap.y and not is_bridged(current):
+		if _jumper.over_tear(get_physics_process_delta_time()) and not _try_hop(&"fall", p):
 			_fall_into_gutter()
+		return
+	_jumper.on_solid_floor()
+	_try_hop(&"fall", p)
 
 
 func _update_plank(delta: float) -> void:
@@ -205,17 +214,6 @@ func _hop(hop: SpreadHop) -> void:
 	hopping = false
 
 
-func _jump() -> void:
-	airborne = true
-	AudioManager.play(&"step", -4.0, 0.1)
-	var tween: Tween = create_tween()
-	tween.tween_method(func(k: float) -> void: _player.lift = sin(k * PI) * JUMP_HEIGHT, 0.0, 1.0, JUMP_TIME)
-	await tween.finished
-	if is_instance_valid(_player):
-		_player.lift = 0.0
-	airborne = false
-
-
 ## Into the white: drop, then the gutter spits you back at the panel's entry.
 func _fall_into_gutter() -> void:
 	hopping = true
@@ -236,8 +234,7 @@ func knock_back(caption: String) -> void:
 	hopping = true
 	_player.global_position = to_global(_entry)
 	_player.modulate.a = 1.0
-	_player.lift = 0.0
-	airborne = false
+	_jumper.cancel()
 	_enter(current, _entry)
 	EventBus.shake_requested.emit(0.25)
 	EventBus.caption_requested.emit(caption, 2.5)

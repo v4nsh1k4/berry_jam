@@ -69,6 +69,7 @@ func _run() -> void:
 	await _shot("00_menu.png")
 	root.get_node("/root/EventBus").menu_new_game.emit()
 	# New Game opens with the intro cinematic: skip it like a click would.
+	current_scene.get_node("MenuLayer/ControlsCard").call("_accept")
 	current_scene.get_node("MenuLayer/IntroCinematic").call("_finish")
 	current_scene.get_node("MenuLayer/MainMenu").hide()
 	await _wait(0.8)
@@ -136,10 +137,17 @@ func _run() -> void:
 	await _say(3)
 	await _wait(0.8)
 	await _shot("10_memory.png")
-	# Remembering the marks opens the carved door (no dial lock since Stage 4C).
-	_log("door open after REMEMBER=" + str(gs.has_flag(&"study_lock_open")) + " carved door=" + str(gs.has_flag(&"study_door_carved")))
+	_log("REMEMBER alone opens nothing: lock open=" + str(gs.has_flag(&"study_lock_open")))
 	await _at(1075)
-	await _wait(0.6)
+	await _tap("interact")
+	await _wait(0.2)
+	# Dials start on "house" (5 of 7 symbols): eye = up 3, moon = up 2, key = up 4.
+	for a in ["move_up", "move_up", "move_up", "move_right", "move_up", "move_up", "move_right", "move_up", "move_up", "move_up", "move_up"]:
+		await _tap(a)
+	await _shot("11_lock.png")
+	await _tap("ui_accept")
+	await _wait(1.2)
+	_log("lock open=" + str(gs.has_flag(&"study_lock_open")) + " modal=" + str(gs.modal_open))
 	await _shot("12_lock_open.png")
 	await _walk("move_right", 0.6)
 	_log("arrived")

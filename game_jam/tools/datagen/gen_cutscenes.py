@@ -9,7 +9,8 @@ TOP_BOTTOM = [(0, 0, 1, 0.5), (0, 0.5, 1, 0.5)]
 
 
 def beat(duration, panels, draws, caption="", camera="still", sfx="", page_turn=False):
-    return Sub("cutscene_beat", duration=float(duration), panels=R2Arr(panels), draws=PSA(draws),
+    # Stage 4D runtime pass: every beat 15% shorter (captions still readable).
+    return Sub("cutscene_beat", duration=round(float(duration) * 0.85, 2), panels=R2Arr(panels), draws=PSA(draws),
                caption=caption, camera=SN(camera), sfx=SN(sfx), page_turn=page_turn)
 
 

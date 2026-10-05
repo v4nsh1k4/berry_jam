@@ -50,36 +50,57 @@ func _run() -> void:
 	main = current_scene
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
+	main.get_node("MenuLayer/ControlsCard").call("_accept")
 	main.get_node("MenuLayer/IntroCinematic").call("_finish")
 	main.get_node("MenuLayer/MainMenu").hide()
 	bus.intro_finished.emit()
 	main.get_node("MenuLayer/IntroSequence").hide()
 	await _wait(0.4)
 	player = main.get_node("World/Player")
+	var ov = main.get_node("FXLayer/JumpscareOverlay")
+	var rooms := {&"scare_hallway": ["ch2_long_hallway", &"hall_panel_open"], &"scare_gallery": ["ch2_gallery", &"gallery_lever"],
+		&"scare_passage": ["ch2_servants_passage", &"survived_passage"], &"scare_clock": ["ch2_clock_room", &"clock_read"],
+		&"scare_hand": ["ch3_gallery_words", &"spread_lens"]}
+	for id in rooms:
+		await _go(rooms[id][0])
+		ov._since_last = 999.0
+		player.global_position = Vector2(48 + 420, 32 + (200 if id == &"scare_hand" else 466))
+		var before: int = scares.size()
+		gs.set_flag(rooms[id][1])
+		var waited := 0.0
+		while scares.size() == before and waited < 6.0:
+			await _wait(0.05)
+			waited += 0.05
+		await _wait(0.12)
+		await _shot("sc_%s.png" % id)
+		_check("%s fired after its trigger (%.1fs)" % [id, waited], scares.size() == before + 1 and scares[-1] == id)
+		await _wait(0.6)
+	# The clock's gameplay half: the Crawler appears and hunts.
 	await _go("ch2_clock_room")
-	player.global_position = Vector2(48 + 600, 32 + 466)
-	root.warp_mouse(Vector2(48 + 600, 32 + 140))
-	root.get_node("/root/LightingSystem").set_light(true)
-	while scares.is_empty():
-		await process_frame
-	await _wait(0.1)
-	await _shot("sc_face.png")
-	root.get_node("/root/LightingSystem").set_light(false)
-	await _wait(0.6)
-	await _shot("sc_after.png")
+	ov.play(&"scare_clock")
+	await _wait(0.5)
 	var crawler = get_first_node_in_group(&"crawler")
-	var gap: float = absf(crawler.global_position.x - player.global_position.x)
-	_check("major scare fired once (%s)" % [scares], scares == [&"scare_clock"])
-	_check("crawler close and hunting (gap=%d, state=%d)" % [gap, crawler.state], gap < 420.0 and crawler.is_hunting())
-	_check("clock read and door unbolted", gs.has_flag(&"clock_read"))
+	_check("clock scare: the Crawler is close and hunting", crawler.is_hunting() and absf(crawler.global_position.x - player.global_position.x) < 420.0)
+	# Spacing, chases and replays.
+	gs.seen.clear()
+	await _go("ch2_gallery")
+	var n: int = scares.size()
+	ov._since_last = 10.0
+	gs.set_flag(&"gallery_lever")
+	await _wait(3.0)
+	_check("a scare inside 60 s of the last one waits", scares.size() == n)
+	ov._since_last = 999.0
+	var shadow = get_first_node_in_group(&"crawler")
+	shadow.wake_to(true, 3.0)
+	await _wait(1.5)
+	_check("...and still waits while the Crawler hunts", scares.size() == n)
+	shadow._set_state(0)
+	await _wait(1.0)
+	_check("...then fires once it is fair", scares.size() == n + 1)
 	bus.restart_chapter_requested.emit()
 	await _wait(2.0)
-	_check("seen kept after restart", gs.seen.has(&"scare_clock"))
-	# Margin: the minor scare.
-	await _go("ch3_margin")
-	await _wait(0.75)
-	await _shot("sc_hand.png")
-	await _wait(1.0)
-	_check("minor scare fired (%s)" % [scares], scares.has(&"scare_margin"))
+	gs.set_flag(&"gallery_lever")
+	await _wait(3.0)
+	_check("never replayed after a restart", scares.size() == n + 1 and gs.seen.has(&"scare_gallery"))
 	print("SCARE TEST ", "PASSED" if ok else "FAILED")
 	quit(0 if ok else 1)

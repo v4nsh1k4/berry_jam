@@ -35,7 +35,6 @@ func _ready() -> void:
 	EventBus.bubble_stolen.connect(_on_bubble_stolen)
 	EventBus.ability_used.connect(_on_ability_used)
 	EventBus.ability_failed.connect(_on_ability_failed)
-	EventBus.interactable_resolved.connect(_on_interactable_resolved)
 	EventBus.player_caught.connect(play.bind(&"splat", -6.0))
 	EventBus.notice_changed.connect(_on_notice_changed)
 	EventBus.crawler_proximity.connect(_on_crawler_proximity)
@@ -192,14 +191,6 @@ func _on_ability_used(_bubble: BubbleData, _target_id: StringName) -> void:
 
 func _on_ability_failed(_bubble: BubbleData, _target_id: StringName) -> void:
 	play(&"thud", -5.0)
-
-
-func _on_interactable_resolved(_id: StringName, kind: StringName, _pos: Vector2) -> void:
-	match kind:
-		&"door", &"symbol_lock", &"pushable":
-			play(&"creak", -8.0, 0.1)
-		_:
-			play(&"click", -6.0)
 
 
 func _load_settings() -> void:

@@ -9,4 +9,4 @@ title = "Chapter 2: The Hallway of Shadows"
 first_frame_id = &"ch2_long_hallway"
 damage_visual_scale = 1.3
 line_jitter = 1.35
-intro_lines = PackedStringArray("Issue #2. The house has noticed you.")
+intro_lines = PackedStringArray()

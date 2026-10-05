@@ -29,6 +29,7 @@ func setup(interactable: InteractableData) -> void:
 	super.setup(interactable)
 	if resolved:
 		progress = 1.0
+		_add_done_glow()
 	if data.kind == &"shadow_puzzle":
 		# A dim pool of light on the chalk mark, so it can be found in the dark.
 		var mark: PointLight2D = PointLight2D.new()
@@ -86,13 +87,27 @@ func _update_shadow() -> bool:
 func _clear() -> void:
 	progress = 1.0
 	resolve()
-	if data.caption != "":
-		EventBus.caption_requested.emit(data.caption, 3.5)
+	_add_done_glow()
 	match data.kind:
 		&"light_ink":
 			AudioManager.play(&"rub", -8.0, 0.1)
 		_:
 			AudioManager.play(&"chime", -6.0, 0.0)
+
+
+## Done markers live in the dark world layer, so a solved shadow puzzle or
+## lens carries a small light: its glow shows with the torch on or off, on
+## every revisit.
+func _add_done_glow() -> void:
+	if data.kind != &"shadow_puzzle" and data.kind != &"lens":
+		return
+	var glow: PointLight2D = PointLight2D.new()
+	glow.texture = LightTextures.radial()
+	glow.texture_scale = 110.0 / LightTextures.RADIAL_RADIUS
+	glow.energy = 0.9
+	glow.color = Color(1.0, 0.95, 0.75)
+	glow.position = Vector2(data.size.x * 0.5, data.size.y * 0.3 - LightPuzzleArt.OUTLINE_LIFT) if data.kind == &"shadow_puzzle" else data.size * 0.5
+	add_child(glow)
 
 
 ## A lever waiting on a flag can't be pulled (or seen) until it is set.

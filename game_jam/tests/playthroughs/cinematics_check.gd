@@ -27,6 +27,7 @@ func _run() -> void:
 	main = current_scene
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
+	current_scene.get_node("MenuLayer/ControlsCard").call("_accept")
 	var intro = main.get_node("MenuLayer/IntroCinematic")
 	main.get_node("MenuLayer/MainMenu").hide()
 	var prev := 0.0

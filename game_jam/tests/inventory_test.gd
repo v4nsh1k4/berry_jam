@@ -33,6 +33,7 @@ func _run() -> void:
 	EventBus.game_started.emit()
 	EventBus.menu_new_game.emit()
 	# New Game opens with the intro cinematic: skip it like a click would.
+	main.get_node("MenuLayer/ControlsCard").call("_accept")
 	main.get_node("MenuLayer/IntroCinematic").call("_finish")
 	EventBus.intro_finished.emit()
 	await get_tree().process_frame
@@ -52,13 +53,13 @@ func _run() -> void:
 		GameState.add_bubble(load(path) as BubbleData, Vector2(640, 300))
 		ids.append(word.id)
 		_check(GameState.inventory.size() == i + 1, "word %d added (inventory %d)" % [i, GameState.inventory.size()])
-	_check(strip.call("is_index_visible", COUNT - 1), "newest word scrolled into view")
+	_check(strip.call("is_slot_visible", COUNT - 1), "newest word scrolled into view")
 
 	# 2. Cycle through every word: selectable, visible when selected, usable.
 	GameState.select(0, false)
 	for i in COUNT:
 		_check(GameState.selected_index == i, "cycle reaches word %d" % i)
-		_check(strip.call("is_index_visible", i), "word %d visible when selected" % i)
+		_check(strip.call("is_slot_visible", i), "word %d visible when selected" % i)
 		AbilityRegistry.reset_cooldowns()
 		_check(AbilityRegistry.speak(GameState.selected_bubble(), null), "word %d can be spoken" % i)
 		GameState.cycle(1)
@@ -83,6 +84,29 @@ func _run() -> void:
 	for word in GameState.inventory:
 		loaded.append(word.id)
 	_check(loaded == ids, "all %d words survive save/load in order" % COUNT)
+
+	# 5. Stage 4D: no duplicates, same-word bubbles share a slot, reordering.
+	var before: int = GameState.inventory.size()
+	GameState.add_bubble(GameState.inventory[0])
+	_check(GameState.inventory.size() == before, "the same bubble can't be added twice")
+	var twin: BubbleData = BubbleData.new()
+	twin.id = &"test_twin"
+	twin.text = "W0"
+	twin.ability_id = &"help"
+	twin.stolen_from = &"other_owner"
+	var twin_path: String = "%s/twin.tres" % WORD_DIR
+	ResourceSaver.save(twin, twin_path)
+	GameState.add_bubble(load(twin_path) as BubbleData)
+	_check(InventorySlots.count() == COUNT, "a second W0 shares the first one's slot (%d slots)" % InventorySlots.count())
+	InventorySlots.select_slot(0, false)
+	_check(InventorySlots.word_for_owner(&"other_owner").id == &"test_twin", "giving back picks the bubble of the right owner")
+	InventorySlots.move_slot(0, 2)
+	_check((InventorySlots.slots()[2] as Array).size() == 2 and GameState.selected_bubble().text == "W0", "reorder moves the whole slot and keeps the selection")
+	var reorder_snap: Dictionary = JSON.parse_string(JSON.stringify(GameState.to_dict()))
+	GameState.reset()
+	GameState.from_dict(reorder_snap)
+	_check(GameState.inventory[0].text == "W1" and (InventorySlots.slots()[2] as Array)[0].text == "W0", "order survives save/load")
+	DirAccess.remove_absolute(twin_path)
 
 	# Clean up and restore the player's own save.
 	for i in COUNT:

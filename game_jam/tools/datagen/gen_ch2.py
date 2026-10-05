@@ -1,7 +1,9 @@
 """Generates Chapter 2 .tres data for INK-BLEED (dev tool, not shipped)."""
 from gen_lib import *
 
-CLOCK = ["spiral", "hand", "house"]
+# The clock face's marks, clockwise from twelve (the answer). Read left to
+# right they would be house, hand, spiral: the hallway clue gives the order.
+CLOCK = ["hand", "spiral", "house"]
 GO = (1080, 396, 104, 112)
 BACK = (0, 396, 96, 112)
 
@@ -15,10 +17,10 @@ frame("ch2_long_hallway", "The Long Hallway", "long_hallway", 0.045, (150, 466),
       "Shine the light on the ink over the far door and hold it there until it shrinks away.",
       exits=[exit_(GO, "ch2_gallery", (150, 466), SLIDE, "hall_panel_open")],
       lights=[light("glow", (150, 300), 220, 0.35)],
-      items=[item(id="hall_writing", kind="writing", position=(300, 110), size=(560, 80), revealed_by_light=True,
-                  text="SHE KEEPS THE KEYS.\nHE KEEPS THE TIME."),
+      items=[item(id="hall_writing", kind="writing", position=(170, 100), size=(820, 80), revealed_by_light=True,
+                  text="MRS. VANE KEEPS THE CELLAR KEY AS A SHADOW.\nREAD ARTHUR'S CLOCK FROM XII, CLOCKWISE."),
              item(id="hall_ink", kind="light_ink", text="door", position=(1050, 120), size=(120, 270), light_hold=1.6,
-                  sets_flag="hall_panel_open", caption="The ink shrinks from the light. The way is open.")])
+                  sets_flag="hall_panel_open", caption="The ink shrinks from the light. The way is open.")], doodles=True)
 
 frame("ch2_gallery", "The Portrait Gallery", "gallery", 0.05, (150, 466),
       ["Something sleeps by the far door. The door has no handle.",
@@ -26,8 +28,8 @@ frame("ch2_gallery", "The Portrait Gallery", "gallery", 0.05, (150, 466),
       "Sweep the light along the walls (in short bursts) to find the lever, pull it with E, then walk past it in the dark.",
       exits=[exit_(BACK, "ch2_long_hallway", (980, 466), SLIDE), exit_(GO, "ch2_servants_passage", (170, 466), SLIDE, "gallery_lever")],
       lights=[light("glow", (120, 300), 220, 0.35), light("glow", (1130, 300), 180, 0.35)],
-      items=[item(id="gallery_plaque", kind="writing", position=(470, 228), size=(300, 40), revealed_by_light=True,
-                  text="DON'T LOOK AT IT."),
+      items=[item(id="gallery_plaque", kind="writing", position=(440, 196), size=(520, 76), revealed_by_light=True,
+                  text="THE BOLT IS UNDER THE SECOND FRAME.\nDON'T LIGHT THE SLEEPER."),
              item(id="gallery_lever", kind="lever", position=(330, 270), size=(60, 100), revealed_by_light=True,
                   sets_flag="gallery_lever", caption="Somewhere by the far door, a bolt slides back.")],
       crawler=(980, 492))
@@ -59,12 +61,15 @@ frame("ch2_pantry", "The Housekeeper's Pantry", "pantry", 0.1, (170, 466),
 
 frame("ch2_clock_room", "The Clock Room", "clock_room", 0.05, (170, 466),
       ["The clock has no hands. Its face only shows in the light.",
-       "It patrols here. The far door stays bolted until the clock is read."],
-      "Say HUSH or WAIT first, then light the clock face for a moment. Hide behind the curtain afterwards.",
-      exits=[exit_(BACK, "ch2_pantry", (980, 466), SLIDE), exit_(GO, "ch2_cellar", (200, 466), SLIDE, "clock_read")],
+       "It patrols here. The far door is bolted to the clock's dial box."],
+      "Light the clock face (WAIT on the pendulum holds the marks still), then set the dial box: read the marks from XII, clockwise.",
+      exits=[exit_(BACK, "ch2_pantry", (980, 466), SLIDE), exit_(GO, "ch2_cellar", (200, 466), SLIDE, "clock_solved")],
       lights=[light("glow", (120, 300), 180, 0.3), light("glow", (1130, 300), 180, 0.3)],
       items=[item(id="grandfather_clock", kind="clock", position=(540, 70), size=(120, 310), revealed_by_light=True,
-                  symbols=CLOCK, sets_flag="clock_read", caption="The clock strikes once. Across the room, a bolt slides back."),
+                  symbols=CLOCK, sets_flag="clock_read",
+                  caption="Three marks on the face. The dial box beside the clock wants them, in the right order."),
+             item(id="clock_dials", kind="symbol_lock", text="panel", position=(690, 262), size=(110, 64), symbols=CLOCK,
+                  sets_flag="clock_solved", caption="THE CLOCK'S MARKS"),
              item(id="clock_curtain", kind="hiding_spot", position=(230, 110), size=(130, 272), text="curtain")],
       crawler=(980, 492), patrol=True)
 
@@ -88,4 +93,4 @@ frame("ch2_end", "The Cellar", "cellar_stair", 0.08, (170, 466), ["At the bottom
 write("data/chapters/ch2.tres", "chapter_data", dict(
     id=SN("ch2"), title="Chapter 2: The Hallway of Shadows", first_frame_id=SN("ch2_long_hallway"),
     damage_visual_scale=1.3, line_jitter=1.35,
-    intro_lines=PSA(["Issue #2. The house has noticed you."])))
+    intro_lines=PSA([])))

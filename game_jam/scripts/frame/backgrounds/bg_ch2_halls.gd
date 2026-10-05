@@ -8,13 +8,15 @@ const WOOD: Color = Color(0.78, 0.75, 0.68)
 
 static func long_hallway(ci: FrameBackground, tick: int) -> void:
 	var s: int = tick * 43
-	# A row of shut doors receding down the hall.
+	# A row of dim landscape paintings down the hall (no doors: the only way
+	# on is the inked-over door at the far end).
 	for i in 4:
 		var x: float = 150.0 + i * 230.0
-		var r: Rect2 = Rect2(x, 170 + i * 6, 72 - i * 4, 210 - i * 6)
+		var r: Rect2 = Rect2(x, 196 + i * 4, 110 - i * 6, 80 - i * 4)
 		InkDraw.rect(ci, r.grow(7), 4.0, s + i, Color(0.2, 0.19, 0.22))
-		InkDraw.rect(ci, r, 3.0, s + 10 + i, WOOD)
-		ci.draw_circle(Vector2(r.end.x - 10, r.get_center().y + 10), 3.5, InkDraw.INK)
+		InkDraw.rect(ci, r, 2.0, s + 10 + i, Color(0.72, 0.7, 0.64))
+		InkDraw.polyline(ci, PackedVector2Array([r.position + Vector2(0, r.size.y * 0.7), r.position + Vector2(r.size.x * 0.35, r.size.y * 0.4),
+			r.position + Vector2(r.size.x * 0.6, r.size.y * 0.62), r.end - Vector2(0, r.size.y * 0.45)]), 2.0, s + 14 + i)
 	# Wallpaper peeling in curls.
 	for i in 6:
 		var x: float = 110.0 + i * 170.0

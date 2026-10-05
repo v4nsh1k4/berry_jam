@@ -52,6 +52,10 @@ func _on_new_game() -> void:
 	GameState.reset()
 	GameState.current_chapter = null
 	SaveSystem.clear()
+	# The controls first: nothing starts until the player presses OK.
+	var card: ControlsCard = $MenuLayer/ControlsCard
+	card.open()
+	await card.accepted
 	_cinematic.call("play")
 
 
@@ -180,7 +184,7 @@ func _on_game_completed() -> void:
 
 ## Debug builds only (see DebugJump):
 ##   F6  play the next cutscene (C1..C6, even if seen)
-##   F7  the Clock Room jumpscare (jumps there first)
+##   F7  play the next jumpscare right here (cycles through all five)
 ##   F8  the reveal (jumps to the Ink Heart and takes ERASE)
 ##   F9  the next Chapter 3 room, with the words a player would have there
 ##   F10 the page spread (Gallery of Words)
@@ -197,9 +201,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_debug_cutscene = (_debug_cutscene + 1) % ids.size()
 			CutsceneSystem.play_id(StringName(ids[_debug_cutscene]))
 		KEY_F7:
-			if _debug_jump("ch2_clock_room"):
-				await get_tree().create_timer(1.5).timeout
-				$FXLayer/JumpscareOverlay.play(&"scare_clock")
+			EventBus.caption_requested.emit("DEBUG: %s" % $FXLayer/JumpscareOverlay.debug_next(), 2.0)
 		KEY_F8:
 			if _debug_jump("ch3_ink_heart"):
 				await get_tree().create_timer(1.5).timeout

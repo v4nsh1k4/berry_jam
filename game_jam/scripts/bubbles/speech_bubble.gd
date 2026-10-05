@@ -73,7 +73,7 @@ func get_interact_point() -> Vector2:
 
 func get_prompt() -> String:
 	if is_returnable():
-		var word: BubbleData = GameState.selected_bubble()
+		var word: BubbleData = InventorySlots.word_for_owner(data.stolen_from)
 		var owner: String = data.owner_name if data.owner_name != "" else "them"
 		if word != null and word.id == data.id:
 			return "Hold E: give \"%s\" back to %s" % [word.text, owner]

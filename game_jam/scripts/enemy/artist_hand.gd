@@ -226,6 +226,6 @@ func _draw() -> void:
 	HandFloorArt.draw(self, state == State.AIM, state == State.RUB, _target_x, _width, FLOOR, progress, _smudges, _tick)
 	var tool: StringName = &"eraser" if _grip < 0.5 else &"none"
 	if _grip >= 0.5:
-		# The eraser set down on the floor beside the word.
-		HandArt.eraser(self, Vector2(FINAL_WORD_X - 260.0, FLOOR.y - 30.0), SIZE * 0.8, 1.0, _tick)
+		# The pencil set down on the floor beside the word.
+		HandArt.pencil_lying(self, Vector2(FINAL_WORD_X - 260.0, FLOOR.y - 20.0), SIZE * 0.8)
 	HandArt.draw(self, _wrist, SIZE, _tick * 7, _grip, tool)

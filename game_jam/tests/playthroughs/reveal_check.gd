@@ -31,6 +31,7 @@ func _run() -> void:
 	main = current_scene
 	bus.game_started.emit()
 	bus.menu_new_game.emit()
+	main.get_node("MenuLayer/ControlsCard").call("_accept")
 	main.get_node("MenuLayer/IntroCinematic").call("_finish")
 	main.get_node("MenuLayer/MainMenu").hide()
 	bus.intro_finished.emit()
@@ -45,13 +46,16 @@ func _run() -> void:
 	await _wait(1.5)
 	var reveal = main.get_node("MenuLayer/RevealSequence")
 	gs.add_bubble(load("res://data/bubbles/hand_erase.tres"))
-	var times := [3.5, 7.5, 12.0, 15.5, 19.5, 22.5, 26.0, 29.5, 33.0]
-	var prev := 0.0
-	for i in times.size():
-		await _wait(times[i] - prev + (0.5 if i == 0 else 0.0))
-		prev = times[i]
+	await _wait(1.0)
+	var starts: PackedFloat32Array = reveal._starts
+	print("reveal beats at ", starts, " total ", reveal.total())
+	var prev := 0.5
+	for i in starts.size() - 1:
+		var mid: float = (starts[i] + starts[i + 1]) * 0.5 + 0.5
+		await _wait(mid - prev)
+		prev = mid
 		await _shot("rv_%d.png" % i)
-	await _wait(5.0)
+	await _wait(reveal.total() - prev + 2.5)
 	var ok: bool = gs.twist_revealed and not paused
 	print("twist=", gs.twist_revealed, " frame=", gs.current_frame_id, " paused=", paused)
 	await _wait(1.0)

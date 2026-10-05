@@ -30,6 +30,11 @@ extends Resource
 @export var prompt: String = ""
 ## Caption shown on inspect / pickup.
 @export_multiline var caption: String = ""
+## The "it opened" caption (UnlockFeedback); empty = a default per kind.
+@export var unlock_caption: String = ""
+## memory: offset (from the sketch's centre) of the thing it is the key to;
+## the revealed sketch draws an arrow toward it. ZERO = no arrow.
+@export var points_to: Vector2 = Vector2.ZERO
 ## A bubble found inside when this is opened (e.g. a word in a drawer).
 @export var reward_bubble: BubbleData
 

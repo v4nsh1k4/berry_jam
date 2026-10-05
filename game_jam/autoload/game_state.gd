@@ -67,7 +67,10 @@ func snap_damage() -> void:
 
 
 func set_flag(flag: StringName, value: bool = true) -> void:
+	var was: bool = flags.get(flag, false)
 	flags[flag] = value
+	if value and not was:
+		EventBus.flag_set.emit(flag)
 
 
 func has_flag(flag: StringName) -> bool:
@@ -177,6 +180,9 @@ func stolen_from_count(character_id: StringName) -> int:
 
 ## `from_screen_pos` is where the bubble was taken, for the fly-in animation.
 func add_bubble(bubble: BubbleData, from_screen_pos: Vector2 = Vector2.INF) -> void:
+	# Never the same bubble twice (same-word bubbles share a slot instead).
+	if is_bubble_stolen(bubble.id) or inventory.any(func(b: BubbleData) -> bool: return b.id == bubble.id):
+		return
 	inventory.append(bubble)
 	stolen_bubble_ids.append(bubble.id)
 	stolen_bubble_count += 1

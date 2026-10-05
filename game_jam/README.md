@@ -21,7 +21,8 @@ sound are generated in code: there are no asset files and no addons.
 | Walk / run | A/D or ←/→, hold **Shift** to run (loud: the Crawler hears running) |
 | Step nearer / further | W/S or ↑/↓ |
 | Steal a word | Stand under it and hold **E** (step left/right to choose between words) |
-| Pick a stolen word | **1-6** for a visible slot, **Q / R** or the mouse wheel to cycle, or click a slot |
+| Pick a stolen word | **1-6** for a visible slot, **Q / R** or the mouse wheel to cycle, or click a slot. Hover a word to see what it does |
+| Reorder words | Drag a word onto another slot, or **Shift+Q / Shift+R** |
 | Say the word | **E** at the thing in front of you, or with nothing near to say it into the room |
 | Look / take / hide / dials | **E** on mirrors, pickups, hiding spots and dial locks |
 | Give a word back (Chapter 3) | Pick it, stand under its owner's broken bubble and hold **E** (or press **E** at their portrait) |
@@ -43,8 +44,10 @@ Menus work with the mouse or the keyboard (arrows + Enter; Esc goes back).
    WAIT) and hold E. Pick OPEN, then press E at the study door.
 4. **The Study Corridor.** The ink hand passes. Steal **REMEMBER** from the
    portrait.
-5. **The Study.** PUSH the cabinet, then say REMEMBER: the marks **eye,
-   moon, key** glow, and the carved door opens for whoever remembers.
+5. **The Study.** PUSH the cabinet, then say REMEMBER behind it: a sketch of
+   **eye, moon, key** appears with an arrow to the far door. REMEMBER only
+   shows the code. Press E at the door, set its dials to **eye, moon, key**
+   and press TRY (Enter). Wrong codes get "?"; the right one opens it.
 6. **The Back Stair.** Take the flashlight, then go through the right-hand
    door. Chapter 2's intro follows.
 
@@ -55,11 +58,14 @@ Optional: OPEN the bedchamber drawer to get **HUSH**.
 Light puzzles: every one fills the noticed meter where the Crawler is, so use
 the light in short bursts.
 
-1. **The Long Hallway** (safe). Turn the light on. Writing appears on the
-   wall. Hold the light on the **ink over the far door** until it shrinks
-   away.
+1. **The Long Hallway** (safe). Turn the light on. The wall reads *MRS. VANE
+   KEEPS THE CELLAR KEY AS A SHADOW. READ ARTHUR'S CLOCK FROM XII,
+   CLOCKWISE.* (both are clues, below). Hold the light on the **ink over the
+   far door** until it shrinks away.
 2. **The Portrait Gallery.** The Crawler sleeps by the far door, and the door
-   has no handle. **Sweep the light along the walls** to find a lever, and
+   has no handle. The plaque (in the light) says *THE BOLT IS UNDER THE
+   SECOND FRAME. DON'T LIGHT THE SLEEPER.* **Sweep the light** under the
+   second portrait to find a lever, and
    pull it with E while it is lit. Then turn the light off and walk (don't
    run) past the sleeper. If it wakes, stand still in the dark until it sinks.
 3. **The Servants' Passage.** After a growl and a warning, the Crawler rises
@@ -68,10 +74,14 @@ the light in short bursts.
    light (it creeps back in the dark).
 4. **The Housekeeper's Pantry.** Mrs. Vane's flashback cutscene plays. Steal
    **HIDE, HUSH and WAIT** from her (optional).
-5. **The Clock Room.** The Crawler patrols, and the far door is bolted. Say
-   **HUSH** (or WAIT once it's up), then light the clock face for a second.
-   The clock strikes, the bolt slides back, and *something happens*: run for
-   the door or hide behind the curtain.
+5. **The Clock Room.** The Crawler patrols, and the far door is bolted to the
+   dial box beside the clock. Light the clock face: three marks show, at XII,
+   IV and VIII. They shudder while the pendulum swings (say **WAIT** at the
+   pendulum to hold them still, or catch them as it passes the middle). Then
+   *something happens*: run or hide behind the curtain. Then press E at the
+   dial box and set the marks **read from XII, clockwise: hand, spiral,
+   house** (left to right would be house, hand, spiral: wrong). TRY opens
+   the door.
 6. **The Locked Cellar Stair.** A **shadow puzzle**: stand on the glowing
    chalk X and light the iron key on its stand until its shadow fits the
    keyhole outline on the wall. Then say **OPEN** at the padlock and run.
@@ -80,6 +90,20 @@ the light in short bursts.
 **Minimum:** OPEN, REMEMBER (Chapter 1's study) and the flashlight. HUSH and
 WAIT only make the Clock Room easier: you can wait for the patrol to turn
 away, light the clock, then hide.
+
+### Every clue, and what it solves
+
+| Clue text | Where | What it solves |
+| --- | --- | --- |
+| The alcove sketch: eye, moon, key (with an arrow) | Ch1 Study, after PUSH + REMEMBER | The Study door's dials |
+| "MRS. VANE KEEPS THE CELLAR KEY AS A SHADOW." | Ch2 Long Hallway wall (light) | The cellar shadow puzzle: make the key's *shadow* fit the keyhole |
+| "READ ARTHUR'S CLOCK FROM XII, CLOCKWISE." | Ch2 Long Hallway wall (light) | The order for the clock's dial box |
+| "THE BOLT IS UNDER THE SECOND FRAME. DON'T LIGHT THE SLEEPER." | Ch2 Portrait Gallery plaque (light) | Where the hidden lever is |
+| Three marks at XII, IV, VIII | Ch2 Clock face (light) | The clock's dial box: hand, spiral, house |
+| The keyhole outline and chalk X | Ch2 Cellar wall and floor | Where to stand and what the shadow must fill |
+| "LIGHT THE GLASS" | Ch3 spread, dark panel B (light) | The lens |
+| "PULL" | Ch3 spread, panel C (shown by the lens) | The lever that unbolts panel D's door |
+| "Artist's note: fix this page / erase the red one?" etc. | Ch3 Ink Heart and Last Page margins | Atmosphere: the Artist's own notes about you |
 
 ### Chapter 3: The Ink Heart
 
@@ -121,8 +145,8 @@ Every frame is more broken than the last. Giving words back calms it all.
 
 **Minimum word set for the whole game:** OPEN, PUSH, REMEMBER (Chapter 1) and
 ERASE. Words are never used up, so no order of play can lock you out.
-**Estimated first-time runtime:** about 15½-16 minutes (see the Stage 4C notes
-in CLAUDE.md).
+**Estimated first-time runtime:** about 16-16½ minutes (estimate; see the
+Stage 4D notes in CLAUDE.md).
 
 ## How it fits together
 
@@ -192,7 +216,8 @@ Chapter 1, 3 in Chapter 2). Each chapter scales how strongly it shows.
 ## Tests
 
 - **Debug keys (debug builds only, e.g. the editor's ▶):** **F6** plays the
-  next cutscene, **F7** jumps to the Clock Room jumpscare, **F8** jumps to the
+  next cutscene, **F7** plays the next jumpscare where you are (cycles through
+  all five), **F8** jumps to the
   reveal, **F9** goes to the next Chapter 3 room, **F10** jumps to the page
   spread.
 - **Jump to any room (debug builds only):** on the web add `?frame=ch3_margin`
