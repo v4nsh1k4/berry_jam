@@ -7,6 +7,9 @@ extends RefCounted
 ##   wardrobe  a wardrobe door flies open on a pulled-in face
 ##   lights    the lights die; the face is right beside the player
 ##   hand      the Artist's hand slams across the page with a nib stab
+##   cry_face  (Stage 5, cellar) after a blackout, a huge pale face, stretched,
+##             doubled and torn by glitch bands, mouth open in a wail, so
+##             close it spills past the panel
 
 
 static func draw(ci: CanvasItem, art: StringName, screen: Vector2, t: float, seed_value: int, player: Vector2) -> void:
@@ -24,6 +27,8 @@ static func draw(ci: CanvasItem, art: StringName, screen: Vector2, t: float, see
 				face(ci, player + Vector2(150, -120), 0.55 + (t - 0.12) * 0.5, seed_value)
 		&"hand":
 			_hand(ci, screen, t, seed_value)
+		&"cry_face":
+			cry_face(ci, Frame.PANEL_RECT.grow(28.0), t, seed_value)
 
 
 ## The Crawler's face: a pen-slashed ink head, staring eyes, a torn mouth
@@ -123,3 +128,73 @@ static func hollow_face(ci: CanvasItem, c: Vector2, g: float, seed_value: int) -
 	InkDraw.fill(ci, mouth, InkDraw.INK)
 	for i in 8:
 		CrawlerArt.nib(ci, c + Vector2(-78 + i * 22.5, 78) * g, PI * 0.5, 9.0 * g)
+
+
+## Is the light on at build progress `k` (0..1)? It stutters from 60%, and is
+## out for good from 88%.
+static func lit(k: float, t: float) -> bool:
+	if k < 0.6:
+		return true
+	if k > 0.88:
+		return false
+	return sin(t * 47.0) + sin(t * 23.0) > -0.2 + (k - 0.6) * 3.0
+
+
+## The cellar scare's build-up over the panel: darkness creeping in from the
+## edges, then the light flickering out.
+static func blackout(ci: CanvasItem, panel: Rect2, k: float, t: float) -> void:
+	var dark: float = smoothstep(0.0, 0.6, k) * 0.45
+	if not lit(k, t):
+		dark = 0.97
+	ci.draw_rect(panel, Color(0.0, 0.0, 0.01, dark))
+
+
+## A huge pale face, distorted: two offset copies, stretched, with bands torn
+## sideways across it; hollow eyes, a mouth wide open in a wail.
+static func cry_face(ci: CanvasItem, panel: Rect2, t: float, seed_value: int) -> void:
+	ci.draw_rect(panel, Color(0.01, 0.01, 0.015))
+	var c: Vector2 = panel.get_center() + Vector2(0, 40)
+	var grow: float = 1.0 + t * 0.6
+	for ghost in [1, 0]:
+		var at: Vector2 = c + Vector2(26, -14) * ghost * (1.0 + t * 2.0)
+		var alpha: float = 0.35 if ghost == 1 else 1.0
+		ci.draw_set_transform(at, sin(t * 9.0) * 0.04, Vector2(1.18, 0.9) * grow)
+		_wail(ci, alpha, seed_value)
+	ci.draw_set_transform(Vector2.ZERO)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = seed_value + int(t * 30.0)
+	for i in 5:
+		var y: float = panel.position.y + rng.randf() * panel.size.y
+		var h: float = rng.randf_range(6.0, 26.0)
+		ci.draw_rect(Rect2(panel.position.x, y, panel.size.x, h), Color(0.01, 0.01, 0.015, 0.85))
+		ci.draw_rect(Rect2(panel.position.x + rng.randf_range(-60, 60), y + h, panel.size.x, 3.0), Color(CrawlerArt.PALE, 0.5))
+
+
+## The face itself, around (0, 0), about 700 x 800 before scaling.
+static func _wail(ci: CanvasItem, alpha: float, seed_value: int) -> void:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var skin: Color = Color(0.86, 0.84, 0.79, alpha)
+	var ink: Color = Color(InkDraw.INK, alpha)
+	var head: PackedVector2Array = PackedVector2Array()
+	for i in 30:
+		var a: float = TAU * i / 30.0
+		head.append(Vector2(cos(a) * 330.0, sin(a) * 400.0) * rng.randf_range(0.94, 1.05))
+	InkDraw.fill(ci, head, skin)
+	for x in [-130.0, 130.0]:
+		var eye: Vector2 = Vector2(x, -110 + rng.randf_range(-12, 12))
+		ci.draw_colored_polygon(InkDraw.ellipse_points(eye, Vector2(92, 70), 20), ink)
+		ci.draw_circle(eye + Vector2(rng.randf_range(-6, 6), 8), 7.0, Color(1, 1, 1, alpha))
+		for d in 3:
+			var top: Vector2 = eye + Vector2(rng.randf_range(-50, 50), 50)
+			ci.draw_line(top, top + Vector2(0, rng.randf_range(80, 220)), ink, rng.randf_range(5.0, 12.0))
+		ci.draw_line(eye + Vector2(-90, -100), eye + Vector2(70, -70 + x * 0.1), ink, 10.0)
+	var mouth: PackedVector2Array = InkDraw.ellipse_points(Vector2(0, 200), Vector2(130, 170), 24)
+	ci.draw_colored_polygon(mouth, ink)
+	ci.draw_colored_polygon(InkDraw.ellipse_points(Vector2(0, 230), Vector2(80, 110), 18), Color(0.0, 0.0, 0.0, alpha))
+	for i in 7:
+		CrawlerArt.nib(ci, Vector2(-90 + i * 30, 52), PI * 0.5, 13.0)
+	for i in 9:
+		var a2: float = rng.randf() * TAU
+		var from: Vector2 = Vector2.from_angle(a2) * rng.randf_range(100, 300)
+		ci.draw_line(from, from + Vector2.from_angle(a2 + rng.randf_range(-0.6, 0.6)) * rng.randf_range(60, 180), ink, rng.randf_range(2.0, 6.0))

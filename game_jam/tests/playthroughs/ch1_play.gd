@@ -16,7 +16,14 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _shot(name: String) -> void:
-	await RenderingServer.frame_post_draw
+	var drawn := [false]
+	RenderingServer.frame_post_draw.connect(func() -> void: drawn[0] = true, CONNECT_ONE_SHOT)
+	for i in 20:
+		if drawn[0]:
+			break
+		await process_frame
+	if not drawn[0]:
+		RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png(_shot_dir() + "/" + name)
 
 func _wait(sec: float) -> void:

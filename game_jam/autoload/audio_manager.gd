@@ -25,6 +25,9 @@ var _pending: Dictionary = {}
 # A held breath before a lunge: after the growl, everything drops out.
 var _hush_in: float = -1.0
 var _hush: float = 0.0
+var _cry: CryBank = CryBank.new()
+## The last sound asked for (tests check door creaks with it).
+var last_played: StringName = &""
 
 
 func _ready() -> void:
@@ -44,6 +47,7 @@ func _ready() -> void:
 	EventBus.hiding_spot_erased.connect(play.bind(&"scribble", -6.0, 0.1).unbind(1))
 	EventBus.hand_erase.connect(play.bind(&"rub", -4.0, 0.1).unbind(1))
 	EventBus.reveal_started.connect(_on_frame_changed.bind(null))
+	EventBus.scare_building.connect(func(_k: StringName, seconds: float) -> void: hush(seconds))
 
 
 func start() -> void:
@@ -60,8 +64,13 @@ func start() -> void:
 	# Later sounds are built one per frame so the first click doesn't stall.
 	_pending = {
 		&"swoosh": SfxSynth2.swoosh, &"nib": SfxSynth2.nib, &"whisper": SfxSynth2.whisper,
-		&"sting": SfxSynth2.sting, &"scare_hit": SfxSynth2.scare_hit,
+		&"sting": SfxSynth2.sting, &"scare_hit": SfxSynth2.scare_hit, &"scare_low": SfxSynth2.scare_low,
+		&"door_creak_0": SfxSynth2.door_creak.bind(11), &"door_creak_1": SfxSynth2.door_creak.bind(29),
+		&"door_creak_2": SfxSynth2.door_creak.bind(47),
 	}
+	var cry_player: AudioStreamPlayer = AudioStreamPlayer.new()
+	add_child(cry_player)
+	_cry.start(cry_player)
 	for i in VOICES:
 		var voice: AudioStreamPlayer = AudioStreamPlayer.new()
 		add_child(voice)
@@ -108,6 +117,7 @@ func _process(delta: float) -> void:
 		var id: StringName = _pending.keys()[0]
 		_streams[id] = (_pending[id] as Callable).call()
 		_pending.erase(id)
+	_cry.step()
 	_skitter_left -= delta
 	if _hush_in > 0.0:
 		_hush_in -= delta
@@ -141,6 +151,29 @@ func play(sound: StringName, volume_db: float = -8.0, pitch_jitter: float = 0.06
 	voice.volume_db = volume_db
 	voice.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	voice.play()
+	last_played = sound
+
+
+## Doors, exits and secret doors opening: one of three wooden creaks, pitch
+## jittered, so no two sound alike.
+func play_door_creak(volume_db: float = -5.0) -> void:
+	play(StringName("door_creak_%d" % randi_range(0, 2)), volume_db, 0.08)
+
+
+## The team's recorded cry (CryBank.play): raw / low / thin, once per
+## `once_id` per run.
+func play_cry(variant: StringName, volume_db: float = -10.0, fade_in: float = 0.0, once_id: StringName = &"") -> void:
+	if _started and _cry.play(variant, volume_db, fade_in, once_id):
+		last_played = StringName("cry_%s" % variant)
+
+
+func stop_cry() -> void:
+	_cry.stop()
+
+
+## Drops the drone, rumble and heartbeat out for `seconds` (a held breath).
+func hush(seconds: float) -> void:
+	_hush = maxf(_hush, seconds)
 
 
 func _on_footstep(loud: bool) -> void:

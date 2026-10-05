@@ -60,7 +60,8 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
   **Compatibility renderer**, must export to Web without threads.
 - **Original hand-written code.** No addons, starter kits or templates. All art
   and sound are **procedural** (`_draw()`, shaders, generated audio). The
-  default font only.
+  default font only. **No audio files except `res://audio/baby_cry.wav`, a
+  deliberate exception** (Stage 5: the team's own recording, see CryBank).
 - **Static typing everywhere** (`var x: float = 1.0`, typed returns).
 - **Systems talk only through `EventBus` signals.** Small public methods on
   autoloads (`GameState.add_bubble`, `AbilityRegistry.speak`) are the
@@ -83,11 +84,12 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 | 4B | Story reorder (no returning before the reveal), Gallery ability puzzle, the Ink Heart and the final steal (ERASE), the reveal, the return phase with the Artist's hand, the final word and repair, the Last Page, epilogue, intro cinematic, save v2 migration, F9 debug jump |
 | 4C | Pacing pass to ~15 min (Torn Page cut, one batched Returning Room, gallery return removed, Ch1 intro captions cut), CutsceneSystem + C1-C6, reveal rewrite (9 captions, ~35 s, goal line), light puzzles (4 in Ch2, 3 in the spread, light disabled in the Ink Heart), the page spread (Gallery of Words), scarier monster, one major + one minor jumpscare, MusicManager, intro/ending as comic pages, save v3, F6-F10 debug keys |
 
+| 5 | Atmosphere pass: a shorter intro (25 s → 18.5 s) where the reader is sucked into the comic; C1, C2 and C4 first person (red hands, empty bubble, vignette); more detail in every cutscene (same beats, same 32.64 s); a wooden door creak (3 variants, pitch jittered) for every door, exit and secret door; an ominous music bed under all of Chapters 1-3; a sixth scare (the cellar: silence, the cry, lights out, a huge face); the team's recorded cry at three one-time moments |
 | 4D | 22 playtest fixes: real Study and Clock dial locks (TRY + "?"), every clue used (hallway, plaque, clock), decoy doors removed, forgiving spread jump (buffer + coyote, W/Up), no duplicate words (x2 slots), WAIT made useful (pendulum, gutter fingers) with a frost effect, unified unlock feedback (captions, pop-ups, sound, pulse, padlocks that drop, gated exit doors, off-screen arrow), word tooltips + selected-word line, reorder (drag, Shift+Q/R), controls card on New Game, noticed-meter cause icons + noise from running, margin doodles, clean chapter title cards, reveal rebuilt (morph, label card, recap), five one-time scares, return/erase music + build-up layers, the Artist's pencil, save v4 |
 
 Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B,
-Stage 4C, the study-lock cut (since reverted by 4D). Stage 4D is uncommitted
-until the user asks.
+Stage 4C, the study-lock cut (since reverted by 4D), Stage 4D (d1e2764).
+Stage 5 is uncommitted until the user asks.
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
 Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
@@ -127,9 +129,25 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   door's padlock) and `ui_check` (controls card, title card, doodles, hover
   tooltip + x2, meter icons, the final room's hand). New Game now waits on
   the controls card: tests press it (`MenuLayer/ControlsCard._accept`).
+  Stage 5 extended `cutscenes` (lengths vs. Stage 4D, three shots per POV
+  beat, slowest frame; `ONLY=c1_first_steal,c2_torch` runs some),
+  `cinematics_check` (the 18.5 s intro, the cry at its end once; `FAST=1`
+  jumps the clock for quick shots), `scare_check` (six scares, the cellar
+  build-up: music/ambience near silent, cry, light out; a menu calls it off
+  and it retries), `music_check` (the bed under Ch1-3 rooms, back within
+  ~2 s after cutscene/lunge/scare drops, off for reveal/return; new sounds
+  and cry variants, clipping), `gates_check` (creak for door / exit / secret
+  door, click for padlock / dials / lever), `reveal_check` (the thin cry on
+  the erase beat, once).
   They print a log and save screenshots to `$SHOT_DIR`. Read the screenshots,
   because visual bugs (cyan glitch blocks, a pink vignette flood) only showed
   up there. `tests/visual/art_preview.gd` renders any drawing call to a PNG.
+- **A hidden test window is never drawn** (another Space, a full-screen app,
+  even with `--always-on-top`), so `frame_post_draw` never fires and a
+  screenshot waits for ever. Every `_shot` now waits 20 frames and then
+  `RenderingServer.force_draw()`s. Mouse-aimed torch steps (`warp_mouse`)
+  still fail in a hidden/unfocused window: in Stage 5, `ch2_play` on the
+  pack failed at a different torch step each run while desktop passed.
 - **Run with `--disable-vsync`** on macOS: an occluded/unfocused test window
   can block on vsync and freeze the run at a screenshot (looks like a hang
   with no error). Unfocused windows can also drop `warp_mouse`, so a torch-
@@ -144,7 +162,7 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   (optionally `&words=arthur_open,vane_hide` and `&twist=1`); on desktop run
   with `-- --frame=ch3_margin [--words=...] [--twist=1]`. **In game (debug
   builds, e.g. the editor's ▶): F6** next cutscene, **F7** next jumpscare
-  (cycles all five, right where you are), **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
+  (cycles all six, right where you are), **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
   spread (all in `main._unhandled_key_input`). `DebugJump` adds the
   words a player would carry; return-phase rooms also get ERASE and
   `twist_revealed`.
@@ -168,7 +186,7 @@ box). Don't name test methods after `SceneTree` methods.
 | Autoload | Owns |
 | --- | --- |
 | `EventBus` | ~52 signals, no logic. Each signal has `@warning_ignore("unused_signal")` (per line, for 4.3 compatibility) |
-| `AudioManager` | Builds every sound on the first click (`SfxSynth`), SFX voices, drone, Crawler dread (heartbeat speeding with notice, rumble, skitter, growl), volume and mute in `user://settings.cfg` |
+| `AudioManager` | Builds every sound on the first click (`SfxSynth`; newer ones one per frame via `_pending`), SFX voices, drone, Crawler dread (heartbeat speeding with notice, rumble, skitter, growl), volume and mute in `user://settings.cfg`. Stage 5: `play_door_creak()` (3 creaks), `play_cry(variant, db, fade_in, once_id)` / `stop_cry()` (CryBank), `hush(s)` (drone/heartbeat out), `last_played` (tests) |
 | `ShakeManager` | Trauma shake (trauma squared, decays) on the viewport canvas transform; also holds the frame's **base tilt** (`FrameData.panel_tilt`, rotated about the panel centre) |
 | `GameState` | `inventory` (uncapped, single source of truth), `selected_index`, `flags`, `stolen_bubble_ids`, `returned_bubble_ids`, `stolen_bubble_count`, `comic_damage` (+ eased `shown_damage`), **`twist_revealed`**, `current_chapter`, `chapter_start` snapshot, `is_playing`, `modal_open`; `return_bubble`, `reveal_twist`, `normal_words_held`, `held_share`, `glitch_of`; save/restore (`to_dict` / `from_dict`, built by `StateSnapshot`) |
 | `LightingSystem` | Flashlight on/off (F / left click), only with flag `has_flashlight` |
@@ -176,7 +194,7 @@ box). Don't name test methods after `SceneTree` methods.
 | `TransitionManager` | SLIDE (page sheet) and INK_SPLASH (shader) wipes around a swap |
 | `AbilityRegistry` | ability id → `AbilityData` + handler instance, `speak()`, cooldowns (`ABILITY_PATHS` list) |
 | `CutsceneSystem` | CanvasLayer 55. Loads `data/cutscenes/*.tres` (`CUTSCENE_PATHS`), plays one when its trigger fires (`first_steal`, `resolved:<id>`, `frame:<id>`, `repaired`), pauses the tree, skippable after 0.6 s, marks it in `GameState.seen` |
-| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame (`MusicRenderer` + `MusicSynth`/`MusicSynth2`), crossfades, build-up layers (pulse → strings swell → hunt), stingers, ducking, focus-loss mute; music volume/mute in `settings.cfg` |
+| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame (`MusicRenderer` + `MusicSynth`/`MusicSynth2`), crossfades, build-up layers (pulse → strings swell → hunt), the Stage 5 **bed** (always under ch1/ch2/ch3), stingers, ducking, focus-loss mute; music volume/mute in `settings.cfg` |
 
 ### Scene tree (`scenes/main.tscn`) and canvas layers
 World (layer 0: the `Frame` under `World/FrameRoot`, plus `World/Player`; the
@@ -194,7 +212,7 @@ y 400-504.
 
 ### Flow (`scripts/main.gd`)
 Title (click or key; browsers need that gesture before audio) → menu → **New
-Game: `IntroCinematic`** (19 s, Space/click skips) → chapter intro
+Game: `IntroCinematic`** (18.5 s, Space/click skips) → chapter intro
 (`ChapterData.intro_lines`) → `_start_chapter` (sets `current_chapter`, takes
 the `chapter_start` snapshot, applies `line_jitter`) → frames → a frame with
 **`next_chapter`** hands off after 1.5 s to the next chapter's intro → ... →
@@ -363,7 +381,16 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   `light_disabled` refuse the torch (`LightingSystem.light_blocked`). The
   player's red aura is always on (dims when concealed).
 - **Cutscenes** (`autoload/cutscene_system.gd`, `ui/cutscene_view.gd`,
-  `ui/cutscene_art.gd` + `cutscene_art2.gd`): a page with 1-4 clipped panel
+  `ui/cutscene_art.gd` (C3) + `cutscene_art2.gd` (C5, C6) + Stage 5's
+  `cutscene_art3.gd` / `cutscene_art4.gd` (first person, `pov_*` ids) and
+  `cutscene_detail.gd` (halftone/splatter on every panel, per-id props and
+  secondary motion)). C1, C2 and C4 are POV: the scene is drawn under a
+  `pov_look_up` / `pov_look` / `pov_sweep` / `pov_look_down` / `pov_shake`
+  camera (breathing sway, slight roll), then `CutsceneArt3.overlay` draws
+  the player's red hands, the empty bubble at the edge of view and a dark
+  vignette fixed to the viewer. C2's dark room is lit only inside the cone
+  (darkness is a fan polygon round it, no clipping). Totals: C1 4.76 s, C2
+  4.93, C3 5.27, C4 5.27, C5 5.27, C6 7.14 = 32.64 s (unchanged). a page with 1-4 clipped panel
   Controls that ink in one by one, a typed narration box, a slow camera
   transform, an optional page turn. C1 first steal, C2 the torch
   (`resolved:flashlight`), C3 Mrs. Vane's flashback (`frame:ch2_pantry`),
@@ -382,7 +409,7 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   light-mask bit; a soft square fill light per lit panel culls to that bit;
   the torch lights every bit. `SpreadFingers`: torch on 4 s → fingers peek
   through the gutter under the player (0.8 s telegraph) and stab (knock back).
-- **Scares** (`ui/jumpscare_overlay.gd`, FXLayer): `scare_clock` 0.6 s after
+- **Scares** (superseded by the Stage 4D/5 notes below) (`ui/jumpscare_overlay.gd`, FXLayer): `scare_clock` 0.6 s after
   the clock is read (0.35 s face + `scare_hit` + shake + one short red flash,
   then `InkCrawler.appear_at` 330 px behind the player + `wake_to`: run for the
   unbolted door or hide), `scare_margin` (the hand slams across the page with
@@ -405,8 +432,14 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   cutscene cues. Ducks for cutscenes and scares; drops out before lunges.
 - **Intro / ending** (`ui/intro_cinematic.gd`, `ui/epilogue_sequence.gd`,
   shared `ui/comic_pages.gd`): comic pages of tilted, clipped panels looking
-  into one continuous 1280x720 scene, halftone tint, page turns. Intro ~25 s
-  (bedroom → ink → SLAM! → the first panel's border inks in). Ending ~30 s
+  into 1280x720 scenes, halftone tint, page turns. Intro (Stage 5, 18.5 s,
+  `IntroArt` / `IntroArt2`, scene ids 0 room / 1 page close-up / 2 tunnel):
+  0-4.4 a reader bent over the comic on a desk at night; 4.4-9.8 the page's
+  ink lifts and reaches out, the room warps toward the page (panel frames
+  and speed lines rush in, page lines curl), a finger touches the page and
+  turns red; 9.8-13.6 inside the pull, the red reader dragged into the
+  light; 13.6 SLAM (the book shut on the desk); 15.0 the white first panel
+  inks in; 15.3 the recorded cry, raw and faint (`cry_intro`). Ending ~30 s
   (out through the border gap → the teen closes the book → the last panel,
   everyone whole, a faint red mark, "Some stories keep a little of whoever
   visits them.").
@@ -470,7 +503,7 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   - *Noticed meter*: running steps within 430 px add 0.07 each
     (`NoticeSystem._on_footstep`); `EventBus.notice_sources` lights the
     torch / footprint icons (`NoticeIcons`); a quiet tick per 12%.
-  - *Scares* (`ui/jumpscare_overlay.gd` + `ui/scare_art.gd`): a table of five
+  - *Scares* (`ui/jumpscare_overlay.gd` + `ui/scare_art.gd`): a table of five (six since Stage 5)
     (hallway lights-out face, gallery portrait, passage wardrobe, clock face
     + Crawler strike, spread hand slam), each triggered by a room flag, then
     waiting for a fair moment (no menu/cutscene/turn/dials, no Crawler
@@ -489,6 +522,40 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
     its grid), `IntroSequence` = the chapter title card, `PageDoodles` on
     frames with `doodles`.
 
+- **Stage 5 systems.**
+  - *Door creak* (`SfxSynth2.door_creak(seed)`): stick-slip pulses at a
+    gliding, wobbling rate through two wood resonances plus friction noise,
+    ~0.75-0.95 s; three seeds built one per frame (`door_creak_0..2`),
+    played by `UnlockFeedback` for door / exit / secret_door with pitch
+    jitter. Padlocks (unbolt), dial boxes, latches and levers click.
+    `UnlockFeedback.heard` logs [kind, sound] for tests. C4's stair keeps
+    the old `creak`.
+  - *Music bed* (`MusicSynth2._bed`, 24 s loop): detuned partial pairs
+    (55/55.17, 110/110.25 Hz...) beating every 4-6 s, a breathing tritone,
+    three far glass tones with echoes. Plays at `BED_DB` -14 whenever the
+    wanted track is ch1/ch2/ch3; follows every duck; drops at 140 dB/s and
+    comes back at 40 dB/s (≤ ~2 s). Off for menu, reveal, return, erase,
+    warm, ending.
+  - *The recorded cry* (`scripts/audio/cry_bank.gd`): loads
+    `res://audio/baby_cry.wav` (guarded by `ResourceLoader.exists`; falls
+    back to `SfxSynth2.wail()` with a warning). Variants: raw; low (low-pass
+    baked into the samples a chunk per frame, played at pitch 0.6, because
+    web sample playback ignores bus effects); thin (cut at 62%). Used three
+    times, each once per run via `GameState.seen`: `cry_intro` (end of the
+    intro, raw, -17 dB), `cry_scare` (the cellar scare's build, low, fading
+    in), `cry_reveal` (the reveal's erase beat, thin).
+  - *Scares*: six. `scare_cellar` (ch2_cellar, flag `cellar_dials_set`,
+    `build` 3.0 s, `patience` 90 s): `EventBus.scare_building(kind, s)`
+    ducks music to near silence and hushes the drone; the cry grows; the
+    panel darkens and the light (and the torch) flickers out
+    (`ScareArt.lit/blackout`); then `cry_face` (a huge doubled, stretched,
+    glitch-torn face), shake 1.0 x intensity, one red flash, `scare_low` +
+    `scare_hit`, cry cut. A menu / cutscene / page turn mid-build calls it
+    off and it retries; leaving the room drops it. No Crawler strike (the
+    cellar chase starts on OPEN as before).
+  - *Save*: no version bump; new ids (`scare_cellar`, `cry_*`) are just
+    entries in `seen`.
+
 ### Split precedents (for the 250-line rule)
 `InventoryArt` (strip drawing), `InteractableArt` / `InteractableArt2`, the
 `HidingSpot` / `ReturnSpot` subclasses chosen by `Frame.KIND_CLASSES`, the
@@ -498,7 +565,8 @@ Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 `SfxSynth2`, `LightPuzzle`/`LightPuzzleArt`, `SpreadController`/`SpreadArt`/
 `SpreadPanelView`/`SpreadFingers`, `RevealArtTear`, `ComicPages`, `RevealBeats`,
 `ScareArt`, `MusicRenderer`/`MusicSynth2`, `GrandfatherClock`, `InventorySlots`,
-`ExitDoorArt`, `NoticeIcons`, `PageDoodles`, `SpreadJump`.
+`ExitDoorArt`, `NoticeIcons`, `PageDoodles`, `SpreadJump`, `IntroArt`/`IntroArt2`,
+`CutsceneArt3`/`CutsceneArt4`, `CutsceneDetail`, `CryBank`.
 
 ## 7. Content, chapter by chapter
 
@@ -523,7 +591,8 @@ the marks still) → the **major jumpscare**: the Crawler appears behind you and
 hunts → the dial box beside the clock: **hand, spiral, house**, read from XII
 clockwise as the hallway wall says; it unbolts the exit) → cellar stair
 (`shadow_puzzle`: stand on the chalk X, light the iron key until its shadow
-fits the keyhole; then OPEN, then a short chase) → `ch2_end` (C4) hands off
+fits the keyhole; a moment later the Stage 5 cellar scare; then OPEN, then a
+short chase) → `ch2_end` (C4) hands off
 to Chapter 3. Only OPEN and the flashlight are required here.
 
 **Chapter 3, The Ink Heart** (`ch3_*`). *Before the reveal:* gallery of words
@@ -553,20 +622,31 @@ by the shadow puzzle.
 
 ## 8. Open issues and next steps
 
-1. Stage 4D is complete; nothing is stubbed. Runtime ≈ 16-16½ min (estimate:
-   the restored Study and new Clock dial locks add about a minute; cutscenes
-   were trimmed 15%). Further cuts would remove a beat (bedchamber drawer
-   detour, Margin chase length) and need the user's say.
-2. `ink_crawler.gd` is 261 lines (it was 254 before 4C; `appear_at` added 7).
-   Next time it grows, split the senses (`_can_see`, notice/footstep
-   handlers) into a helper.
-3. Stage 5: an options screen for music volume (pause menu has it now),
-   "reduce shake and flashing" (wire it to settings.cfg
-   `[accessibility] scare_intensity`, read by `JumpscareOverlay`).
-4. Credits say "the Berry Jam team"; real names go in `ui/main_menu.gd`.
-5. The user should delete `ink-bleed-(4.3)/` (deleting it from here was blocked).
+1. Stage 5 is complete; nothing is stubbed. Runtime ≈ 15½-16 min (4D's
+   estimate minus 6.5 s of intro; cutscenes unchanged at 32.64 s).
+2. Not verified in a real browser: frame pacing (the in-app browser pane was
+   hidden, which throttles it to 1 fps) and how the cry / creak / bed sound
+   (audio can't be heard by the agent). Desktop numbers: intro worst frame
+   24 ms (page 1's first frame; page 2 ~20 ms, the rest < 10 ms), cutscenes
+   31 ms on C1's first frame, otherwise ≤ 13 ms.
+3. `ch3_systems` prints `E2 WAIT froze hand=false` (also at d1e2764, before
+   Stage 5): WAIT near the Returning Room's hand freezes something else
+   first. Check WaitAbility's target order vs. the test.
+4. `ink_crawler.gd` is 261 lines (unchanged since 4C); `music_manager.gd`
+   is at 250. Split the Crawler's senses / MusicManager's settings next time.
+5. Credits say "the Berry Jam team" and "Voice: the team"; real names go in
+   `ui/main_menu.gd`.
+6. The user should delete `ink-bleed-(4.3)/` (deleting it from here was blocked).
 
 ## 9. Hard-won gotchas (read before touching these areas)
+
+- **WAV import (4.7.2):** the importer refuses WAVE_FORMAT_EXTENSIBLE
+  headers ("not PCM"). The team's `baby_cry.wav` arrived that way; its
+  header was rewritten as plain PCM (samples byte-identical). Keep its
+  `.import` at `compress/mode=0`: the 4.x default (QOA) would hand CryBank
+  compressed bytes it can't filter.
+- **Web audio is sample playback:** bus effects (AudioEffectLowPassFilter
+  etc.) are skipped on the web, so filters are baked into samples (CryBank).
 
 - **Godot 4.7.2 web export bug #1:** with
   `convert_text_resources_to_binary=true`, every **PackedStringArray in `.tres`**

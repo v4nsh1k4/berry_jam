@@ -27,7 +27,14 @@ func _shot(name: String) -> void:
 	if DisplayServer.window_get_size() != Vector2i(1280, 720):
 		DisplayServer.window_set_size(Vector2i(1280, 720))
 		await process_frame
-	await RenderingServer.frame_post_draw
+	var drawn := [false]
+	RenderingServer.frame_post_draw.connect(func() -> void: drawn[0] = true, CONNECT_ONE_SHOT)
+	for i in 20:
+		if drawn[0]:
+			break
+		await process_frame
+	if not drawn[0]:
+		RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png(_shot_dir() + "/" + name)
 
 func _wait(sec: float) -> void:

@@ -1,19 +1,22 @@
 extends Control
-## New Game opening, drawn in code as comic pages (about 25 s; click / Space
-## skips). Page 1: a teenager reading "The Silent House of Hollow Hill" late
-## at night, the book, their face. Page 2 (page turn): the book glows, red
-## ink erupts and drags them in. Page 3: the book slams shut. Then the white
-## first panel (the Awakening) and Chapter 1's intro captions. The scene
-## itself is one continuous 1280x720 drawing; the panels look into it.
+## New Game opening (Stage 5: shorter, "sucked into the comic"), drawn in code
+## as comic pages (18.5 s; click / Space skips). Page 1: late at night, a
+## reader bent over the comic open on their desk, the page lighting their face.
+## Page 2 (page turn): the page's ink lifts and reaches out, the room warps
+## toward the page, a finger touches it and turns red. Page 3: inside the
+## pull (panel borders zooming into the page, speed lines, page lines curling),
+## the red reader dragged into the light, then SLAM: the book shuts. Then the
+## white first panel inks in and the team's recorded cry plays, faint.
+## Scenes (IntroArt / IntroArt2): 0 room, 1 the page close up, 2 the tunnel.
 
-const HIP: Vector2 = Vector2(330, 470)
-const BOOK: Vector2 = Vector2(560, 360)
-const T_GLOW: float = 5.0
-const T_INK: float = 9.5
-const T_PULL: float = 13.5
-const T_SLAM: float = 19.6
-const T_WHITE: float = 22.2
-const T_END: float = 25.0
+const T_PAGE2: float = 4.4
+const T_INK: float = 4.8
+const T_TOUCH: float = 7.4
+const T_PAGE3: float = 9.8
+const T_SLAM: float = 13.6
+const T_WHITE: float = 15.0
+const T_CRY: float = 15.3
+const T_END: float = 18.5
 
 var _t: float = -1.0
 var _slammed: bool = false
@@ -28,16 +31,16 @@ func _ready() -> void:
 	_pages.scene_drawer = _scene
 	_pages.footer = "click / space: skip"
 	_pages.pages = [
-		{start = 0.0, end = 8.6, caption = "Late. One more chapter. The pages are warm.", panels = [
-			{rect = Rect2(0, 0, 1, 0.56), src = Rect2(0, 60, 1280, 600), zoom = 1.06},
-			{rect = Rect2(0, 0.56, 0.46, 0.44), src = Rect2(420, 250, 300, 220), tilt = -1.5, zoom = 1.2},
-			{rect = Rect2(0.46, 0.56, 0.54, 0.44), src = Rect2(200, 150, 340, 230), tilt = 1.5, zoom = 1.15}]},
-		{start = 8.6, end = 17.4, caption = "Something in the ink wants a reader.", panels = [
-			{rect = Rect2(0, 0, 0.6, 1), src = Rect2(330, 120, 520, 520), tilt = -2.0, zoom = 1.12},
-			{rect = Rect2(0.6, 0, 0.4, 0.5), src = Rect2(140, 110, 420, 360), tilt = 2.5, zoom = 1.25},
-			{rect = Rect2(0.6, 0.5, 0.4, 0.5), src = Rect2(470, 260, 220, 180), tilt = -3.0, zoom = 1.4}]},
-		{start = 17.4, end = T_WHITE, caption = "", panels = [
-			{rect = Rect2(0.04, 0.02, 0.92, 0.96), src = Rect2(160, 80, 900, 560), tilt = 1.0, zoom = 1.3}]},
+		{start = 0.0, end = T_PAGE2, caption = "Late. One more chapter. The pages are warm.", panels = [
+			{rect = Rect2(0, 0, 1, 0.56), src = Rect2(40, 150, 1200, 520), zoom = 1.08},
+			{rect = Rect2(0, 0.56, 0.46, 0.44), src = Rect2(470, 380, 380, 180), tilt = -1.5, zoom = 1.25},
+			{rect = Rect2(0.46, 0.56, 0.54, 0.44), src = Rect2(330, 220, 400, 220), tilt = 1.5, zoom = 1.2}]},
+		{start = T_PAGE2, end = T_PAGE3, caption = "Something in the ink wants a reader.", panels = [
+			{rect = Rect2(0, 0, 0.6, 1), src = Rect2(200, 60, 900, 640), scene = 1, tilt = -2.0, zoom = 1.15},
+			{rect = Rect2(0.6, 0, 0.4, 0.5), src = Rect2(80, 120, 1100, 560), tilt = 2.5, zoom = 1.3},
+			{rect = Rect2(0.6, 0.5, 0.4, 0.5), src = Rect2(470, 300, 420, 320), scene = 1, tilt = -3.0, zoom = 1.45}]},
+		{start = T_PAGE3, end = T_WHITE, caption = "", panels = [
+			{rect = Rect2(0.03, 0.02, 0.94, 0.96), src = Rect2(160, 80, 960, 600), scene = 2, tilt = 1.0, zoom = 1.5}]},
 	]
 	add_child(_pages)
 	hide()
@@ -58,16 +61,22 @@ func _stop() -> void:
 func _process(delta: float) -> void:
 	if _t < 0.0:
 		return
+	var was: float = _t
 	_t += delta
-	if _t >= T_INK and _t - delta < T_INK:
+	var crossed: Callable = func(at: float) -> bool: return _t >= at and was < at
+	if crossed.call(T_INK):
+		AudioManager.play(&"whisper", -10.0, 0.05)
+	if crossed.call(T_TOUCH):
 		AudioManager.play(&"steal", -4.0, 0.0)
-	for at in [8.6, 17.4]:
-		if _t >= at and _t - delta < at:
-			AudioManager.play(&"swoosh", -6.0, 0.05)
+	for at in [T_PAGE2, T_PAGE3, T_PAGE3 + 2.0]:
+		if crossed.call(at):
+			AudioManager.play(&"swoosh", -6.0 if at != T_PAGE3 + 2.0 else -3.0, 0.05)
 	if _t >= T_SLAM and not _slammed:
 		_slammed = true
 		AudioManager.play(&"slam", -2.0, 0.0)
 		EventBus.shake_requested.emit(0.5)
+	if crossed.call(T_CRY):
+		AudioManager.play_cry(&"raw", -17.0, 0.4, &"cry_intro")
 	if _t >= T_END:
 		_finish()
 		return
@@ -95,27 +104,33 @@ func _finish() -> void:
 	EventBus.intro_cinematic_finished.emit()
 
 
-## The continuous scene the panels look into (scene space 1280x720).
-func _scene(ci: CanvasItem, _id: int, t: float, tick: int) -> void:
-	var screen: Vector2 = ComicPages.SCENE
-	var slammed: bool = t >= T_SLAM
-	RealWorldArt.bedroom(ci, screen, 0.0, tick)
-	var glow: float = smoothstep(T_GLOW, T_INK, t) * (0.0 if slammed else 1.0)
-	var shrink: float = smoothstep(T_PULL, T_SLAM - 0.4, t)
-	var shake: Vector2 = Vector2(sin(t * 53.0), cos(t * 41.0)) * 4.0 * smoothstep(T_INK, T_PULL, t) * (0.0 if slammed else 1.0)
-	var book: Vector2 = BOOK + shake
-	if not slammed:
-		RealWorldArt.teen(ci, HIP, book, 1.0 - smoothstep(T_SLAM - 0.8, T_SLAM, t), shrink, tick)
-	RealWorldArt.book(ci, book if not slammed else Vector2(560, 500), 0.0 if slammed else 1.0, glow, tick)
-	var ink: float = smoothstep(T_INK, T_PULL, t) * (1.0 - smoothstep(T_SLAM - 1.5, T_SLAM, t))
-	RealWorldArt.red_ink(ci, book, HIP.lerp(book, shrink) + Vector2(10, -200) * (1.0 - shrink), ink, tick * 3)
-	if slammed:
-		var k: float = smoothstep(T_SLAM, T_SLAM + 0.25, t)
-		ci.draw_rect(Rect2(Vector2(-200, -200), screen + Vector2(400, 400)), Color(1, 1, 1, 0.7 * (1.0 - k)))
-		ci.draw_rect(Rect2(Vector2(-200, -200), screen + Vector2(400, 400)), Color(0, 0, 0, smoothstep(T_SLAM + 0.6, T_WHITE, t)))
-		var font: Font = ThemeDB.fallback_font
-		ci.draw_string_outline(font, Vector2(560, 300), "SLAM!", HORIZONTAL_ALIGNMENT_LEFT, -1, 110, 14, InkDraw.WHITE)
-		ci.draw_string(font, Vector2(560, 300), "SLAM!", HORIZONTAL_ALIGNMENT_LEFT, -1, 110, InkDraw.INK)
+## Scene `id` at time `t` (scene space 1280x720), see IntroArt.
+func _scene(ci: CanvasItem, id: int, t: float, tick: int) -> void:
+	var glow: float = smoothstep(0.0, T_PAGE2, t) * 0.6 + smoothstep(T_INK, T_TOUCH, t) * 0.4
+	var ink: float = smoothstep(T_INK, T_TOUCH, t)
+	var reach: float = smoothstep(T_INK + 0.6, T_TOUCH, t)
+	var red: float = smoothstep(T_TOUCH, T_TOUCH + 1.2, t)
+	match id:
+		0:
+			IntroArt.room(ci, t, glow, ink, reach, red, smoothstep(T_INK + 0.8, T_PAGE3, t), 1.0, tick)
+		1:
+			IntroArt2.page_close(ci, t, ink, reach, red, smoothstep(T_TOUCH + 0.9, T_PAGE3 + 0.2, t), tick)
+		2:
+			if t < T_SLAM:
+				IntroArt2.tunnel(ci, t, smoothstep(T_PAGE3 + 0.2, T_SLAM - 0.1, t), tick)
+			else:
+				_slam(ci, t, tick)
+
+
+## The book slammed shut on an empty desk: a white flash, SLAM!, then black.
+func _slam(ci: CanvasItem, t: float, tick: int) -> void:
+	IntroArt.room(ci, t, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, tick, true)
+	var big: Rect2 = Rect2(Vector2(-400, -400), Vector2(2080, 1520))
+	ci.draw_rect(big, Color(1, 1, 1, 0.75 * (1.0 - smoothstep(T_SLAM, T_SLAM + 0.25, t))))
+	ci.draw_rect(big, Color(0, 0, 0, smoothstep(T_SLAM + 0.6, T_WHITE, t)))
+	var font: Font = ThemeDB.fallback_font
+	ci.draw_string_outline(font, Vector2(440, 330), "SLAM!", HORIZONTAL_ALIGNMENT_LEFT, -1, 120, 14, InkDraw.WHITE)
+	ci.draw_string(font, Vector2(440, 330), "SLAM!", HORIZONTAL_ALIGNMENT_LEFT, -1, 120, InkDraw.INK)
 
 
 func _draw() -> void:

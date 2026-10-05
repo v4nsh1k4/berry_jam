@@ -3,9 +3,10 @@ extends Control
 
 const CREDITS_TEXT: String = """INK-BLEED
 Made for the Infinium 26 game jam by the Berry Jam team.
+Voice: the team
 
-Code, art and sound are made in Godot from code: no assets,
-no addons. Font: Godot's built-in default font."""
+Code, art and sound are made in Godot from code: no addons, and no
+assets except one recorded cry. Font: Godot's built-in default font."""
 
 var _pages: Dictionary = {}
 var _continue_button: Button

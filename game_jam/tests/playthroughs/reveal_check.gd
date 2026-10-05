@@ -17,7 +17,14 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _shot(name: String) -> void:
-	await RenderingServer.frame_post_draw
+	var drawn := [false]
+	RenderingServer.frame_post_draw.connect(func() -> void: drawn[0] = true, CONNECT_ONE_SHOT)
+	for i in 20:
+		if drawn[0]:
+			break
+		await process_frame
+	if not drawn[0]:
+		RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png(_shot_dir() + "/" + name)
 
 func _wait(sec: float) -> void:
@@ -50,13 +57,20 @@ func _run() -> void:
 	var starts: PackedFloat32Array = reveal._starts
 	print("reveal beats at ", starts, " total ", reveal.total())
 	var prev := 0.5
+	var am = root.get_node("/root/AudioManager")
+	var cry_beat := -1
 	for i in starts.size() - 1:
 		var mid: float = (starts[i] + starts[i + 1]) * 0.5 + 0.5
 		await _wait(mid - prev)
 		prev = mid
+		if cry_beat < 0 and String(am.last_played) == "cry_thin":
+			cry_beat = i
 		await _shot("rv_%d.png" % i)
 	await _wait(reveal.total() - prev + 2.5)
 	var ok: bool = gs.twist_revealed and not paused
+	# Stage 5: the recorded cry, cut short, as the eraser rubs the figure out.
+	print("cry (thin) heard by beat %d (%s), seen=%s" % [cry_beat, reveal._beats[maxi(cry_beat, 0)].id, gs.seen.has(&"cry_reveal")])
+	ok = ok and reveal._beats[maxi(cry_beat, 0)].id == &"erase" and gs.seen.count(&"cry_reveal") == 1
 	print("twist=", gs.twist_revealed, " frame=", gs.current_frame_id, " paused=", paused)
 	await _wait(1.0)
 	await _shot("rv_goal.png")

@@ -1,6 +1,6 @@
 class_name CutsceneArt2
 extends RefCounted
-## Cutscene panel drawings for the descent, the Ink Heart and the repair
+## Cutscene panel drawings for the Ink Heart and the repair
 ## (see CutsceneArt for the conventions).
 
 const DARK: Color = Color(0.07, 0.065, 0.08)
@@ -10,10 +10,6 @@ const PENCIL: Color = Color(0.55, 0.62, 0.72, 0.7)
 
 static func draw(ci: CanvasItem, id: String, s: Vector2, t: float, tick: int) -> void:
 	match id:
-		"descent":
-			_descent(ci, s, t, tick)
-		"ink_rising":
-			_ink_rising(ci, s, t, tick)
 		"sketch_through":
 			_sketch_through(ci, s, t, tick)
 		"torn_panels":
@@ -32,45 +28,6 @@ static func draw(ci: CanvasItem, id: String, s: Vector2, t: float, tick: int) ->
 
 static func _dark(ci: CanvasItem, s: Vector2, color: Color = DARK) -> void:
 	ci.draw_rect(Rect2(Vector2(-40, -40), s + Vector2(80, 80)), color)
-
-
-## C4: stairs spiralling down past the bottom of the drawing.
-static func _descent(ci: CanvasItem, s: Vector2, t: float, tick: int) -> void:
-	var u: float = CutsceneArt.unit(s)
-	_dark(ci, s, Color(0.2, 0.19, 0.21))
-	var c: Vector2 = Vector2(s.x * 0.5, s.y * 0.2)
-	for i in 14:
-		var k: float = i / 14.0
-		var a: float = i * 0.9 + t * 0.4
-		var r: float = lerpf(150.0, 30.0, k) * u
-		var p: Vector2 = c + Vector2(cos(a) * r, k * s.y * 0.9)
-		InkDraw.line(ci, p + Vector2(-34, 0) * u * (1.0 - k * 0.6), p + Vector2(34, 6) * u * (1.0 - k * 0.6), 4.0 * (1.0 - k * 0.5), tick + i,
-			Color(0.75, 0.72, 0.68, 1.0 - k))
-	ci.draw_rect(Rect2(0, s.y * 0.8, s.x, s.y * 0.3), Color(0, 0, 0, 0.7))
-	var step: int = mini(int(t * 1.5), 6)
-	var a2: float = step * 0.9 + t * 0.4
-	var feet: Vector2 = c + Vector2(cos(a2) * lerpf(150.0, 30.0, step / 14.0) * u, step / 14.0 * s.y * 0.9)
-	RevealArt.red_figure(ci, feet, u * (0.8 - step * 0.05), tick)
-
-
-## C4: black ink rising up the panel, with pale eyes in it.
-static func _ink_rising(ci: CanvasItem, s: Vector2, t: float, tick: int) -> void:
-	var u: float = CutsceneArt.unit(s)
-	_dark(ci, s, Color(0.8, 0.78, 0.74))
-	CutsceneArt.floor_line(ci, s, s.y * 0.7, tick)
-	RevealArt.red_figure(ci, Vector2(s.x * 0.5, s.y * 0.7), u, tick)
-	var level: float = lerpf(s.y * 1.02, s.y * 0.55, clampf(t / 3.0, 0.0, 1.0))
-	var top: PackedVector2Array = PackedVector2Array([Vector2(-40, s.y + 40)])
-	for i in 13:
-		var x: float = s.x * i / 12.0
-		top.append(Vector2(x, level + sin(x * 0.03 + t * 3.0) * 8.0 * u))
-	top.append(Vector2(s.x + 40, s.y + 40))
-	ci.draw_colored_polygon(top, InkDraw.INK)
-	for i in 3:
-		var e: Vector2 = Vector2(s.x * (0.2 + i * 0.3), level + 40 * u)
-		var blink: float = 1.0 if fmod(t + i * 0.7, 2.4) > 0.2 else 0.1
-		ci.draw_circle(e, 5.0 * u, Color(CrawlerArt.PALE, blink))
-		ci.draw_circle(e + Vector2(16, 0) * u, 5.0 * u, Color(CrawlerArt.PALE, blink))
 
 
 ## C5: the room is only construction lines; something beats in the middle.

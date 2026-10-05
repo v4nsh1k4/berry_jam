@@ -113,20 +113,29 @@ func _draw_panel(panel: Control, draw_id: String, index: int) -> void:
 	var tick: int = InkDraw.boil_tick() + index * 7
 	var s: Vector2 = panel.size
 	panel.draw_rect(Rect2(Vector2.ZERO, s), InkDraw.WHITE)
-	RevealArt.set_view(panel, _camera(s))
+	var cam: Transform2D = _camera(s)
+	RevealArt.set_view(panel, cam)
 	CutsceneArt.draw(panel, draw_id, s, _t, tick)
+	CutsceneDetail.extra(panel, draw_id, s, _t, tick)
 	RevealArt.set_view(panel, Transform2D.IDENTITY)
+	CutsceneDetail.texture(panel, s, draw_id.hash())
+	if CutsceneArt3.is_pov(draw_id):
+		CutsceneArt3.overlay(panel, draw_id, s, _t, tick, cam)
 	InkDraw.rect(panel, Rect2(Vector2(3, 3), s - Vector2(6, 6)), 6.0, tick + 3)
 	if appear < 1.0:
 		panel.draw_rect(Rect2(Vector2.ZERO, s), Color(InkDraw.PAPER, 1.0 - appear))
 
 
 ## The beat's slow camera move, as a transform around the panel centre.
+## pov_* modes (first person) add breathing sway and a slight roll:
+## look_up (eyes rise to the bubble), look (drift), sweep (follow the torch),
+## look_down (down the stair, a step's bob), shake (fear).
 func _camera(s: Vector2) -> Transform2D:
 	var k: float = clampf(_t / maxf(_beat.duration, 0.1), 0.0, 1.0)
 	var c: Vector2 = s * 0.5
 	var zoom: float = 1.0
 	var offset: Vector2 = Vector2.ZERO
+	var roll: float = 0.0
 	match _beat.camera:
 		&"zoom_in":
 			zoom = lerpf(1.0, 1.18, k)
@@ -138,10 +147,28 @@ func _camera(s: Vector2) -> Transform2D:
 		&"pan_right":
 			zoom = 1.12
 			offset.x = lerpf(-s.x * 0.05, s.x * 0.05, k)
-		&"shake":
+		&"shake", &"pov_shake":
 			var fade: float = maxf(0.0, 1.0 - _t * 1.4)
 			offset = Vector2(sin(_t * 61.0), cos(_t * 47.0)) * 9.0 * fade
-	return Transform2D(0.0, Vector2(zoom, zoom), 0.0, c + offset - c * zoom)
+			zoom = 1.12 if _beat.camera == &"pov_shake" else 1.0
+		&"pov_look_up":
+			zoom = 1.12
+			offset.y = lerpf(-s.y * 0.07, s.y * 0.04, ease(k, -1.6))
+		&"pov_look":
+			zoom = 1.1
+			offset.x = lerpf(s.x * 0.03, -s.x * 0.03, k)
+		&"pov_sweep":
+			zoom = 1.12
+			offset.x = -sin(_t * 1.5 - 1.2) * s.x * 0.035
+		&"pov_look_down":
+			zoom = lerpf(1.08, 1.22, k)
+			offset.y = lerpf(s.y * 0.05, -s.y * 0.05, k) + absf(sin(_t * 4.2)) * 6.0
+	if String(_beat.camera).begins_with("pov_"):
+		offset += Vector2(sin(_t * 1.1) * s.x * 0.006, sin(_t * 2.2) * s.y * 0.008)
+		roll = sin(_t * 0.9) * 0.012
+	var xf: Transform2D = Transform2D(roll, Vector2(zoom, zoom), 0.0, Vector2.ZERO)
+	xf.origin = c + offset - xf.basis_xform(c)
+	return xf
 
 
 ## The page turn: the old page folds away to the left, a curl at its edge.

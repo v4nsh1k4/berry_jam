@@ -7,19 +7,19 @@
 script = ExtResource("2_cutscene_beat")
 duration = 2.55
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
-draws = PackedStringArray("descent")
+draws = PackedStringArray("pov_stairs")
 caption = "The stair goes down further than the drawing does."
-camera = &"zoom_in"
+camera = &"pov_look_down"
 sfx = &"creak"
 page_turn = false
 
 [sub_resource type="Resource" id="Resource_2"]
 script = ExtResource("2_cutscene_beat")
 duration = 2.72
-panels = Array[Rect2]([Rect2(0, 0, 0.62, 1), Rect2(0.62, 0, 0.38, 1)])
-draws = PackedStringArray("ink_rising", "red_smudge")
+panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
+draws = PackedStringArray("pov_ink_rise")
 caption = "And the ink is rising to meet you."
-camera = &"shake"
+camera = &"pov_shake"
 sfx = &"growl"
 page_turn = false
 

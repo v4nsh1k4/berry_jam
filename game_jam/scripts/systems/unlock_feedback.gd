@@ -35,6 +35,8 @@ var _pending_left: float = 0.0
 var _pulses: Array = []
 var _arrow_to: Vector2 = Vector2.INF
 var _arrow_left: float = 0.0
+## The last few [kind, sound] it played (tests read it).
+var heard: Array = []
 
 
 func _ready() -> void:
@@ -76,7 +78,15 @@ func _announce(text: String, kind: StringName, pos: Vector2, priority: int) -> v
 	if fx != null and WORDS.has(kind):
 		fx.call("popup", WORDS[kind], pos + Vector2(60, -80))
 		fx.call("splash", pos, 12)
-	AudioManager.play(&"creak" if kind in [&"door", &"exit", &"secret_door", &"unbolt"] else &"click", -6.0, 0.08)
+	# A way opening creaks; everything else (a padlock dropping, a latch, a
+	# dial box) clicks.
+	if kind in [&"door", &"exit", &"secret_door"]:
+		AudioManager.play_door_creak()
+	else:
+		AudioManager.play(&"click", -6.0, 0.08)
+	heard.append([kind, AudioManager.last_played])
+	if heard.size() > 24:
+		heard.pop_front()
 	_pulses.append([pos, PULSE_TIME])
 	if text != "" and priority >= _priority:
 		_pending = text

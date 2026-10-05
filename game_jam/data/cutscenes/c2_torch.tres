@@ -7,9 +7,9 @@
 script = ExtResource("2_cutscene_beat")
 duration = 2.38
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
-draws = PackedStringArray("torch")
+draws = PackedStringArray("pov_torch")
 caption = "Light. The house shows what it hides..."
-camera = &"zoom_in"
+camera = &"pov_sweep"
 sfx = &"click"
 page_turn = false
 
@@ -17,9 +17,9 @@ page_turn = false
 script = ExtResource("2_cutscene_beat")
 duration = 2.55
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
-draws = PackedStringArray("pen_shadow")
+draws = PackedStringArray("pov_watch")
 caption = "...and it shows you to whatever is watching."
-camera = &"pan_right"
+camera = &"pov_look"
 sfx = &"whisper"
 page_turn = true
 

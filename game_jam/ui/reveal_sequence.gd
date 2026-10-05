@@ -98,6 +98,10 @@ func _process(delta: float) -> void:
 	if get_tree().paused:
 		_t += delta
 	_update_ghost()
+	var at: Array = _beat()
+	if at[0] >= 0 and _beats[at[0]].id == &"erase" and at[1] > 0.12:
+		# The team's recorded cry, cut short as the eraser rubs the figure out.
+		AudioManager.play_cry(&"thin", -9.0, 0.0, &"cry_reveal")
 	modulate.a = clampf(_t / T_RESOLVE, 0.0, 1.0) if not _finishing else modulate.a
 	if _t >= total() and not _finishing:
 		_finish()

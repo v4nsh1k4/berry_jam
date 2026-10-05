@@ -7,6 +7,9 @@ extends RefCounted
 ##   erase        the last room before the repair: heartbeat pulse, eraser
 ##                scraping in strokes, a slowly rising dissonant cluster
 ##   layer_pulse  the first build-up layer: a low throb (the Crawler is up)
+##   bed          (Stage 5) the ominous bed under every Chapter 1-3 track: a
+##                low drone whose detuned partials beat slowly, and now and
+##                then a faint, distant glassy tone with an echo
 
 const RATE: int = MusicSynth.RATE
 ## A minor, slow, with gaps (-1 = rest): two notes per bar at most.
@@ -34,6 +37,11 @@ static func render(track: StringName, buf: PackedFloat32Array, from: int, to: in
 		&"layer_pulse":
 			for i in 16:
 				MusicSynth._kick(buf, from, to, i * 0.5, 0.22 if i % 2 == 0 else 0.12, 46.0)
+		&"bed":
+			_bed(buf, from, to)
+			for n in [[2.5, 88], [10.2, 87], [17.6, 91]]:
+				for echo in 3:
+					_glass(buf, from, to, n[0] + echo * 0.37, MusicSynth.hz(n[1]), 0.045 * pow(0.45, echo))
 
 
 static func _drone(buf: PackedFloat32Array, from: int, to: int, f1: float, f2: float, amp: float) -> void:
@@ -42,6 +50,29 @@ static func _drone(buf: PackedFloat32Array, from: int, to: int, f1: float, f2: f
 	for i in range(from, to):
 		var swell: float = 0.7 + 0.3 * sin(i * 0.000035)
 		buf[i] += (sin(w1 * i) + sin(w2 * i) * 0.45 + sin(w1 * 0.5 * i) * 0.6) * amp * swell
+
+
+## Pairs of close partials (whole cycles per 24 s loop) beat every 4-6 s; a
+## tritone breathes in and out over the loop.
+static func _bed(buf: PackedFloat32Array, from: int, to: int) -> void:
+	var parts: Array = [[55.0, 0.5], [55.1667, 0.4], [110.0, 0.35], [110.25, 0.3], [164.875, 0.12], [233.0833, 0.06]]
+	for i in range(from, to):
+		var t: float = float(i) / RATE
+		var v: float = 0.0
+		for p in parts:
+			v += sin(TAU * p[0] * t) * p[1] * (1.0 if p[0] < 200.0 else 0.5 + 0.5 * sin(TAU * t / 24.0))
+		buf[i] += v * 0.12 * (0.85 + 0.15 * sin(TAU * t / 12.0))
+
+
+## A far-off glass tone: slow swell, long tail, a slight shimmer.
+static func _glass(buf: PackedFloat32Array, from: int, to: int, start: float, f: float, amp: float) -> void:
+	var s0: int = int(start * RATE)
+	var a: int = maxi(from, s0)
+	var b: int = mini(to, mini(s0 + int(3.6 * RATE), buf.size()))
+	for i in range(a, b):
+		var t: float = float(i - s0) / RATE
+		var env: float = minf(t / 0.7, 1.0) * exp(-maxf(t - 0.7, 0.0) * 1.3)
+		buf[i] += (sin(TAU * f * t) + sin(TAU * f * 1.004 * t) * 0.6) * env * amp
 
 
 ## A pen nib (or an eraser) dragged across paper: bright noise in strokes.
@@ -76,6 +107,14 @@ static func short_stinger(notes: Array, amp: float) -> AudioStreamWAV:
 	for n in notes:
 		MusicSynth._pluck(buf, 0, buf.size(), n[0], MusicSynth.hz(n[1]), amp, 0.8, true)
 	return SfxSynth._to_wav(buf)
+
+
+## [music volume, muted] from the shared settings file.
+static func load_setting(path: String, volume: float, muted: bool) -> Array:
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(path) == OK:
+		return [float(config.get_value("audio", "music_volume", volume)), bool(config.get_value("audio", "music_muted", muted))]
+	return [volume, muted]
 
 
 ## Music volume / mute into the shared settings file (loads it first so the

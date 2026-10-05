@@ -18,8 +18,17 @@ func _initialize() -> void:
 	change_scene_to_file("res://scenes/main.tscn")
 	_run.call_deferred()
 
+## A hidden window (another Space, a full-screen app) is never drawn, so
+## frame_post_draw never comes: then force a draw for the shot.
 func _shot(name: String) -> void:
-	await RenderingServer.frame_post_draw
+	var drawn := [false]
+	RenderingServer.frame_post_draw.connect(func() -> void: drawn[0] = true, CONNECT_ONE_SHOT)
+	for i in 20:
+		if drawn[0]:
+			break
+		await process_frame
+	if not drawn[0]:
+		RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png(_shot_dir() + "/" + name)
 
 func _wait(sec: float) -> void:
@@ -46,18 +55,44 @@ func _run() -> void:
 	var ok := true
 	print("cutscenes loaded: ", cs.ids())
 	ok = ok and cs.ids().size() == 6
-	# 1. Every cutscene, every beat, screenshotted mid-beat.
+	# 1. Every cutscene, every beat, screenshotted mid-beat (the first-person
+	# ones three times per beat). Lengths vs. Stage 4D (Step 0 of Stage 5),
+	# and the slowest frame while they play.
+	var before := {"c1_first_steal": [2, 4.76], "c2_torch": [2, 4.93], "c3_flashback": [2, 5.27], "c4_descent": [2, 5.27],
+		"c5_before_final": [2, 5.27], "c6_repair": [3, 7.14]}
+	var total := 0.0
+	var only: String = OS.get_environment("ONLY")
 	for id in ["c1_first_steal", "c2_torch", "c3_flashback", "c4_descent", "c5_before_final", "c6_repair"]:
+		if only != "" and not only.split(",").has(id):
+			continue
 		cs.play_id(StringName(id))
-		await _wait(0.1)
+		await process_frame
 		var data = cs._current
+		var secs := 0.0
+		for b in data.beats:
+			secs += b.duration
+		total += secs
+		print("%-16s beats %d (was %d)  %.2f s (was %.2f)" % [id, data.beats.size(), before[id][0], secs, before[id][1]])
+		ok = ok and data.beats.size() == before[id][0] and secs <= before[id][1] + 0.001
+		var pov: bool = String(data.beats[0].draws[0]).begins_with("pov_")
+		var worst := 0
 		for b in data.beats.size():
-			await _wait(data.beats[b].duration * 0.75)
-			await _shot("cs_%s_%d.png" % [id, b])
-			await _wait(data.beats[b].duration * 0.25)
+			while cs._beat >= 0 and cs._beat < b:
+				await process_frame
+			var marks: Array = [0.25, 0.6, 0.92] if pov else [0.75]
+			for m in marks.size():
+				while cs._beat == b and cs._beat_t < data.beats[b].duration * marks[m]:
+					var f0: int = Time.get_ticks_usec()
+					await process_frame
+					worst = maxi(worst, Time.get_ticks_usec() - f0)
+				await _shot("cs_%s_%d%s.png" % [id, b, "abc"[m] if pov else ""])
+		while cs.is_playing:
+			await process_frame
+		print("   slowest frame %.1f ms" % (worst / 1000.0))
 		await _wait(0.3)
 		print(id, " finished playing=", cs.is_playing, " paused=", paused)
 		ok = ok and not cs.is_playing and not paused
+	print("all cutscenes: %.2f s (Stage 4D: 32.64 s)" % total)
 	# 2. Trigger: the first steal plays C1 once (after a short beat).
 	gs.reset()
 	gs.is_playing = true

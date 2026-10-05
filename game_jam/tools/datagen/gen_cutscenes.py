@@ -20,16 +20,19 @@ def cutscene(name, cid, trigger, music, beats, skippable=True):
         beats=TypedArr("cutscene_beat", beats)))
 
 
+# Stage 5: C1, C2 and C4 are first person (CutsceneArt3/4 pov_* ids and
+# pov_* camera modes); same beats and durations as Stage 4D.
+
 # C1: the first theft, and what it costs.
 cutscene("c1_first_steal", "c1_first_steal", "first_steal", "sting_soft", [
-    beat(2.6, WIDE_L, ["steal_tear", "red_smudge"], "The word came away like a scab.", "zoom_in", "steal"),
-    beat(3.0, FULL, ["pencil_lines"], "Somewhere in the house, a line went thin.", "pan_right", "nib"),
+    beat(2.6, FULL, ["pov_reach"], "The word came away like a scab.", "pov_look_up", "steal"),
+    beat(3.0, FULL, ["pov_thin"], "Somewhere in the house, a line went thin.", "pov_look", "nib"),
 ])
 
 # C2: the torch, and the thing that watches light.
 cutscene("c2_torch", "c2_torch", "resolved:flashlight", "sting_soft", [
-    beat(2.8, FULL, ["torch"], "Light. The house shows what it hides...", "zoom_in", "click"),
-    beat(3.0, FULL, ["pen_shadow"], "...and it shows you to whatever is watching.", "pan_right", "whisper", True),
+    beat(2.8, FULL, ["pov_torch"], "Light. The house shows what it hides...", "pov_sweep", "click"),
+    beat(3.0, FULL, ["pov_watch"], "...and it shows you to whatever is watching.", "pov_look", "whisper", True),
 ])
 
 # C3: Mrs. Vane's flashback: what the book was before the red mark.
@@ -40,8 +43,8 @@ cutscene("c3_flashback", "c3_flashback", "frame:ch2_pantry", "flashback", [
 
 # C4: down the cellar stair, into Chapter 3.
 cutscene("c4_descent", "c4_descent", "frame:ch2_end", "sting_descent", [
-    beat(3.0, FULL, ["descent"], "The stair goes down further than the drawing does.", "zoom_in", "creak"),
-    beat(3.2, WIDE_L, ["ink_rising", "red_smudge"], "And the ink is rising to meet you.", "shake", "growl"),
+    beat(3.0, FULL, ["pov_stairs"], "The stair goes down further than the drawing does.", "pov_look_down", "creak"),
+    beat(3.2, FULL, ["pov_ink_rise"], "And the ink is rising to meet you.", "pov_shake", "growl"),
 ])
 
 # C5: the Ink Heart, before the last theft.

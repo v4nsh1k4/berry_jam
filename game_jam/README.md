@@ -8,7 +8,8 @@ it shows you to the Ink Crawler. Every stolen word damages the comic a little
 more, and in Chapter 3 the way out is to give them all back.
 
 Made in Godot 4.7.2 with GDScript and the Compatibility renderer. All art and
-sound are generated in code: there are no asset files and no addons.
+sound are generated in code, with one deliberate exception: a cry the team
+recorded (`audio/baby_cry.wav`). No other asset files, no addons.
 
 ## Run
 
@@ -84,7 +85,9 @@ the light in short bursts.
    the door.
 6. **The Locked Cellar Stair.** A **shadow puzzle**: stand on the glowing
    chalk X and light the iron key on its stand until its shadow fits the
-   keyhole outline on the wall. Then say **OPEN** at the padlock and run.
+   keyhole outline on the wall. *Something happens* a moment later (the
+   worst scare in the game: it goes quiet first). Then say **OPEN** at the
+   padlock and run.
 7. **The Cellar.** A cutscene leads into Chapter 3.
 
 **Minimum:** OPEN, REMEMBER (Chapter 1's study) and the flashlight. HUSH and
@@ -148,6 +151,27 @@ ERASE. Words are never used up, so no order of play can lock you out.
 **Estimated first-time runtime:** about 16-16½ minutes (estimate; see the
 Stage 4D notes in CLAUDE.md).
 
+## Scares and the recorded cry (spoilers)
+
+Six one-time scares, each fired by something you just did, and only at a
+fair moment (no menu, cutscene or dial box up, nothing chasing you, never
+within 60 s of another, never after the twist):
+
+| Scare | Room | After |
+| --- | --- | --- |
+| Lights die, a face beside you | Ch2 Long Hallway | the ink door clears |
+| A portrait snaps round | Ch2 Portrait Gallery | the lever |
+| A wardrobe flies open | Ch2 Servants' Passage | the stalker gives up |
+| The Crawler's face, then it hunts you | Ch2 Clock Room | reading the clock face |
+| Silence, a distant cry growing, the light flickers out, a huge face | Ch2 Cellar Stair | the key's shadow fits |
+| The Artist's hand slams a nib across the page | Ch3 Gallery of Words | the lens lights up |
+
+The team's recorded cry is heard three times, once each per run: faintly at
+the end of the opening (as the first panel inks in), slowed and muffled in
+the cellar scare, and cut short in the reveal as the eraser rubs you out.
+Settings: `user://settings.cfg` `[accessibility] scare_intensity` (0-1)
+scales the shake and the red flash.
+
 ## How it fits together
 
 ```
@@ -161,7 +185,8 @@ data/chapters/    ChapterData: title, intro captions, first frame, damage scale,
 data/cutscenes/   CutsceneData C1-C6 (beats: panels, drawings, caption, camera, sound)
 data/frames/      FrameData .tres, one per comic panel
 scripts/abilities/  one handler per ability (open, push, remember, hush, help, wait, hide)
-scripts/audio/    SfxSynth / SfxSynth2: every sound; MusicSynth + MusicRenderer: the music
+scripts/audio/    SfxSynth / SfxSynth2: every sound; MusicSynth + MusicRenderer: the music;
+                  CryBank: the recorded cry and its variants
 scripts/enemy/    InkCrawler (brain: states and senses), CrawlerView (stop-motion look), CrawlerArt,
                   InkShadow + ShadowView (the huge Chapter 3 version)
 scripts/events/   scripted moments: ink hand, crawler window, pantry fingers, passage stalker,
@@ -217,7 +242,7 @@ Chapter 1, 3 in Chapter 2). Each chapter scales how strongly it shows.
 
 - **Debug keys (debug builds only, e.g. the editor's ▶):** **F6** plays the
   next cutscene, **F7** plays the next jumpscare where you are (cycles through
-  all five), **F8** jumps to the
+  all six; the sixth goes quiet for 3 s first), **F8** jumps to the
   reveal, **F9** goes to the next Chapter 3 room, **F10** jumps to the page
   spread.
 - **Jump to any room (debug builds only):** on the web add `?frame=ch3_margin`

@@ -81,3 +81,88 @@ static func scare_hit() -> AudioStreamWAV:
 		var noise: float = randf_range(-1.0, 1.0) * exp(-t * 5.0) * 0.5
 		out[i] = (shriek + thump + noise) * 0.75
 	return _wav(out)
+
+
+## A wooden door creak (Stage 5): stick-slip pulses at a slowly gliding rate
+## with an irregular wobble (and the odd catch), rung through two wood
+## resonances, over soft filtered friction noise. Each seed is a different
+## creak; AudioManager also jitters the pitch per play.
+static func door_creak(seed_value: int) -> AudioStreamWAV:
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var length: float = rng.randf_range(0.75, 0.95)
+	var out: PackedFloat32Array = SfxSynth._buffer(length)
+	var start_hz: float = rng.randf_range(52.0, 72.0)
+	var top_hz: float = start_hz * rng.randf_range(1.6, 2.2)
+	var c1: float = 2.0 * 0.985 * cos(TAU * rng.randf_range(360.0, 440.0) / RATE)
+	var c2: float = 2.0 * 0.97 * cos(TAU * rng.randf_range(780.0, 960.0) / RATE)
+	var a1: float = 0.0
+	var b1: float = 0.0
+	var a2: float = 0.0
+	var b2: float = 0.0
+	var phase: float = 0.0
+	var wob: float = 0.0
+	var wob_to: float = 0.0
+	var hold: int = 0
+	var peak: float = 0.0
+	for i in out.size():
+		var k: float = float(i) / out.size()
+		hold -= 1
+		if hold <= 0:
+			hold = rng.randi_range(180, 900)
+			wob_to = -0.65 if rng.randf() < 0.12 else rng.randf_range(-0.3, 0.3)
+		wob = lerpf(wob, wob_to, 0.006)
+		phase += lerpf(start_hz, top_hz, sin(PI * minf(k * 0.9, 0.5))) * (1.0 + wob) / RATE
+		var x: float = 0.0
+		if phase >= 1.0:
+			phase -= 1.0
+			x = rng.randf_range(0.5, 1.0)
+		var y1: float = x + c1 * a1 - 0.970225 * b1
+		b1 = a1
+		a1 = y1
+		var y2: float = x + c2 * a2 - 0.9409 * b2
+		b2 = a2
+		a2 = y2
+		out[i] = y1 * 0.65 + y2 * 0.35
+		peak = maxf(peak, absf(out[i]))
+	var lp: float = 0.0
+	for i in out.size():
+		var t: float = float(i) / RATE
+		lp = lerpf(lp, rng.randf_range(-1.0, 1.0), 0.06)
+		var env: float = minf(t * 20.0, 1.0) * minf((length - t) * 5.0, 1.0) * (0.8 + 0.2 * sin(t * 9.0 + seed_value))
+		out[i] = (out[i] / maxf(peak, 0.001) * 0.55 + lp * 0.35) * env
+	return _wav(out)
+
+
+## The cellar scare's hit: a sub drop, a growling low cluster and a burst of
+## noise. Louder and lower than scare_hit.
+static func scare_low() -> AudioStreamWAV:
+	var out: PackedFloat32Array = SfxSynth._buffer(1.8)
+	var phase: float = 0.0
+	for i in out.size():
+		var t: float = float(i) / RATE
+		phase += TAU * lerpf(62.0, 28.0, minf(t / 1.2, 1.0)) / RATE
+		var sub: float = sin(phase) * exp(-t * 1.6)
+		var cluster: float = fmod(t * 73.4, 1.0) + fmod(t * 77.8, 1.0) + fmod(t * 110.0, 1.0) + fmod(t * 116.5, 1.0) - 2.0
+		var noise: float = randf_range(-1.0, 1.0) * exp(-t * 7.0) * 0.45
+		out[i] = tanh((sub * 0.9 + cluster * 0.24 * exp(-t * 1.2)) * 1.6 + noise) * 0.85
+	return _wav(out)
+
+
+## Fallback for the team's recorded cry if res://audio/baby_cry.wav is
+## missing: a vowel-like wail (harmonics weighted by "aa" formants) whose
+## pitch rises, breaks and falls, with vibrato.
+static func wail() -> AudioStreamWAV:
+	var out: PackedFloat32Array = SfxSynth._buffer(2.2)
+	var phase: float = 0.0
+	for i in out.size():
+		var t: float = float(i) / RATE
+		var hz: float = 420.0 + 160.0 * sin(PI * minf(t / 1.4, 1.0)) - 120.0 * maxf(t - 1.4, 0.0) + sin(TAU * 6.0 * t) * 14.0
+		phase += hz / RATE
+		var v: float = 0.0
+		for h in range(1, 9):
+			var f: float = hz * h
+			v += sin(TAU * phase * h) * (exp(-pow((f - 850.0) / 300.0, 2.0)) + 0.6 * exp(-pow((f - 1250.0) / 350.0, 2.0)) + 0.08 / h)
+		var env: float = minf(t * 6.0, 1.0) * minf((2.2 - t) * 3.0, 1.0) * (0.8 + 0.2 * sin(TAU * 2.3 * t))
+		out[i] = v * env * 0.3
+	return _wav(out)

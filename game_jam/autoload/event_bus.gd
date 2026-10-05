@@ -149,6 +149,9 @@ signal goal_changed(text: String)
 ## A scare fired; intensity 0..1 scales its shake and flash (accessibility).
 @warning_ignore("unused_signal")
 signal scare(kind: StringName, intensity: float)
+## A scare with a build-up is starting: music and ambience drop out for `seconds`.
+@warning_ignore("unused_signal")
+signal scare_building(kind: StringName, seconds: float)
 
 # Stage 4D
 ## The inventory order changed (reordering words).

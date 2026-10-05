@@ -184,7 +184,7 @@ func _on_game_completed() -> void:
 
 ## Debug builds only (see DebugJump):
 ##   F6  play the next cutscene (C1..C6, even if seen)
-##   F7  play the next jumpscare right here (cycles through all five)
+##   F7  play the next jumpscare right here (cycles through all six)
 ##   F8  the reveal (jumps to the Ink Heart and takes ERASE)
 ##   F9  the next Chapter 3 room, with the words a player would have there
 ##   F10 the page spread (Gallery of Words)

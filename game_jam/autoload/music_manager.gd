@@ -2,20 +2,24 @@ extends Node
 ## Music: synthesized tracks (MusicSynth) rendered a chunk at a time across
 ## frames after the first click (no stall), played on a "Music" bus that feeds
 ## Master. Its own volume and mute live in user://settings.cfg [audio].
-##   Base track by situation: menu / ch1 / ch2 / ch3, reveal (once), warm after
-##   the twist and through the repair, ending for the epilogue.
+##   Base track: menu / ch1 / ch2 / ch3, reveal (once), return / erase after
+##   the twist, warm after the repair, ending for the epilogue.
 ##   Layers: intensity follows the noticed meter and the Crawler's nearness;
 ##   hunt plays while it hunts. Safe rooms (no Crawler) sit near-silent.
 ##   Stingers: a new room, danger, relief on a return, cutscene cues.
-##   Ducks under cutscenes and scares, drops out before a lunge, and mutes
-##   when the window loses focus.
+##   Bed: a quiet ominous drone under Chapters 1-3 only (never dead silent).
+##   All of it ducks for cutscenes and scares (and a scare's build-up), drops
+##   out before a lunge, mutes on focus loss, and is back within ~2 s.
 
 const SETTINGS_PATH: String = "user://settings.cfg"
 const BUS: StringName = &"Music"
 const BASE_DB: float = -10.0
 const SAFE_DB: float = -20.0
-const PRIORITY: Array[StringName] = [&"menu", &"ch1", &"ch2", &"layer_pulse", &"layer_intensity", &"layer_hunt", &"ch3",
+const PRIORITY: Array[StringName] = [&"menu", &"ch1", &"bed", &"ch2", &"layer_pulse", &"layer_intensity", &"layer_hunt", &"ch3",
 	&"reveal", &"return", &"erase", &"warm", &"ending"]
+const BED_UNDER: Array[StringName] = [&"ch1", &"ch2", &"ch3"]
+const BED_DB: float = -14.0
+const CUES: Dictionary = {&"sting_descent": &"danger", &"sting_heart": &"danger", &"repair": &"relief", &"flashback": &"discover"}
 
 var music_volume: float = 0.6
 var music_muted: bool = false
@@ -29,6 +33,7 @@ var _active: int = 0
 var _intensity: AudioStreamPlayer
 var _hunt: AudioStreamPlayer
 var _pulse: AudioStreamPlayer
+var _bed: AudioStreamPlayer
 ## The Crawler is up (any state but dormant): the first build-up layer.
 var _risen: bool = false
 ## Jumps each time the Artist's hand erases; decays (the final room).
@@ -57,6 +62,7 @@ func _ready() -> void:
 	_intensity = _make_player()
 	_hunt = _make_player()
 	_pulse = _make_player()
+	_bed = _make_player()
 	_sting = _make_player()
 	_load_settings()
 	EventBus.game_started.connect(start)
@@ -75,6 +81,7 @@ func _ready() -> void:
 	EventBus.cutscene_started.connect(func(_id: StringName) -> void: duck(0.6, 999.0))
 	EventBus.cutscene_finished.connect(func(_id: StringName) -> void: duck(0.0, 0.0))
 	EventBus.scare.connect(func(_k: StringName, _i: float) -> void: duck(1.0, 1.4))
+	EventBus.scare_building.connect(func(_k: StringName, seconds: float) -> void: duck(0.97 if seconds > 0.0 else 0.0, seconds))
 	EventBus.music_cue.connect(_on_cue)
 
 
@@ -128,15 +135,7 @@ func _on_crawler_state(state: StringName) -> void:
 
 
 func _on_cue(cue: StringName) -> void:
-	match cue:
-		&"sting_descent", &"sting_heart":
-			stinger(&"danger")
-		&"repair":
-			stinger(&"relief")
-		&"flashback":
-			stinger(&"discover")
-		_:
-			stinger(&"soft")
+	stinger(CUES.get(cue, &"soft"))
 
 
 func stinger(id: StringName) -> void:
@@ -188,6 +187,10 @@ func _process(delta: float) -> void:
 	_hunt.volume_db = move_toward(_hunt.volume_db, (BASE_DB if _hunting else -70.0) + duck_db, speed)
 	_ensure_layer(_intensity, &"layer_intensity")
 	_ensure_layer(_hunt, &"layer_hunt")
+	var bed_on: bool = _want in BED_UNDER and GameState.is_playing
+	var bed_db: float = BED_DB + duck_db if bed_on else -80.0
+	_bed.volume_db = move_toward(_bed.volume_db, bed_db, delta * (140.0 if bed_db < _bed.volume_db else 40.0))
+	_ensure_layer(_bed, &"bed")
 
 
 func _switch(track: StringName) -> void:
@@ -237,10 +240,9 @@ func _notification(what: int) -> void:
 
 
 func _load_settings() -> void:
-	var config: ConfigFile = ConfigFile.new()
-	if config.load(SETTINGS_PATH) == OK:
-		music_volume = float(config.get_value("audio", "music_volume", music_volume))
-		music_muted = bool(config.get_value("audio", "music_muted", music_muted))
+	var loaded: Array = MusicSynth2.load_setting(SETTINGS_PATH, music_volume, music_muted)
+	music_volume = loaded[0]
+	music_muted = loaded[1]
 	_apply()
 
 

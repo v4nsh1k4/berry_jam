@@ -15,7 +15,14 @@ func _shot(name: String) -> void:
 	if DisplayServer.window_get_size() != Vector2i(1280, 720):
 		DisplayServer.window_set_size(Vector2i(1280, 720))
 		await process_frame
-	await RenderingServer.frame_post_draw
+	var drawn := [false]
+	RenderingServer.frame_post_draw.connect(func() -> void: drawn[0] = true, CONNECT_ONE_SHOT)
+	for i in 20:
+		if drawn[0]:
+			break
+		await process_frame
+	if not drawn[0]:
+		RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png(_shot_dir() + "/" + name)
 
 func _wait(sec: float) -> void:
@@ -45,7 +52,7 @@ func _run() -> void:
 	var cinematic = current_scene.get_node("MenuLayer/IntroCinematic")
 	var captions = current_scene.get_node("MenuLayer/IntroSequence")
 	var elapsed: float = 0.0
-	for mark in [2.0, 7.0, 12.0, 16.0, 20.0, 23.5]:
+	for mark in [2.0, 6.0, 8.5, 11.5, 14.0, 17.0]:
 		await _wait(mark - elapsed)
 		elapsed = mark
 		await _shot("30_intro_%04.1f.png" % mark)

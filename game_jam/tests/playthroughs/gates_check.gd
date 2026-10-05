@@ -4,6 +4,8 @@ extends SceneTree
 ## the Clock Room (read the face, wrong code "?", right code opens the way),
 ## the unified unlock feedback (captions), the Portrait Gallery lever, the
 ## cellar marker after reload / save-load, and the spread's door padlock.
+## Stage 5: every way opening (a door, a gated exit, a secret door) plays a
+## wooden creak; a padlock dropping or a dial box clicks.
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/gates_check.gd
 
 var gs
@@ -23,8 +25,17 @@ func _initialize() -> void:
 	change_scene_to_file("res://scenes/main.tscn")
 	_run.call_deferred()
 
+## A hidden window (another Space, a full-screen app) is never drawn, so
+## frame_post_draw never comes: then force a draw for the shot.
 func _shot(name: String) -> void:
-	await RenderingServer.frame_post_draw
+	var drawn := [false]
+	RenderingServer.frame_post_draw.connect(func() -> void: drawn[0] = true, CONNECT_ONE_SHOT)
+	for i in 20:
+		if drawn[0]:
+			break
+		await process_frame
+	if not drawn[0]:
+		RenderingServer.force_draw(false)
 	root.get_texture().get_image().save_png(_shot_dir() + "/" + name)
 
 func _wait(sec: float) -> void:
@@ -202,5 +213,26 @@ func _run() -> void:
 	await _wait(1.2)
 	_check("spread: the door's padlock drops when the lever is pulled", unlocks.has(&"spread_door"))
 	await _shot("g_spread_unbolted.png")
+	# Then OPEN it: a plain door opening.
+	for node in fm.current_frame.get_node("Props").get_children():
+		if node.get("data") != null and node.data.get("id") == &"spread_door":
+			node.resolve()
+	await _wait(0.3)
+	# A secret door (no room uses one now; the kind still exists).
+	var secret = load("res://scripts/data/interactable_data.gd").new()
+	secret.id = &"test_secret"
+	secret.kind = &"secret_door"
+	bus.unlocked.emit(secret, Vector2(600, 300))
+	await _wait(0.3)
+	# --- Door sounds (Stage 5): what UnlockFeedback played for each kind ---
+	var heard: Array = main.get_node("FXLayer/UnlockFeedback").heard
+	for pair in heard:
+		print("   sound: %-14s %s" % pair)
+	for kind in [&"door", &"exit", &"secret_door"]:
+		var played: Array = heard.filter(func(p): return p[0] == kind)
+		_check("%s opening creaks (%d heard)" % [kind, played.size()], not played.is_empty()
+			and played.all(func(p): return String(p[1]).begins_with("door_creak")))
+	_check("padlocks / dials / levers click, never creak", heard.filter(func(p): return p[0] in [&"unbolt", &"symbol_lock", &"lever"]).all(
+		func(p): return p[1] == &"click") and heard.any(func(p): return p[0] == &"unbolt"))
 	print("GATES TEST ", "PASSED" if ok else "FAILED")
 	quit(0 if ok else 1)
