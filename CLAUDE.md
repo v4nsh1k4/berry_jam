@@ -89,7 +89,7 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 
 Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B,
 Stage 4C, the study-lock cut (since reverted by 4D), Stage 4D (d1e2764).
-Stage 5 is uncommitted until the user asks.
+Stage 5 (d462ec3).
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
 Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
