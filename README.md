@@ -13,7 +13,7 @@ every stolen word tears the page a little more, and **light** (your flashlight)
 shows you the house while drawing the Ink Crawler to you. Find the way out of
 the comic before the story falls apart.
 
-- **Play in the browser:** [ITCH.IO LINK]
+- **Play in the browser:** https://ananyas2025.itch.io/ink-bleed
 - **Playtime:** about 15-16 minutes, three chapters.
 
 ## Team
