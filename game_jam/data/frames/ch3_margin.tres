@@ -69,3 +69,4 @@ glitch = 0.75
 panel_tilt = -2.0
 sketch = 0.45
 crawler_kind = &"shadow"
+corner_eyes = Array[Vector3]([Vector3(1110, 70, 1)])

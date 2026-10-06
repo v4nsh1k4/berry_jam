@@ -51,19 +51,6 @@ static func steal() -> AudioStreamWAV:
 	return _to_wav(out)
 
 
-## Door creak: a slow, wobbling sawtooth with grit.
-static func creak() -> AudioStreamWAV:
-	var out: PackedFloat32Array = _buffer(0.7)
-	var phase: float = 0.0
-	for i in out.size():
-		var t: float = float(i) / RATE
-		phase += (95.0 + 40.0 * sin(t * 9.0) + 20.0 * sin(t * 31.0)) / RATE
-		var saw: float = fmod(phase, 1.0) * 2.0 - 1.0
-		var env: float = minf(t * 12.0, 1.0) * (1.0 - t / 0.7)
-		out[i] = (saw * 0.45 + randf_range(-0.12, 0.12)) * env * 0.5
-	return _to_wav(out)
-
-
 ## Wrong-word thud: a low sine knock.
 static func thud() -> AudioStreamWAV:
 	var out: PackedFloat32Array = _buffer(0.28)
@@ -152,19 +139,6 @@ static func skitter() -> AudioStreamWAV:
 			if tk >= 0.0:
 				ticks += exp(-tk * 90.0)
 		out[i] = smooth * ticks * 0.7
-	return _to_wav(out)
-
-
-## Low growl: the fair warning before a lunge.
-static func growl() -> AudioStreamWAV:
-	var out: PackedFloat32Array = _buffer(0.75)
-	var phase: float = 0.0
-	for i in out.size():
-		var t: float = float(i) / RATE
-		phase += (68.0 + 9.0 * sin(t * 37.0)) / RATE
-		var saw: float = fmod(phase, 1.0) * 2.0 - 1.0
-		var env: float = minf(t * 8.0, 1.0) * (1.0 - t / 0.75)
-		out[i] = (saw * 0.55 + randf_range(-0.2, 0.2)) * env * 0.7
 	return _to_wav(out)
 
 

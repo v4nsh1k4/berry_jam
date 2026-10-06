@@ -2,6 +2,7 @@
 import os, sys
 ROOT = sys.argv[1]
 
+from gen_decor import DECOR
 class SN(str): pass                     # StringName
 class V2(tuple): pass
 class R2(tuple): pass
@@ -15,6 +16,8 @@ class SNArr(list): pass
 class PSA(list): pass                   # PackedStringArray
 class PV2A(list): pass
 class R2Arr(list): pass                 # Array[Rect2]
+class V3Arr(list): pass                 # Array[Vector3]
+class V4Arr(list): pass                 # Array[Vector4]
 
 SCRIPTS = {k: f"res://scripts/data/{k}.gd" for k in
            ["frame_data", "exit_data", "interactable_data", "npc_data", "bubble_data", "light_spot_data", "chapter_data",
@@ -44,6 +47,8 @@ class Writer:
         if isinstance(v, SNArr): return "Array[StringName]([" + ", ".join("&" + q(i) for i in v) + "])"
         if isinstance(v, PSA): return "PackedStringArray(" + ", ".join(q(i) for i in v) + ")"
         if isinstance(v, R2Arr): return "Array[Rect2]([" + ", ".join(f"Rect2({a}, {b}, {c}, {d})" for a, b, c, d in v) + "])"
+        if isinstance(v, V3Arr): return "Array[Vector3]([" + ", ".join(f"Vector3({a}, {b}, {c})" for a, b, c in v) + "])"
+        if isinstance(v, V4Arr): return "Array[Vector4]([" + ", ".join(f"Vector4({a}, {b}, {c}, {d})" for a, b, c, d in v) + "])"
         if isinstance(v, PV2A): return "PackedVector2Array(" + ", ".join(f"{a}, {b}" for a, b in v) + ")"
         raise TypeError(v)
     def body(self, script, props):
@@ -93,7 +98,10 @@ def item(**p):
     return Sub("interactable_data", **p)
 def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(), items=(), npcs=(), events=(), ending="",
           next_chapter="", crawler=None, patrol=False, glitch=0.0, tilt=0.0, sketch=0.0, crawler_kind="",
-          border_gap=False, epilogue=False, light_disabled=False, spread=None, walk=(40, 400, 1104, 104), doodles=False):
+          border_gap=False, epilogue=False, light_disabled=False, spread=None, walk=(40, 400, 1104, 104), doodles=False,
+          webs=(), eyes=()):
+    webs = list(webs) + DECOR.get(fid, {}).get("webs", [])
+    eyes = list(eyes) + DECOR.get(fid, {}).get("eyes", [])
     p = dict(id=SN(fid), display_name=name, ambient_light=float(ambient), background_style=SN(style),
              player_spawn=V2(spawn), walk_area=R2(walk), captions=PSA(captions), hint=hint)
     if exits: p["exits"] = TypedArr("exit_data", list(exits))
@@ -114,6 +122,8 @@ def frame(fid, name, style, ambient, spawn, captions, hint, exits=(), lights=(),
     if light_disabled: p["light_disabled"] = True
     if spread: p["spread"] = spread
     if doodles: p["doodles"] = True
+    if webs: p["webs"] = V4Arr(webs)         # (x, y, size, angle deg)
+    if eyes: p["corner_eyes"] = V3Arr(eyes)  # (x, y, pairs)
     write(f"data/frames/{fid}.tres", "frame_data", p)
 
 SLIDE, SPLASH = 0, 1

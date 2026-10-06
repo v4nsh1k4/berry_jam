@@ -55,18 +55,20 @@ func start() -> void:
 		return
 	_started = true
 	_streams = {
-		&"step": SfxSynth.footstep(), &"steal": SfxSynth.steal(), &"creak": SfxSynth.creak(),
+		&"step": SfxSynth.footstep(), &"steal": SfxSynth.steal(),
 		&"thud": SfxSynth.thud(), &"chime": SfxSynth.chime(), &"click": SfxSynth.click(),
 		&"splat": SfxSynth.splat(), &"heartbeat": SfxSynth.heartbeat(), &"skitter": SfxSynth.skitter(),
-		&"growl": SfxSynth.growl(), &"scribble": SfxSynth.scribble(), &"rub": SfxSynth.rub(),
+		&"growl": SfxSynth3.growl(), &"scribble": SfxSynth.scribble(), &"rub": SfxSynth.rub(),
 		&"slam": SfxSynth.slam(),
 	}
-	# Later sounds are built one per frame so the first click doesn't stall.
+	# Later sounds are built one per frame so the first click doesn't stall
+	# (a job object's next() returns null until it is done: again next frame).
 	_pending = {
 		&"swoosh": SfxSynth2.swoosh, &"nib": SfxSynth2.nib, &"whisper": SfxSynth2.whisper,
 		&"sting": SfxSynth2.sting, &"scare_hit": SfxSynth2.scare_hit, &"scare_low": SfxSynth2.scare_low,
 		&"door_creak_0": SfxSynth2.door_creak.bind(11), &"door_creak_1": SfxSynth2.door_creak.bind(29),
-		&"door_creak_2": SfxSynth2.door_creak.bind(47),
+		&"door_creak_2": SfxSynth2.door_creak.bind(47), &"groan": SfxSynth3.Groan.new(3),
+		&"moan": SfxSynth3.moan,
 	}
 	var cry_player: AudioStreamPlayer = AudioStreamPlayer.new()
 	add_child(cry_player)
@@ -115,8 +117,11 @@ func _process(delta: float) -> void:
 		return
 	if not _pending.is_empty():
 		var id: StringName = _pending.keys()[0]
-		_streams[id] = (_pending[id] as Callable).call()
-		_pending.erase(id)
+		var job: Variant = _pending[id]
+		var built: AudioStream = (job as Callable).call() if job is Callable else job.next()
+		if built != null:
+			_streams[id] = built
+			_pending.erase(id)
 	_cry.step()
 	_skitter_left -= delta
 	if _hush_in > 0.0:
@@ -152,6 +157,7 @@ func play(sound: StringName, volume_db: float = -8.0, pitch_jitter: float = 0.06
 	voice.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	voice.play()
 	last_played = sound
+	EventBus.sfx_played.emit(sound, volume_db)
 
 
 ## Doors, exits and secret doors opening: one of three wooden creaks, pitch

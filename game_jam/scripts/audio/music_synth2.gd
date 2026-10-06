@@ -110,6 +110,16 @@ static func short_stinger(notes: Array, amp: float) -> AudioStreamWAV:
 
 
 ## [music volume, muted] from the shared settings file.
+## Stinger builders for MusicManager (one per frame).
+static func stinger_jobs() -> Dictionary:
+	return {
+		&"soft": short_stinger.bind([[0.0, 45], [0.0, 88]], 0.16),
+		&"discover": short_stinger.bind([[0.0, 81], [0.18, 76]], 0.10),
+		&"relief": short_stinger.bind([[0.0, 69], [0.06, 73], [0.12, 76]], 0.12),
+		&"danger": SfxSynth2.sting,
+	}
+
+
 static func load_setting(path: String, volume: float, muted: bool) -> Array:
 	var config: ConfigFile = ConfigFile.new()
 	if config.load(path) == OK:

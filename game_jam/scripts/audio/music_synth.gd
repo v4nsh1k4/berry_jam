@@ -13,13 +13,14 @@ extends RefCounted
 ##   ending   the motif slower, one note left unresolved
 ##   layer_intensity / layer_hunt   dynamic layers (MusicManager fades them)
 ##   return / erase / layer_pulse / bed   in MusicSynth2
+##   menu_sad (the menu's melancholy layer)  in MusicSynth3
 
 const RATE: int = 22050
 const FADE: float = 0.5
 const TRACKS: Dictionary = {
 	&"menu": 16.0, &"ch1": 12.0, &"ch2": 12.0, &"ch3": 12.0, &"reveal": 24.0,
 	&"warm": 16.0, &"ending": 16.0, &"layer_intensity": 8.0, &"layer_hunt": 8.0,
-	&"return": 20.0, &"erase": 12.0, &"layer_pulse": 8.0, &"bed": 24.0,
+	&"return": 20.0, &"erase": 12.0, &"layer_pulse": 8.0, &"bed": 24.0, &"menu_sad": MusicSynth3.LENGTH,
 }
 const MOTIF: PackedInt32Array = [76, 72, 69, 71, 72, 69, 64, 65, 76, 72, 69, 71, 69, 68, 64, -1]
 const MOTIF_MAJOR: PackedInt32Array = [76, 73, 69, 71, 73, 69, 64, 66, 76, 73, 69, 71, 69, 68, 64, -1]
@@ -68,6 +69,8 @@ static func render(track: StringName, buf: PackedFloat32Array, from: int, to: in
 			_tremolo(buf, from, to)
 		&"return", &"erase", &"layer_pulse", &"bed":
 			MusicSynth2.render(track, buf, from, to)
+		&"menu_sad":
+			MusicSynth3.render(track, buf, from, to)
 		&"layer_hunt":
 			for i in 20:
 				_kick(buf, from, to, i * 0.4, 0.24, 90.0)

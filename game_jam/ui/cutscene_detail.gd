@@ -11,24 +11,47 @@ extends RefCounted
 const SEPIA_INK: Color = Color(0.35, 0.3, 0.26)
 
 
+## Halftone dots per (seed, panel size), built once: [indices, points, colors].
+static var _dots: Dictionary = {}
+
+
 static func texture(ci: CanvasItem, s: Vector2, seed_value: int) -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var corner: Vector2 = Vector2(s.x if rng.randf() < 0.5 else 0.0, s.y if rng.randf() < 0.7 else 0.0)
+	# The ~900 dots go down as ONE cached triangle array (Stage 6: was a
+	# draw_rect each, the panels' biggest per-frame cost).
+	var key: String = "%d_%d_%d" % [seed_value, int(s.x), int(s.y)]
+	if not _dots.has(key):
+		_dots[key] = _dot_field(s, corner)
+	var d: Array = _dots[key]
+	if not (d[1] as PackedVector2Array).is_empty():
+		RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), d[0], d[1], d[2])
+	for i in 2:
+		var at: Vector2 = Vector2(rng.randf_range(0.05, 0.95) * s.x, (0.06 if rng.randf() < 0.5 else 0.92) * s.y)
+		splatter(ci, at, rng.randf_range(6.0, 12.0), rng.randi(), Color(InkDraw.INK, 0.8))
+
+
+static func _dot_field(s: Vector2, corner: Vector2) -> Array:
 	var reach: float = minf(s.x, s.y) * 0.7
 	var step: float = 12.0
 	var count: int = int(reach / step)
 	var dir: Vector2 = Vector2(-1.0 if corner.x > 0.0 else 1.0, -1.0 if corner.y > 0.0 else 1.0)
+	var indices: PackedInt32Array = PackedInt32Array()
+	var points: PackedVector2Array = PackedVector2Array()
+	var colors: PackedColorArray = PackedColorArray()
 	for gy in count:
 		for gx in count:
 			var p: Vector2 = corner + Vector2(gx * step + (step * 0.5 if gy % 2 == 1 else 0.0), gy * step) * dir
-			var d: float = p.distance_to(corner) / reach
-			if d < 1.0:
-				var r: float = (1.0 - d) * 4.0
-				ci.draw_rect(Rect2(p - Vector2(r, r) * 0.5, Vector2(r, r)), Color(0, 0, 0, 0.2))
-	for i in 2:
-		var at: Vector2 = Vector2(rng.randf_range(0.05, 0.95) * s.x, (0.06 if rng.randf() < 0.5 else 0.92) * s.y)
-		splatter(ci, at, rng.randf_range(6.0, 12.0), rng.randi(), Color(InkDraw.INK, 0.8))
+			var dist: float = p.distance_to(corner) / reach
+			if dist < 1.0:
+				var h: float = (1.0 - dist) * 2.0
+				var n: int = points.size()
+				points.append_array([p + Vector2(-h, -h), p + Vector2(h, -h), p + Vector2(h, h), p + Vector2(-h, h)])
+				for c in 4:
+					colors.append(Color(0, 0, 0, 0.2))
+				indices.append_array([n, n + 1, n + 2, n, n + 2, n + 3])
+	return [indices, points, colors]
 
 
 ## An ink splat: a ragged blob, flecks and a couple of streaks.

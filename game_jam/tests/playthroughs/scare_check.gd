@@ -88,9 +88,10 @@ func _run() -> void:
 			if id == &"scare_cellar" and not build_seen and ov._build_t > 2.75:
 				build_seen = true
 				await _shot("sc_scare_cellar_build.png")
-				print("cellar build at %.2fs: bed %.1f dB, drone %.1f dB, cry %s (seen %s), light %s" % [ov._build_t, mm._bed.volume_db,
+				print("cellar build at %.2fs: bg_track %.1f dB, drone %.1f dB, cry %s (seen %s), light %s" % [ov._build_t, mm._files.level,
 					am._drone.volume_db, am.last_played, gs.seen.has(&"cry_scare"), root.get_node("/root/LightingSystem").is_light_on])
-				_check("cellar build: music + ambience near silent, the cry playing, the light out", mm._bed.volume_db < -40.0
+				_check("cellar build: music + ambience near silent, the cry playing, the light out", mm._files.level < -40.0
+					and mm._bed.volume_db < -40.0
 					and am._drone.volume_db <= -59.0 and gs.seen.has(&"cry_scare") and not root.get_node("/root/LightingSystem").is_light_on)
 		await _wait(0.12)
 		await _shot("sc_%s.png" % id)
@@ -128,7 +129,7 @@ func _run() -> void:
 	await _wait(3.4)
 	_check("the torch flickered out with the room's light", lit_before and not lights.is_light_on)
 	await _wait(3.6)
-	_check("the music bed is back ~2 s after the scare's silence (%.1f dB)" % mm._bed.volume_db, mm._bed.volume_db > mm.BED_DB - 4.0)
+	_check("bg_track is back ~2 s after the scare's silence (%.1f dB)" % mm._files.level, mm._files.level > MusicFiles.BG_DB - 4.0)
 	# The clock's gameplay half: the Crawler appears and hunts.
 	await _go("ch2_clock_room")
 	ov.play(&"scare_clock")

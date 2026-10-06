@@ -117,6 +117,7 @@ func _draw_panel(panel: Control, draw_id: String, index: int) -> void:
 	RevealArt.set_view(panel, cam)
 	CutsceneArt.draw(panel, draw_id, s, _t, tick)
 	CutsceneDetail.extra(panel, draw_id, s, _t, tick)
+	CutsceneFill.draw(panel, draw_id, s, tick)
 	RevealArt.set_view(panel, Transform2D.IDENTITY)
 	CutsceneDetail.texture(panel, s, draw_id.hash())
 	if CutsceneArt3.is_pov(draw_id):

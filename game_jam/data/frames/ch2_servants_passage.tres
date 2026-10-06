@@ -77,3 +77,5 @@ interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_7")])
 events = Array[StringName]([&"passage_stalker"])
 crawler_spawn = Vector2(70, 492)
+webs = Array[Vector4]([Vector4(0, 0, 130, 0), Vector4(1184, 0, 120, 90), Vector4(452, 122, 70, -90)])
+corner_eyes = Array[Vector3]([Vector3(1000, 62, 3)])

@@ -54,3 +54,8 @@ extends Resource
 @export var spread: PageSpreadData
 ## Draw faint margin doodles round this panel (PageDoodles).
 @export var doodles: bool = false
+## Stage 6 decor (RoomDecor), optional. Cobwebs, each (x, y, size, angle°):
+## fanned over 90° from `angle` at an anchor (panel coordinates).
+@export var webs: Array[Vector4] = []
+## Pale watching eyes, each (x, y, pairs): a small cluster in a dark corner.
+@export var corner_eyes: Array[Vector3] = []

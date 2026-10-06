@@ -10,7 +10,7 @@ panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
 draws = PackedStringArray("pov_stairs")
 caption = "The stair goes down further than the drawing does."
 camera = &"pov_look_down"
-sfx = &"creak"
+sfx = &"groan"
 page_turn = false
 
 [sub_resource type="Resource" id="Resource_2"]

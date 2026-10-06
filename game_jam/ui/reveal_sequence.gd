@@ -2,9 +2,10 @@ extends Control
 ## The twist, drawn in code (about 40 s; beats and captions in RevealBeats).
 ## Plays when the last word (a story_final bubble) is stolen, or when a save
 ## resumes in the Ink Heart with it stolen but the reveal unseen. The Shadow
-## melts into the Artist's hand ("THE MONSTER WAS THE ARTIST'S HAND."), the
-## hand turns its pencil eraser-down and rubs the red figure, then the cost,
-## the tearing page, what mends it, and a three-line recap card.
+## melts into the author's hand (label card "THE AUTHOR'S HAND."), the hand
+## turns its pencil eraser-down and rubs the red figure, then the cost and the
+## tearing page, a held near-silent beat ("You were the monster."), and a
+## three-line recap card.
 ## Then twist_revealed is set, Restart Chapter is re-anchored to the start of
 ## the return phase, and the player lands there with the goal line showing.
 ## Skippable (click / Space) only once it has been seen in full before.
@@ -29,6 +30,7 @@ var _finishing: bool = false
 var _beats: Array = []
 var _starts: PackedFloat32Array = PackedFloat32Array()
 var _ghost: Ghost
+var _hushed: bool = false
 
 
 ## The Ink Shadow's silhouette, drawn under a transform (crossfaded by alpha).
@@ -72,6 +74,7 @@ func _start() -> void:
 		return
 	_t = 0.0
 	_finishing = false
+	_hushed = false
 	_beats = RevealBeats.beats()
 	_starts = RevealBeats.schedule(T_RESOLVE)
 	_skippable = SaveSystem.get_progress("seen_reveal")
@@ -99,9 +102,8 @@ func _process(delta: float) -> void:
 		_t += delta
 	_update_ghost()
 	var at: Array = _beat()
-	if at[0] >= 0 and _beats[at[0]].id == &"erase" and at[1] > 0.12:
-		# The team's recorded cry, cut short as the eraser rubs the figure out.
-		AudioManager.play_cry(&"thin", -9.0, 0.0, &"cry_reveal")
+	if at[0] >= 0:
+		_hushed = RevealBeats.sounds(_beats[at[0]].id, at[1], _starts[at[0] + 1] - _t, _hushed)
 	modulate.a = clampf(_t / T_RESOLVE, 0.0, 1.0) if not _finishing else modulate.a
 	if _t >= total() and not _finishing:
 		_finish()
@@ -206,9 +208,11 @@ func _draw() -> void:
 	var k: float = at[1]
 	var id: StringName = _beats[index].id
 	match id:
-		&"stole", &"tore", &"mend":
-			RevealArt.cost(self, size, _owners, clampf((_t - _starts[5]) / 0.25, 0.0, 1.0), tick)
-			RevealArtTear.tear(self, size, clampf((_t - _starts[6]) / 2.0, 0.0, 1.0), clampf((_t - _starts[7]) / 2.5, 0.0, 1.0), tick)
+		&"stole":
+			var s0: float = _starts[RevealBeats.STOLE]
+			var tear_at: float = lerpf(s0, _starts[RevealBeats.STOLE + 1], RevealBeats.TEAR_FROM)
+			RevealArt.cost(self, size, _owners, clampf((_t - s0) / 0.25, 0.0, 1.0), tick)
+			RevealArtTear.tear(self, size, clampf((_t - tear_at) / 2.0, 0.0, 1.0), 0.0, tick)
 		&"recap":
 			RevealBeats.recap(self, size, k, tick)
 		_:
@@ -231,10 +235,12 @@ func _draw_desk(id: StringName, k: float, tick: int) -> void:
 	var view: Transform2D = _view_for(RevealBeats.camera(id, k, WRIST, FIGURE_X))
 	RevealArt.set_view(self, view)
 	RevealArt.desk(self, tick)
-	var rubbed: float = k * 0.9 if id == &"erase" else 0.0
+	var rubbed: float = k * 0.9 if id == &"erase" else (0.9 if id == &"you" else 0.0)
 	RevealArt.page(self, FIGURE_X, rubbed, tick)
 	if id == &"erase":
 		RevealBeats.eraser_hand(self, FIGURE_X, HAND_SIZE, k, _t, tick)
+	elif id == &"you":
+		RevealBeats.still_hand(self, FIGURE_X, HAND_SIZE, k, _t, tick)
 	else:
 		var hand_alpha: float = smoothstep(0.45, 0.9, k) if id == &"morph" else 1.0
 		var shadow: float = 1.0 - smoothstep(0.5, 1.0, k) if id == &"morph" else 0.0

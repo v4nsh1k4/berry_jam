@@ -24,7 +24,7 @@ static func _side() -> Vector2:
 static func tool_tip(size: float, tool: StringName) -> Vector2:
 	if tool == &"pen":
 		return (DIR * 0.9 - _side() * 0.08) * size
-	return (DIR * 0.72 + _side() * 0.02) * size
+	return (DIR * 0.94 - _side() * 0.02) * size
 
 
 ## `grip` 0 = closed round the tool, 1 = open and empty. `tool` is &"pen"
@@ -95,24 +95,32 @@ static func _finger(ci: CanvasItem, base: Vector2, angle: float, length: float, 
 
 ## The Artist's one tool: a long pencil with a pen nib at one end and an
 ## eraser at the other, drawn BEFORE the fingers so they close over it (it
-## moves with the grip). `tool` says which end is on the page.
+## moves with the grip). `tool` says which end is on the page. Eraser-down
+## (the return phase), the nib end stays hidden inside the fist and the
+## eraser stands out past the fingertips.
 static func _pencil(ci: CanvasItem, at: Vector2, size: float, d: Vector2, n: Vector2, tool: StringName, alpha: float) -> void:
 	var tip: Vector2 = at + tool_tip(size, tool)
-	var back: Vector2 = at - d * size * 0.15 + n * size * 0.22
-	var axis: Vector2 = (tip - back).normalized()
-	var tail: Vector2 = back - axis * size * 0.18
 	var ink: Color = Color(InkDraw.INK, alpha)
 	var body: Color = Color(0.32, 0.3, 0.34, alpha)
 	var width: float = size * 0.055
+	if tool == &"eraser":
+		var axis_e: Vector2 = (tip - (at + d * size * 0.2)).normalized()
+		var cap_len: float = size * 0.2
+		var butt: Vector2 = tip - axis_e * cap_len
+		var tail_e: Vector2 = at + d * size * 0.12
+		ci.draw_line(tail_e, butt, ink, width + 4.0, true)
+		ci.draw_line(tail_e, butt, body, width, true)
+		_eraser_cap(ci, butt, axis_e, size * 1.7, alpha)
+		return
+	var back: Vector2 = at - d * size * 0.15 + n * size * 0.22
+	var axis: Vector2 = (tip - back).normalized()
+	var tail: Vector2 = back - axis * size * 0.18
 	var page_end: Vector2 = tip - axis * size * 0.07
 	ci.draw_line(tail, page_end, ink, width + 4.0, true)
 	ci.draw_line(tail, page_end, body, width, true)
 	ci.draw_line(tail + axis.orthogonal() * width * 0.25, page_end + axis.orthogonal() * width * 0.25, Color(PALE, 0.5 * alpha), maxf(1.0, size * 0.005), true)
-	var nib_end: Vector2 = page_end if tool == &"pen" else tail
-	var rub_end: Vector2 = tail if tool == &"pen" else page_end
-	var nib_dir: Vector2 = axis if tool == &"pen" else -axis
-	CrawlerArt.nib(ci, nib_end + nib_dir * size * 0.005, nib_dir.angle(), size * 0.024)
-	_eraser_cap(ci, rub_end, -nib_dir, size, alpha)
+	CrawlerArt.nib(ci, page_end + axis * size * 0.005, axis.angle(), size * 0.024)
+	_eraser_cap(ci, tail, -axis, size, alpha)
 
 
 ## The eraser end of the pencil: a metal ferrule and a worn rubber cap.

@@ -72,3 +72,5 @@ interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_5"), SubResource("Resource_6")])
 events = Array[StringName]([&"cellar_chase"])
 crawler_spawn = Vector2(60, 492)
+webs = Array[Vector4]([Vector4(0, 0, 140, 0), Vector4(1184, 0, 100, 90)])
+corner_eyes = Array[Vector3]([Vector3(90, 96, 3)])

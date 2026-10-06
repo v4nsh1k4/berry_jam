@@ -18,7 +18,7 @@ id = &"mirror"
 kind = &"inspect"
 position = Vector2(580, 120)
 size = Vector2(120, 262)
-caption = "The mirror shows an empty panel where your face should be."
+caption = "There is no one in the glass. You are not written here."
 
 [sub_resource type="Resource" id="Resource_3"]
 script = ExtResource("4_light_spot_data")
@@ -47,4 +47,5 @@ hint = "Look in the mirror if you like. Then walk right, through the door."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1")])
 interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_2")])
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_3"), SubResource("Resource_4")])
+events = Array[StringName]([&"mirror_ghoul"])
 doodles = true

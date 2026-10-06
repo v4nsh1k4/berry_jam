@@ -49,3 +49,5 @@ hint = "Take the torch from the table. Then leave by the far door."
 exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResource("Resource_2")])
 interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource_3")])
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_4")])
+webs = Array[Vector4]([Vector4(1184, 0, 140, 90)])
+corner_eyes = Array[Vector3]([Vector3(84, 80, 1)])

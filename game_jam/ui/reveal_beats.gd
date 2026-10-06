@@ -2,30 +2,49 @@ class_name RevealBeats
 extends RefCounted
 ## The reveal's beats, one idea each (RevealSequence runs the clock). Each
 ## caption is held for its reading time (at least MIN_READ seconds).
-##   morph    the Shadow's silhouette melts into the Artist's hand (no words)
-##   artist   pull back: the panel is a page on a desk  "This comic has an Artist."
+##   morph    the Shadow's silhouette melts into the author's hand (no words)
+##   artist   pull back: the panel is a page on a desk  "This comic has an author."
 ##   monster  the monster's ghost over the hand         "The monster was never a monster."
-##   hand     close on the hand + label card            "It was the Artist's hand."
+##   hand     close on the hand + label card            "It was, in fact, the author's hand."
 ##   erase    the pencil turned eraser-down rubs the red figure out
-##   stole / tore / mend   the robbed characters, the page tearing, stitching
+##   stole    the robbed characters, then the page tearing (the broken story)
+##   you      held near-silence: the hand stills over the page, the red
+##            figure alone                              "You were the monster."
 ##   recap    a plain three-line card
+## Player-facing text says "author"; ids and class names keep "artist".
 
 const MIN_READ: float = 2.5
 ## Built at runtime (typed constant arrays of containers misbehave in exports).
 static func beats() -> Array:
 	return [
 	{id = &"morph", text = "", hold = 3.6},
-	{id = &"artist", text = "This comic has an Artist."},
+	{id = &"artist", text = "This comic has an author."},
 	{id = &"monster", text = "The monster was never a monster."},
-	{id = &"hand", text = "It was the Artist's hand.", hold = 4.0},
-	{id = &"erase", text = "It was erasing me. I was never written. I am a mistake on the page."},
-	{id = &"stole", text = "And every word I stole was a line the Artist drew."},
-	{id = &"tore", text = "Every theft tore the page."},
-	{id = &"mend", text = "To mend it, I must give it all back."},
+	{id = &"hand", text = "It was, in fact, the author's hand.", hold = 4.0},
+	{id = &"erase", text = "To the author, you were the anomaly. A glitch. A mistake."},
+	{id = &"stole", text = "You starved the characters of their words, and broke the story."},
+	{id = &"you", text = "You were the monster.", hold = 6.5},
 	{id = &"recap", text = "", hold = 6.5},
 	]
-const LABEL: String = "THE MONSTER WAS THE ARTIST'S HAND."
-const RECAP: PackedStringArray = ["The monster = the Artist's hand.", "I am the mistake it is erasing.", "My thefts broke the comic."]
+## Index of the "stole" beat (the cost + tear drawing keys off its start).
+const STOLE: int = 5
+## Share of the "stole" beat before the page starts to tear.
+const TEAR_FROM: float = 0.45
+const LABEL: String = "THE AUTHOR'S HAND."
+const RECAP: PackedStringArray = ["The monster was the author's hand.", "I was the glitch it was erasing.", "My theft broke the story."]
+
+
+## Sound cues inside beats; returns whether the held beat's hush is done.
+## The team's recorded cry, cut short, as the eraser rubs the figure out;
+## near silence (music and ambience) for "You were the monster."
+static func sounds(id: StringName, k: float, left: float, hushed: bool) -> bool:
+	if id == &"erase" and k > 0.12:
+		AudioManager.play_cry(&"thin", -9.0, 0.0, &"cry_reveal")
+	if id == &"you" and not hushed:
+		MusicManager.duck(0.97, left)
+		AudioManager.hush(left)
+		return true
+	return hushed
 
 
 ## Seconds a beat is held: its own `hold`, or reading time for its caption.
@@ -66,7 +85,8 @@ static func recap(ci: CanvasItem, screen: Vector2, k: float, tick: int) -> void:
 		var a: float = clampf((k * 6.5 - 0.4 - i * 1.0) / 0.5, 0.0, 1.0)
 		ci.draw_string(font, card.position + Vector2(60, 100 + i * 80), RECAP[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 38, Color(InkDraw.INK, a))
 		if i == 0 and a > 0.0:
-			InkDraw.line(ci, card.position + Vector2(56, 112), card.position + Vector2(56 + 380 * a, 114), 3.0, tick + 9, Color(InkDraw.INK, a))
+			var w: float = font.get_string_size(RECAP[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 38).x
+			InkDraw.line(ci, card.position + Vector2(56, 112), card.position + Vector2(56 + w * a, 114), 3.0, tick + 9, Color(InkDraw.INK, a))
 
 
 ## Smaller than the pen shot: the pencil turned eraser-down rubs the legs,
@@ -89,6 +109,36 @@ static func eraser_hand(ci: CanvasItem, figure_x: float, hand_full: float, k: fl
 
 
 
+## "You were the monster.": the hand comes to rest over the page, eraser
+## down but not touching, and stills; the red figure stands alone under it.
+static func still_hand(ci: CanvasItem, figure_x: float, hand_full: float, k: float, now: float, tick: int) -> void:
+	var feet: Vector2 = RevealArt.HEART_PANEL.position + Vector2(RevealArt.HEART_PANEL.size.x * figure_x, 500)
+	var hand_size: float = hand_full * 0.42
+	var settle: float = 1.0 - smoothstep(0.0, 0.45, k)
+	var tip: Vector2 = feet + Vector2(130, -240) + Vector2(sin(now * 3.0), cos(now * 2.3)) * 14.0 * settle
+	HandArt.draw(ci, tip - HandArt.tool_tip(hand_size, &"eraser"), hand_size, tick * 7 if settle > 0.05 else 7, 0.0, &"eraser")
+	# The page around the figure darkens: it stands alone.
+	_vignette(ci, feet + Vector2(0, -90), Vector2(170, 190), smoothstep(0.2, 0.8, k) * 0.6)
+
+
+## A smooth dark vignette: clear inside `radii`, `dark` from twice that out
+## (one triangle array, per-vertex alpha).
+static func _vignette(ci: CanvasItem, c: Vector2, radii: Vector2, dark: float) -> void:
+	var pts: PackedVector2Array = PackedVector2Array()
+	var cols: PackedColorArray = PackedColorArray()
+	var idx: PackedInt32Array = PackedInt32Array()
+	var rings: Array = [[1.0, 0.0], [2.2, dark], [30.0, dark]]
+	var seg: int = 40
+	for ring in rings:
+		for i in seg:
+			pts.append(c + Vector2.from_angle(TAU * i / seg) * radii * float(ring[0]))
+			cols.append(Color(0, 0, 0, float(ring[1])))
+	for r in rings.size() - 1:
+		for i in seg:
+			var a0: int = r * seg + i
+			var a1: int = r * seg + (i + 1) % seg
+			idx.append_array([a0, a1, a0 + seg, a1, a1 + seg, a0 + seg])
+	RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), idx, pts, cols)
 
 
 ## Desk-space rect the camera frames for beat `id` at progress `k`.
@@ -108,6 +158,8 @@ static func camera(id: StringName, k: float, wrist: Vector2, figure_x: float) ->
 			return _lerp(desk, page, smoothstep(0.0, 0.4, k))
 		&"hand":
 			return _lerp(desk, hand, smoothstep(0.0, 0.5, k))
+		&"you":
+			return _lerp(page, figure.grow(120), smoothstep(0.0, 0.7, k))
 		_:
 			return _lerp(hand, figure, smoothstep(0.0, 0.3, k))
 

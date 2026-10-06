@@ -169,3 +169,12 @@ signal flag_set(flag: StringName)
 ## What is feeding the noticed meter right now (its two HUD icons).
 @warning_ignore("unused_signal")
 signal notice_sources(light: bool, noise: bool)
+
+## Stage 6: AudioManager played a sound effect (MusicFiles dips bg_track
+## under loud ones).
+@warning_ignore("unused_signal")
+signal sfx_played(sound: StringName, volume_db: float)
+
+## Stage 6: E on a plain "inspect" object (the awakening mirror's ghoul).
+@warning_ignore("unused_signal")
+signal inspected(id: StringName)

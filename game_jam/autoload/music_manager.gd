@@ -7,7 +7,10 @@ extends Node
 ##   Layers: intensity follows the noticed meter and the Crawler's nearness;
 ##   hunt plays while it hunts. Safe rooms (no Crawler) sit near-silent.
 ##   Stingers: a new room, danger, relief on a return, cutscene cues.
-##   Bed: a quiet ominous drone under Chapters 1-3 only (never dead silent).
+##   Bed: the team's bg_track.wav under Chapters 1-3 rooms (MusicFiles), in
+##   place of the ch1-ch3 tracks; the synthesized bed if the file is missing.
+##   Menu: a quiet melancholy layer (MusicSynth3) over the menu track.
+##   Ending: the team's ending.wav once, then the synthesized ending, quiet.
 ##   All of it ducks for cutscenes and scares (and a scare's build-up), drops
 ##   out before a lunge, mutes on focus loss, and is back within ~2 s.
 
@@ -15,10 +18,12 @@ const SETTINGS_PATH: String = "user://settings.cfg"
 const BUS: StringName = &"Music"
 const BASE_DB: float = -10.0
 const SAFE_DB: float = -20.0
-const PRIORITY: Array[StringName] = [&"menu", &"ch1", &"bed", &"ch2", &"layer_pulse", &"layer_intensity", &"layer_hunt", &"ch3",
+const PRIORITY: Array[StringName] = [&"menu", &"menu_sad", &"ch1", &"bed", &"ch2", &"layer_pulse", &"layer_intensity", &"layer_hunt", &"ch3",
 	&"reveal", &"return", &"erase", &"warm", &"ending"]
 const BED_UNDER: Array[StringName] = [&"ch1", &"ch2", &"ch3"]
 const BED_DB: float = -14.0
+## The menu's melancholy layer: ~9 dB under the menu track.
+const SAD_DB: float = -19.0
 const CUES: Dictionary = {&"sting_descent": &"danger", &"sting_heart": &"danger", &"repair": &"relief", &"flashback": &"discover"}
 
 var music_volume: float = 0.6
@@ -30,20 +35,13 @@ var _want: StringName = &""
 var _playing: StringName = &""
 var _players: Array[AudioStreamPlayer] = []
 var _active: int = 0
-var _intensity: AudioStreamPlayer
-var _hunt: AudioStreamPlayer
-var _pulse: AudioStreamPlayer
 var _bed: AudioStreamPlayer
-## The Crawler is up (any state but dormant): the first build-up layer.
-var _risen: bool = false
-## Jumps each time the Artist's hand erases; decays (the final room).
-var _erase_boost: float = 0.0
+var _sad: AudioStreamPlayer
+var _files: MusicFiles = MusicFiles.new()
+var _layers: MusicLayers = MusicLayers.new()
 var _sting: AudioStreamPlayer
 var _stingers: Dictionary = {}
 var _stinger_jobs: Dictionary = {}
-var _notice: float = 0.0
-var _near: float = 0.0
-var _hunting: bool = false
 var _safe: bool = false
 var _duck: float = 0.0
 var _duck_left: float = 0.0
@@ -59,22 +57,21 @@ func _ready() -> void:
 		AudioServer.set_bus_send(index, &"Master")
 	for i in 2:
 		_players.append(_make_player())
-	_intensity = _make_player()
-	_hunt = _make_player()
-	_pulse = _make_player()
+	add_child(_layers)
+	_layers.setup(_make_player)
 	_bed = _make_player()
+	_sad = _make_player()
 	_sting = _make_player()
+	add_child(_files)
+	_files.setup(BUS)
 	_load_settings()
 	EventBus.game_started.connect(start)
 	EventBus.frame_changed.connect(_on_frame_changed)
-	EventBus.returned_to_menu.connect(_choose.bind(&"menu"))
+	EventBus.returned_to_menu.connect(func() -> void: _choose(&"menu"); _files.stop_all())
+	EventBus.sfx_played.connect(_files.on_sfx)
 	EventBus.reveal_started.connect(_choose.bind(&"reveal"))
 	EventBus.twist_revealed.connect(_choose.bind(&"return"))
 	EventBus.comic_repaired.connect(func() -> void: _choose(&"warm"); stinger(&"relief"))
-	EventBus.hand_erase.connect(func(_p: Vector2) -> void: _erase_boost = minf(_erase_boost + 0.35, 1.0))
-	EventBus.notice_changed.connect(func(v: float) -> void: _notice = v)
-	EventBus.crawler_proximity.connect(func(v: float, _m: bool) -> void: _near = v)
-	EventBus.crawler_state_changed.connect(_on_crawler_state)
 	EventBus.crawler_telegraph.connect(duck.bind(1.0, 0.7))
 	EventBus.player_noticed.connect(stinger.bind(&"danger"))
 	EventBus.bubble_returned.connect(func(_b: BubbleData, _p: Vector2) -> void: stinger(&"relief"))
@@ -98,23 +95,20 @@ func start() -> void:
 		return
 	_started = true
 	# Stingers are built one per frame once the first track is ready.
-	_stinger_jobs = {
-		&"soft": MusicSynth2.short_stinger.bind([[0.0, 45], [0.0, 88]], 0.16),
-		&"discover": MusicSynth2.short_stinger.bind([[0.0, 81], [0.18, 76]], 0.10),
-		&"relief": MusicSynth2.short_stinger.bind([[0.0, 69], [0.06, 73], [0.12, 76]], 0.12),
-		&"danger": SfxSynth2.sting,
-	}
+	_stinger_jobs = MusicSynth2.stinger_jobs()
 	_renderer.queue = PRIORITY.duplicate()
+	if MusicFiles.bg_exists():
+		# bg_track covers these: never render them.
+		_renderer.queue = _renderer.queue.filter(func(t: StringName) -> bool: return not (t in BED_UNDER or t == &"bed"))
 	if _want == &"":
 		_want = &"menu"
 
 
 func _on_frame_changed(data: FrameData) -> void:
 	_safe = data.crawler_spawn == Vector2.INF
-	_hunting = false
-	_risen = false
 	if data.epilogue:
 		_choose(&"ending")
+		_files.play_ending()
 	elif GameState.has_flag(&"comic_repaired"):
 		_choose(&"warm")
 	elif data.id == &"ch3_heart_return":
@@ -127,11 +121,6 @@ func _on_frame_changed(data: FrameData) -> void:
 		if not _visited.is_empty():
 			stinger(&"discover")
 		_visited[data.id] = true
-
-
-func _on_crawler_state(state: StringName) -> void:
-	_hunting = state in [&"HUNTING", &"TELEGRAPH", &"LUNGE"]
-	_risen = state != &"DORMANT"
 
 
 func _on_cue(cue: StringName) -> void:
@@ -157,6 +146,7 @@ func _choose(track: StringName) -> void:
 
 
 func _process(delta: float) -> void:
+	_files.load_step()
 	if not _started:
 		return
 	_renderer.step()
@@ -164,7 +154,7 @@ func _process(delta: float) -> void:
 		var id: StringName = _stinger_jobs.keys()[0]
 		_stingers[id] = (_stinger_jobs[id] as Callable).call()
 		_stinger_jobs.erase(id)
-	if _want != _playing and _renderer.streams.has(_want):
+	if _want != _playing and (_renderer.streams.has(_want) or _files.holds(_want)):
 		_switch(_want)
 	if _duck_left > 0.0:
 		_duck_left -= delta
@@ -172,34 +162,30 @@ func _process(delta: float) -> void:
 			_duck = 0.0
 	var duck_db: float = linear_to_db(maxf(1.0 - _duck, 0.0001))
 	var base: float = (SAFE_DB if _safe and _playing.begins_with("ch") else BASE_DB) + duck_db
-	var speed: float = delta * 30.0
+	base -= 6.0 if _playing == &"ending" else 0.0
 	for i in _players.size():
-		var target: float = base if i == _active else -80.0
-		_players[i].volume_db = move_toward(_players[i].volume_db, target, delta * (40.0 if i == _active else 20.0))
-	# Build-up: a low pulse once it's up (or you're noticed), the string swell
-	# with the meter / nearness / the hand's erasing, the hunt rhythm on top.
-	_erase_boost = maxf(0.0, _erase_boost - delta * 0.08)
-	var pulse_on: bool = _risen or _notice > 0.1 or _erase_boost > 0.05
-	_pulse.volume_db = move_toward(_pulse.volume_db, (BASE_DB - 3.0 if pulse_on else -70.0) + duck_db, speed)
-	_ensure_layer(_pulse, &"layer_pulse")
-	var level: float = clampf(maxf(maxf(_notice, _near), _erase_boost), 0.0, 1.0)
-	_intensity.volume_db = move_toward(_intensity.volume_db, lerpf(-60.0, BASE_DB, level) + duck_db, speed)
-	_hunt.volume_db = move_toward(_hunt.volume_db, (BASE_DB if _hunting else -70.0) + duck_db, speed)
-	_ensure_layer(_intensity, &"layer_intensity")
-	_ensure_layer(_hunt, &"layer_hunt")
+		var target: float = base if i == _active and not _files.holds(_playing) else -80.0
+		_players[i].volume_db = move_toward(_players[i].volume_db, target, delta * (40.0 if target > -80.0 else 30.0))
+	_layers.update(delta, BASE_DB, duck_db, _ensure_layer)
 	var bed_on: bool = _want in BED_UNDER and GameState.is_playing
-	var bed_db: float = BED_DB + duck_db if bed_on else -80.0
+	_files.update(delta, bed_on, duck_db, _duck >= 0.6)
+	var bed_db: float = BED_DB + duck_db if bed_on and not _files.has_bg() else -80.0
 	_bed.volume_db = move_toward(_bed.volume_db, bed_db, delta * (140.0 if bed_db < _bed.volume_db else 40.0))
 	_ensure_layer(_bed, &"bed")
+	_sad.volume_db = move_toward(_sad.volume_db, SAD_DB + duck_db if _playing == &"menu" else -80.0, delta * 20.0)
+	_ensure_layer(_sad, &"menu_sad")
 
 
 func _switch(track: StringName) -> void:
 	_playing = track
 	_active = 1 - _active
 	var p: AudioStreamPlayer = _players[_active]
-	p.stream = _renderer.streams[track]
+	p.stream = _renderer.streams.get(track)
 	p.volume_db = -40.0
-	p.play()
+	if p.stream != null:
+		p.play()
+	else:
+		p.stop()
 
 
 func _ensure_layer(p: AudioStreamPlayer, track: StringName) -> void:

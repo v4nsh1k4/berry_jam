@@ -1,22 +1,18 @@
 extends Control
 ## Title page with Start / Continue / Controls / Credits.
 
-const CREDITS_TEXT: String = """INK-BLEED
-Made for the Infinium 26 game jam by the Berry Jam team.
-Voice: the team
-
-Code, art and sound are made in Godot from code: no addons, and no
-assets except one recorded cry. Font: Godot's built-in default font."""
-
 var _pages: Dictionary = {}
 var _continue_button: Button
+## The credits page's comic drawing (CreditsArt), redrawn with the line boil.
+var _credits_art: Control
+var _title: Control
 
 
 func _ready() -> void:
 	UiTheme.make_screen(self)
 	_pages["main"] = _build_main().get_parent()
 	_pages["controls"] = _build_controls_page().get_parent()
-	_pages["credits"] = _build_text_page("CREDITS", CREDITS_TEXT).get_parent()
+	_pages["credits"] = _build_credits_page().get_parent()
 	EventBus.returned_to_menu.connect(open)
 	hide()
 
@@ -27,16 +23,17 @@ func open() -> void:
 	_show_page("main")
 
 
+## The crows backdrop (TitleArt, built by the start screen) on every page.
 func _draw() -> void:
-	var r: Rect2 = Rect2(Vector2.ZERO, size)
-	draw_rect(r, InkDraw.WHITE)
-	var tick: int = InkDraw.boil_tick()
-	InkDraw.rect(self, r.grow(-48), 8.0, tick, InkDraw.PAPER, InkDraw.INK, 2.0)
-	InkDraw.hatch(self, Rect2(56, size.y - 150, size.x - 112, 94), 12.0, 1.4, tick + 3)
+	draw_rect(Rect2(Vector2.ZERO, size), InkDraw.WHITE)
+	TitleLive.draw(self, size, InkDraw.boil_tick())
 
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+	_title.queue_redraw()
+	if _credits_art.is_visible_in_tree():
+		_credits_art.queue_redraw()
 
 
 ## Pages are full-screen wrappers; only the shown one is visible, so a
@@ -70,14 +67,21 @@ func _first_button(node: Node) -> Button:
 
 func _build_main() -> Control:
 	var box: VBoxContainer = _centered_column()
-	box.add_child(UiTheme.make_label("INK-BLEED", 84))
-	box.add_child(UiTheme.make_label("The Silent House of Hollow Hill", 24))
-	box.add_child(_spacer(26))
-	box.add_child(UiTheme.make_button("Start", _on_start))
+	# The scrawled title (TitleLettering), then room for the red figure.
+	var title: Control = Control.new()
+	title.custom_minimum_size = Vector2(900, 170)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title.draw.connect(func() -> void: TitleLive.title(title, Vector2(450, 92), InkDraw.boil_tick()))
+	title.set_process(true)
+	_title = title
+	box.add_child(title)
+	box.add_child(_spacer(150))
 	_continue_button = UiTheme.make_button("Continue", _on_continue)
-	box.add_child(_continue_button)
-	box.add_child(UiTheme.make_button("Controls", _show_page.bind("controls")))
-	box.add_child(UiTheme.make_button("Credits", _show_page.bind("credits")))
+	for b in [UiTheme.make_button("Start", _on_start), _continue_button, UiTheme.make_button("Controls", _show_page.bind("controls")),
+			UiTheme.make_button("Credits", _show_page.bind("credits"))]:
+		(b as Button).custom_minimum_size.x = 340
+		(b as Button).size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		box.add_child(b)
 	return box
 
 
@@ -89,14 +93,18 @@ func _build_controls_page() -> Control:
 	return box
 
 
-func _build_text_page(title: String, body: String) -> Control:
+## Credits: one black-and-white comic page (fits 1280x720, no scrolling).
+func _build_credits_page() -> Control:
 	var box: VBoxContainer = _centered_column()
-	box.add_child(UiTheme.make_label(title, 48))
-	var panel: PanelContainer = PanelContainer.new()
-	var text: Label = UiTheme.make_label(body, 19, HORIZONTAL_ALIGNMENT_LEFT)
-	panel.add_child(text)
-	box.add_child(panel)
-	box.add_child(UiTheme.make_button("Back", _show_page.bind("main")))
+	_credits_art = Control.new()
+	_credits_art.custom_minimum_size = Vector2(1130, 566)
+	_credits_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_credits_art.draw.connect(func() -> void:
+		CreditsArt.page(_credits_art, Rect2(Vector2.ZERO, _credits_art.size), CreditsArt.TITLE, InkDraw.boil_tick()))
+	box.add_child(_credits_art)
+	var back: Button = UiTheme.make_button("Back", _show_page.bind("main"))
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(back)
 	return box
 
 

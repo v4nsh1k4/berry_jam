@@ -41,7 +41,7 @@ func _ready() -> void:
 		{start = 0.0, end = T_PAGE2, caption = "Through the gap in the border, there was morning.", panels = [
 			{rect = Rect2(0, 0, 0.62, 1), src = Rect2(260, 60, 860, 640), scene = 0, zoom = 1.04},
 			{rect = Rect2(0.62, 0, 0.38, 1), src = Rect2(380, 120, 420, 600), scene = 1, tilt = 1.5, zoom = 1.1}]},
-		{start = T_PAGE2, end = T_PAGE3, caption = "Every word went back. The Artist's hand set down its pencil.", panels = [
+		{start = T_PAGE2, end = T_PAGE3, caption = "Every word went back. The author's hand set down its pencil.", panels = [
 			{rect = Rect2(0, 0, 1, 0.55), src = Rect2(0, 80, 1280, 580), scene = 1, zoom = 1.05},
 			{rect = Rect2(0, 0.55, 0.5, 0.45), src = Rect2(430, 260, 260, 200), scene = 1, tilt = -1.5, zoom = 1.2},
 			{rect = Rect2(0.5, 0.55, 0.5, 0.45), src = Rect2(200, 150, 340, 230), scene = 1, tilt = 1.5, zoom = 1.15}]},

@@ -20,13 +20,14 @@ def cutscene(name, cid, trigger, music, beats, skippable=True):
         beats=TypedArr("cutscene_beat", beats)))
 
 
-# Stage 5: C1, C2 and C4 are first person (CutsceneArt3/4 pov_* ids and
-# pov_* camera modes); same beats and durations as Stage 4D.
+# Stage 5: C2 and C4 are first person (CutsceneArt3/4 pov_* ids and pov_*
+# camera modes). Stage 6: C1 is third person again (CutsceneArt5 c1_* ids).
+# Same beats and durations as Stage 4D.
 
 # C1: the first theft, and what it costs.
 cutscene("c1_first_steal", "c1_first_steal", "first_steal", "sting_soft", [
-    beat(2.6, FULL, ["pov_reach"], "The word came away like a scab.", "pov_look_up", "steal"),
-    beat(3.0, FULL, ["pov_thin"], "Somewhere in the house, a line went thin.", "pov_look", "nib"),
+    beat(2.6, WIDE_L, ["c1_steal", "c1_tear"], "The word came away like a scab.", "zoom_in", "steal"),
+    beat(3.0, WIDE_L, ["c1_thin", "c1_alone"], "Somewhere in the house, a line went thin.", "shake", "nib"),
 ])
 
 # C2: the torch, and the thing that watches light.
@@ -43,7 +44,7 @@ cutscene("c3_flashback", "c3_flashback", "frame:ch2_pantry", "flashback", [
 
 # C4: down the cellar stair, into Chapter 3.
 cutscene("c4_descent", "c4_descent", "frame:ch2_end", "sting_descent", [
-    beat(3.0, FULL, ["pov_stairs"], "The stair goes down further than the drawing does.", "pov_look_down", "creak"),
+    beat(3.0, FULL, ["pov_stairs"], "The stair goes down further than the drawing does.", "pov_look_down", "groan"),
     beat(3.2, FULL, ["pov_ink_rise"], "And the ink is rising to meet you.", "pov_shake", "growl"),
 ])
 

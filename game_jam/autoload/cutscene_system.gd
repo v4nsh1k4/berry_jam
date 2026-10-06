@@ -128,7 +128,7 @@ func _next_beat() -> void:
 	if beat.page_turn and beat.sfx != &"swoosh":
 		AudioManager.play(&"swoosh", -6.0, 0.05)
 	if beat.sfx != &"":
-		AudioManager.play(beat.sfx, -5.0, 0.0)
+		AudioManager.play(beat.sfx, -5.0, 0.05)
 
 
 func _try_skip() -> void:

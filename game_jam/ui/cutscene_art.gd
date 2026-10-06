@@ -3,7 +3,8 @@ extends RefCounted
 ## Drawings for cutscene panels (CutsceneBeat.draws ids). Each draws in
 ## panel space (0..size) under the camera view set by CutsceneView; `t` is
 ## seconds into the beat, for small motions. C3's ids live here, C5/C6's in
-## CutsceneArt2, the first-person pov_* ids (C1, C2, C4) in CutsceneArt3/4,
+## CutsceneArt2, C1's c1_* ids in CutsceneArt5, the first-person pov_* ids
+## (C2, C4) in CutsceneArt3/4,
 ## extra detail in CutsceneDetail. The player is always the red figure.
 
 const DARK: Color = Color(0.1, 0.095, 0.11)
@@ -13,6 +14,9 @@ const GREY: Color = Color(0.62, 0.6, 0.57)
 static func draw(ci: CanvasItem, id: String, s: Vector2, t: float, tick: int) -> void:
 	if CutsceneArt3.is_pov(id):
 		CutsceneArt3.draw(ci, id, s, t, tick)
+		return
+	if id.begins_with("c1_"):
+		CutsceneArt5.draw(ci, id, s, t, tick)
 		return
 	match id:
 		"story_tea":

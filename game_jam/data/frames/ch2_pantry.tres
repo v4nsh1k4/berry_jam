@@ -62,3 +62,4 @@ exits = Array[ExtResource("2_exit_data")]([SubResource("Resource_1"), SubResourc
 npcs = Array[ExtResource("3_npc_data")]([SubResource("Resource_3")])
 lights = Array[ExtResource("8_light_spot_data")]([SubResource("Resource_4"), SubResource("Resource_5")])
 events = Array[StringName]([&"crawler_fingers"])
+webs = Array[Vector4]([Vector4(1184, 0, 110, 90)])

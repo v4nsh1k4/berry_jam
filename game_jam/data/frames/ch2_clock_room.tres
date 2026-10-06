@@ -79,3 +79,5 @@ interactables = Array[ExtResource("3_interactable_data")]([SubResource("Resource
 lights = Array[ExtResource("4_light_spot_data")]([SubResource("Resource_6"), SubResource("Resource_7")])
 crawler_spawn = Vector2(980, 492)
 crawler_patrol = true
+webs = Array[Vector4]([Vector4(0, 0, 120, 0)])
+corner_eyes = Array[Vector3]([Vector3(1110, 70, 2)])

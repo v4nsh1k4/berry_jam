@@ -74,8 +74,9 @@ func _run() -> void:
 		total += secs
 		print("%-16s beats %d (was %d)  %.2f s (was %.2f)" % [id, data.beats.size(), before[id][0], secs, before[id][1]])
 		ok = ok and data.beats.size() == before[id][0] and secs <= before[id][1] + 0.001
-		var pov: bool = String(data.beats[0].draws[0]).begins_with("pov_")
+		var pov: bool = String(data.beats[0].draws[0]).begins_with("pov_") or id == "c1_first_steal"
 		var worst := 0
+		var times: Array = []
 		for b in data.beats.size():
 			while cs._beat >= 0 and cs._beat < b:
 				await process_frame
@@ -85,10 +86,13 @@ func _run() -> void:
 					var f0: int = Time.get_ticks_usec()
 					await process_frame
 					worst = maxi(worst, Time.get_ticks_usec() - f0)
+					times.append(Time.get_ticks_usec() - f0)
 				await _shot("cs_%s_%d%s.png" % [id, b, "abc"[m] if pov else ""])
 		while cs.is_playing:
 			await process_frame
-		print("   slowest frame %.1f ms" % (worst / 1000.0))
+		times.sort()
+		print("   slowest frame %.1f ms, 95th percentile %.1f ms, median %.1f ms (%d frames)" % [worst / 1000.0,
+			times[int(times.size() * 0.95)] / 1000.0, times[times.size() / 2] / 1000.0, times.size()])
 		await _wait(0.3)
 		print(id, " finished playing=", cs.is_playing, " paused=", paused)
 		ok = ok and not cs.is_playing and not paused

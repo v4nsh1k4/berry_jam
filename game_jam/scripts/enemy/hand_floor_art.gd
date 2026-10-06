@@ -1,7 +1,8 @@
 class_name HandFloorArt
 extends RefCounted
 ## What the Artist's hand leaves on the floor: the eraser's shadow while it
-## aims (the warning: a hatched strip that darkens as it comes down), the
+## aims (the warning: a hatched strip that darkens as it comes down, with the
+## eraser's own block-shaped shadow in the middle tightening as it nears), the
 ## rubbed strip and crumbs while it rubs, and grey smudges that fade after.
 
 const SMUDGE: Color = Color(0.55, 0.54, 0.53)
@@ -20,6 +21,13 @@ static func draw(ci: CanvasItem, aiming: bool, rubbing: bool, x: float, width: f
 	var dark: float = 0.12 + 0.4 * progress if aiming else 0.6
 	ci.draw_rect(strip, Color(InkDraw.INK, dark * 0.5))
 	InkDraw.hatch(ci, strip, lerpf(16.0, 7.0, progress) if aiming else 6.0, 1.5, tick * 5, Color(InkDraw.INK, dark))
+	# The eraser block's own shadow, sharper and darker as it comes down.
+	var near: float = progress if aiming else 1.0
+	var block: Vector2 = Vector2(lerpf(width * 0.5, width * 0.3, near), lerpf(30.0, 18.0, near))
+	var centre: Vector2 = Vector2(x, floor_band.x + (floor_band.y - floor_band.x) * 0.45)
+	var pts: PackedVector2Array = PackedVector2Array([centre + Vector2(-block.x, -block.y * 0.4), centre + Vector2(block.x * 0.7, -block.y),
+		centre + Vector2(block.x, block.y * 0.4), centre + Vector2(-block.x * 0.7, block.y)])
+	InkDraw.fill(ci, pts, Color(InkDraw.INK, 0.2 + 0.45 * near))
 	# Dashed edges: where it will come down. Step out of them.
 	for edge in [strip.position.x, strip.end.x]:
 		for i in 6:

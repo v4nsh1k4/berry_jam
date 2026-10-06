@@ -23,3 +23,5 @@ captions = PackedStringArray("At the bottom of the stair, the page is wet.")
 hint = ""
 lights = Array[ExtResource("2_light_spot_data")]([SubResource("Resource_1")])
 next_chapter = ExtResource("3_ch3")
+webs = Array[Vector4]([Vector4(0, 0, 120, 0)])
+corner_eyes = Array[Vector3]([Vector3(1100, 110, 2)])

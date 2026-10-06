@@ -108,6 +108,7 @@ func interact_plain() -> void:
 	match data.kind:
 		&"inspect":
 			EventBus.caption_requested.emit(data.caption, 3.5)
+			EventBus.inspected.emit(data.id)
 		&"lever":
 			resolve()
 		&"pickup":

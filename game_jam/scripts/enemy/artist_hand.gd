@@ -9,8 +9,8 @@ extends Node2D
 ##   returns kept) -> LIFT -> HOVER.
 ## Every word given back weakens it (rarer, slower, narrower; tuned in
 ## data/hand/hand_pressure.tres). Once the last ordinary word is home it only
-## WATCHES. In the Ink Heart it takes the last word back: OFFER (eraser down,
-## grip open), then WITHDRAW as the comic repairs.
+## WATCHES. In the Ink Heart it takes the last word back: OFFER (grip half
+## open, still holding the eraser), then WITHDRAW as the comic repairs.
 ## HUSH stops its attempts for a while, WAIT freezes it, hiding is always safe.
 
 enum State { HOVER, AIM, RUB, LIFT, WATCH, OFFER, WITHDRAW }
@@ -224,8 +224,5 @@ func _exit_tree() -> void:
 func _draw() -> void:
 	var progress: float = 1.0 - clampf(_timer / _phase_len, 0.0, 1.0)
 	HandFloorArt.draw(self, state == State.AIM, state == State.RUB, _target_x, _width, FLOOR, progress, _smudges, _tick)
-	var tool: StringName = &"eraser" if _grip < 0.5 else &"none"
-	if _grip >= 0.5:
-		# The pencil set down on the floor beside the word.
-		HandArt.pencil_lying(self, Vector2(FINAL_WORD_X - 260.0, FLOOR.y - 20.0), SIZE * 0.8)
-	HandArt.draw(self, _wrist, SIZE, _tick * 7, _grip, tool)
+	# Eraser-down in every state of the return phase (OFFER only opens the grip).
+	HandArt.draw(self, _wrist, SIZE, _tick * 7, _grip * 0.6, &"eraser")

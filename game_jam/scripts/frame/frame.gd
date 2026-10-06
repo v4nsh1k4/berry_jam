@@ -17,6 +17,7 @@ const EVENT_SCRIPTS: Dictionary = {
 	&"return_gate": preload("res://scripts/events/return_gate_event.gd"),
 	&"margin_chase": preload("res://scripts/events/margin_chase_event.gd"),
 	&"artist_hand": preload("res://scripts/enemy/artist_hand.gd"),
+	&"mirror_ghoul": preload("res://scripts/events/mirror_ghoul_event.gd"),
 }
 
 ## Interactable kinds with their own behaviour; everything else is the base class.
@@ -68,6 +69,10 @@ func setup(frame_data: FrameData) -> void:
 		var interactable: Interactable = (KIND_CLASSES.get(interactable_data.kind, Interactable) as GDScript).new()
 		_props.add_child(interactable)
 		interactable.setup(interactable_data)
+	if not data.webs.is_empty() or not data.corner_eyes.is_empty():
+		var decor: RoomDecor = RoomDecor.new()
+		_props.add_child(decor)
+		decor.setup(data)
 	for npc_data in data.npcs:
 		var npc: Npc = Npc.new()
 		_props.add_child(npc)

@@ -20,7 +20,8 @@ frame("ch1_awakening", "Awakening", "awakening", 0.1, (230, 470),
       exits=[exit_((1080, 396, 104, 112), "ch1_bedchamber", (150, 466), SLIDE)],
       lights=[light("candle", (382, 278), 260, 0.85), light("moon", (880, 150), 330, 0.5)],
       items=[item(id="mirror", kind="inspect", position=(580, 120), size=(120, 262),
-                  caption="The mirror shows an empty panel where your face should be.")], doodles=True)
+                  caption="There is no one in the glass. You are not written here.")], doodles=True,
+      events=["mirror_ghoul"])
 
 frame("ch1_bedchamber", "The Rotted Bedchamber", "bedchamber", 0.09, (150, 466),
       ["Something drips. The window is bleeding ink.", "Across the room, someone waits in the doorway."],

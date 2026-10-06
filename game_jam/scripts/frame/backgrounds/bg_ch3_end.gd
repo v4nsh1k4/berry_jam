@@ -41,7 +41,7 @@ static func ink_heart(ci: FrameBackground, tick: int) -> void:
 		var x: float = 60.0 + i * 85.0
 		InkDraw.line(ci, Vector2(x, 210 + (i % 3) * 20), Vector2(x + 2, 300 + (i % 4) * 25), 3.0, s + 50 + i)
 	var font: Font = ThemeDB.fallback_font
-	ci.draw_string(font, Vector2(200, 330), "Artist's note: start this page over", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(InkDraw.INK, 0.6))
+	ci.draw_string(font, Vector2(200, 330), "Author's note: start this page over", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(InkDraw.INK, 0.6))
 	ci.draw_string(font, Vector2(560, 60), "ERASE", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, Color(InkDraw.INK, 0.55))
 	InkDraw.line(ci, Vector2(555, 50), Vector2(660, 44), 3.0, s + 60)
 

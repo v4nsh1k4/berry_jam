@@ -55,19 +55,58 @@ func _run() -> void:
 	gs.add_bubble(load("res://data/bubbles/hand_erase.tres"))
 	await _wait(1.0)
 	var starts: PackedFloat32Array = reveal._starts
+	var ok_text := true
 	print("reveal beats at ", starts, " total ", reveal.total())
-	var prev := 0.5
+	# Stage 6: the second half's captions, in order, one per beat; "author"
+	# everywhere; "never a monster" once; the last line held longest.
+	var want: Array = ["The monster was never a monster.", "It was, in fact, the author's hand.",
+		"To the author, you were the anomaly. A glitch. A mistake.",
+		"You starved the characters of their words, and broke the story.", "You were the monster."]
+	var texts: Array = []
+	var all_text: String = ""
+	var longest_other := 0.0
+	var you_len := 0.0
+	for i in reveal._beats.size():
+		var b: Dictionary = reveal._beats[i]
+		var d: float = starts[i + 1] - starts[i]
+		print("  beat %d %s %.2fs \"%s\"" % [i, b.id, d, b.text])
+		if b.text != "":
+			texts.append(b.text)
+			ok_text = ok_text and d >= 2.5
+			if b.id == &"you":
+				you_len = d
+			else:
+				longest_other = maxf(longest_other, d)
+		all_text += String(b.text) + "\n"
+	var beats_cls = load("res://ui/reveal_beats.gd")
+	all_text += String(beats_cls.LABEL) + "\n" + "\n".join(beats_cls.RECAP)
+	print("label card: ", beats_cls.LABEL, " | recap: ", beats_cls.RECAP)
+	ok_text = ok_text and texts.slice(texts.size() - 5) == want
+	ok_text = ok_text and all_text.count("never a monster") == 1 and all_text.findn("artist") < 0
+	ok_text = ok_text and all_text.contains("author's hand") and String(beats_cls.RECAP[1]).contains("glitch")
+	ok_text = ok_text and you_len > longest_other
+	print("captions ok=", ok_text, " (you %.2fs vs longest other %.2fs)" % [you_len, longest_other])
 	var am = root.get_node("/root/AudioManager")
+	var mm = root.get_node("/root/MusicManager")
 	var cry_beat := -1
+	var hushed := false
 	for i in starts.size() - 1:
-		var mid: float = (starts[i] + starts[i + 1]) * 0.5 + 0.5
-		await _wait(mid - prev)
-		prev = mid
-		if cry_beat < 0 and String(am.last_played) == "cry_thin":
-			cry_beat = i
-		await _shot("rv_%d.png" % i)
-	await _wait(reveal.total() - prev + 2.5)
-	var ok: bool = gs.twist_revealed and not paused
+		var marks: Array = [0.5]
+		if reveal._beats[i].id in [&"hand", &"erase", &"you"]:
+			marks = [0.3, 0.85]
+		for m in marks.size():
+			while reveal._t < lerpf(starts[i], starts[i + 1], marks[m]):
+				await process_frame
+			if cry_beat < 0 and String(am.last_played) == "cry_thin":
+				cry_beat = i
+			if reveal._beats[i].id == &"you" and m == 0:
+				hushed = mm._duck >= 0.95 and am._hush > 0.0
+				print("held beat: music duck=%.2f ambience hush=%.2f" % [mm._duck, am._hush])
+			await _shot("rv_%d%s.png" % [i, "" if marks.size() == 1 else "ab"[m]])
+	while reveal._t < reveal.total():
+		await process_frame
+	await _wait(2.5)
+	var ok: bool = gs.twist_revealed and not paused and ok_text and hushed
 	# Stage 5: the recorded cry, cut short, as the eraser rubs the figure out.
 	print("cry (thin) heard by beat %d (%s), seen=%s" % [cry_beat, reveal._beats[maxi(cry_beat, 0)].id, gs.seen.has(&"cry_reveal")])
 	ok = ok and reveal._beats[maxi(cry_beat, 0)].id == &"erase" and gs.seen.count(&"cry_reveal") == 1

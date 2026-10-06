@@ -115,22 +115,72 @@ static func digit(ci: CanvasItem, a: Vector2, b: Vector2, w: float, color: Color
 	ci.draw_circle(b, w * 0.5, color)
 
 
-## The reader falling into the page: red now, arms out ahead, legs trailing;
-## an empty bubble forms over the head as they shrink (the player).
+## The reader falling into the page, abstract (Stage 6): a stretched red ink
+## streak in the rough shape of a falling body (a blot of a head, a torso
+## ribbon), limbs pulled out into long strokes that dissolve into dashes,
+## line fragments and drops peeling off behind along the pull. No face, no
+## clothes; an empty bubble shell forms as they shrink (the player).
 static func _falling(ci: CanvasItem, at: Vector2, dir: Vector2, sc: float, t: float, tick: int) -> void:
 	var side: Vector2 = dir.orthogonal()
-	var head: Vector2 = at + dir * 60.0 * sc
-	var hips: Vector2 = at - dir * 50.0 * sc
-	var flail: float = sin(t * 9.0) * 14.0 * sc
-	InkDraw.shape(ci, PackedVector2Array([head - dir * 20 * sc + side * 22 * sc, head - dir * 20 * sc - side * 22 * sc,
-		hips - side * 16 * sc, hips + side * 16 * sc]), 3.0, tick, InkDraw.RED, InkDraw.INK)
+	var bend: float = sin(t * 3.0) * 0.25
+	# The torso streak: a tapered ribbon from the head blot back to the hips.
+	var spine: PackedVector2Array = PackedVector2Array()
+	for i in 9:
+		var k: float = i / 8.0
+		spine.append(at + dir * lerpf(62.0, -70.0, k) * sc + side * sin(k * PI + bend) * 10.0 * sc)
+	_streak(ci, spine, 30.0 * sc, Color(InkDraw.RED, 0.95), tick)
+	ci.draw_circle(spine[0] + dir * 6.0 * sc, 15.0 * sc, InkDraw.RED)
+	# Limbs: long strokes, solid near the body, breaking into dashes.
+	var flail: float = sin(t * 9.0) * 0.2
 	for k in [-1.0, 1.0]:
-		digit(ci, head - dir * 14 * sc + side * k * 20 * sc, head + dir * 64 * sc + side * (k * 34 * sc + flail * k), 8.0 * sc + 1.0, InkDraw.RED, tick + 1)
-		digit(ci, hips + side * k * 10 * sc, hips - dir * 74 * sc + side * (k * 26 * sc - flail), 9.0 * sc + 1.0, InkDraw.RED, tick + 2)
-	InkDraw.ellipse(ci, head + dir * 8 * sc, Vector2(17, 17) * sc, 3.0, tick + 3, InkDraw.RED, InkDraw.INK)
+		var shoulder: Vector2 = spine[1] + side * k * 12.0 * sc
+		var hip: Vector2 = spine[8] + side * k * 8.0 * sc
+		_limb(ci, shoulder, (dir + side * k * (0.8 + flail)).normalized(), 110.0 * sc, 7.0 * sc + 1.0, tick + 2)
+		_limb(ci, hip, (-dir + side * k * (0.35 - flail)).normalized(), 150.0 * sc, 8.0 * sc + 1.0, tick + 4)
+	# Fragments of line and drops peeling off behind, back along the pull.
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 41
+	for i in 14:
+		var age: float = fposmod(t * 1.3 + rng.randf(), 1.0)
+		var from: Vector2 = spine[rng.randi_range(2, 8)] + side * rng.randf_range(-20, 20) * sc
+		var p: Vector2 = from - dir * age * 220.0 * sc + side * sin(age * 6.0 + i) * 30.0 * sc
+		var c: Color = Color(InkDraw.RED, 1.0 - age)
+		if i % 3 == 0:
+			ci.draw_circle(p, (5.0 - 3.0 * age) * sc + 0.5, c)
+		else:
+			var d: Vector2 = (-dir).rotated(rng.randf_range(-0.6, 0.6)) * rng.randf_range(10, 28) * sc
+			ci.draw_line(p, p + d, c, maxf(1.0, 3.0 * sc * (1.0 - age)))
 	var bubble: float = clampf((0.9 - sc) / 0.5, 0.0, 1.0)
 	if bubble > 0.0:
-		BubbleArt.draw_shell(ci, head + (dir * 30 + side * 40) * sc, Vector2(60, 34) * sc, BubbleArt.NO_TAIL, tick + 4, bubble, 2.5)
+		BubbleArt.draw_shell(ci, spine[0] + (dir * 30 + side * 44) * sc, Vector2(60, 34) * sc, BubbleArt.NO_TAIL, tick + 6, bubble, 2.5)
+
+
+## A ribbon along `pts`, widest a third of the way, thinning to its ends.
+static func _streak(ci: CanvasItem, pts: PackedVector2Array, w: float, color: Color, _tick: int) -> void:
+	var left: PackedVector2Array = PackedVector2Array()
+	var right: PackedVector2Array = PackedVector2Array()
+	for i in pts.size():
+		var k: float = float(i) / (pts.size() - 1)
+		var d: Vector2 = (pts[mini(i + 1, pts.size() - 1)] - pts[maxi(i - 1, 0)]).normalized()
+		var half: float = w * 0.5 * sin(PI * minf(k * 1.5 + 0.12, 1.0)) * (1.0 - 0.7 * k)
+		left.append(pts[i] + d.orthogonal() * half)
+		right.append(pts[i] - d.orthogonal() * half)
+	right.reverse()
+	left.append_array(right)
+	InkDraw.fill(ci, left, color)
+
+
+## A limb pulled into a stroke: solid, then dashes, then flecks.
+static func _limb(ci: CanvasItem, from: Vector2, d: Vector2, length: float, w: float, tick: int) -> void:
+	var curve: Vector2 = d.orthogonal() * length * 0.12
+	var prev: Vector2 = from
+	for i in range(1, 9):
+		var k: float = i / 8.0
+		var p: Vector2 = from + d * length * k + curve * sin(k * PI)
+		if k < 0.45 or i % 2 == 0:
+			ci.draw_line(prev, p, InkDraw.RED, maxf(1.0, w * (1.0 - k * 0.75)))
+		prev = p
+	ci.draw_circle(prev + d * 8.0, maxf(1.0, w * 0.3), InkDraw.RED)
 
 
 ## Inside the pull. `pull` 0..1 takes the red reader from the lower right into
