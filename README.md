@@ -1,292 +1,103 @@
 # Ink-Bleed
 
-A 2D psychological horror puzzle game set inside a comic book, *The Silent
-House of Hollow Hill*. You are an unperson with no speech bubble, drawn in the
-only colour in the comic: red. You steal other characters' words and speak
-them to open, move, remember, freeze and hide. Light shows you the house, and
-it shows you to the Ink Crawler. Every stolen word damages the comic a little
-more, and in Chapter 3 the way out is to give them all back.
+**A 2D psychological-horror puzzle game set inside a comic book, _The Silent
+House of Hollow Hill_.** Made for the Infinium 26 game jam (theme: COMIC /
+LIGHT / TWIST).
 
-Made in Godot 4.7.2 with GDScript and the Compatibility renderer. All art and
-sound are generated in code, with one deliberate exception: a cry the team
-recorded (`audio/baby_cry.wav`). No other asset files, no addons.
+A reader leans too close to an old comic and is pulled in. Inside, you are an
+unperson: faceless, drawn in red, the only colour in a black-and-white world,
+with an empty speech bubble and no words of your own. To get through the house
+you **steal words** from its characters and **speak them as power**: OPEN a
+door, PUSH a cabinet, REMEMBER a code, HIDE from what hunts in the dark. But
+every stolen word tears the page a little more, and **light** (your flashlight)
+shows you the house while drawing the Ink Crawler to you. Find the way out of
+the comic before the story falls apart.
 
-## Run
+- **Play in the browser:** [ITCH.IO LINK]
+- **Playtime:** about 15-16 minutes, three chapters.
 
-1. Open Godot, choose **Import**, and select `game_jam/project.godot`.
-2. Press **▶** (or ⌘B on a Mac, F5 elsewhere). Click the title page or press
-   any key, then choose **Start**.
+## Team
+
+| Name | Role | Discord |
+| --- | --- | --- |
+| [NAME] | [ROLE] | [DISCORD] |
+| [NAME] | [ROLE] | [DISCORD] |
+| [NAME] | [ROLE] | [DISCORD] |
+
+## Engine
+
+Godot **4.7.2**, GDScript only, Compatibility renderer, Web export without
+threads. All art, animation, music and sound are generated in code; the only
+asset files are three team recordings in `audio/` (see
+[CREDITS.md](CREDITS.md)).
+
+## Run locally (from the repo root)
+
+1. Install Godot 4.7.2 (the standard build; the .NET build also runs it).
+2. In Godot's Project Manager choose **Import** and pick `project.godot` at the
+   root of this repository.
+3. Press **▶ Run Project** (F5, or ⌘B on a Mac). The main scene is
+   `scenes/main.tscn`. The editor canvas looks empty: everything is drawn at
+   runtime.
+
+Command line: `godot --path .` from the repo root.
+
+## Build for the web (itch.io)
+
+1. Use the **standard** (non-.NET) Godot 4.7.2 editor: the .NET editor refuses
+   Web export even for GDScript projects. Install the 4.7.2 export templates
+   (Editor → Manage Export Templates).
+2. **Project → Export → Web → Export Project** (the preset already writes
+   `build/web/index.html`), or from the repo root:
+   `godot --headless --path . --export-release "Web" build/web/index.html`
+3. Zip the **contents** of `build/web/` (`index.html` at the top level of the
+   zip) and upload it to itch.io as an HTML project, viewport 1280 x 720. No
+   SharedArrayBuffer is needed (threads are off).
+
+Keep `editor/export/convert_text_resources_to_binary=false` in
+`project.godot`: with it on, Godot 4.7.2 web exports lose the game's text.
+
+## Controls
 
 | Action | Keys |
 | --- | --- |
-| Walk / run | A/D or ←/→, hold **Shift** to run (loud: the Crawler hears running) |
-| Step nearer / further | W/S or ↑/↓ |
-| Steal a word | Stand under it and hold **E** (step left/right to choose between words) |
-| Pick a stolen word | **1-6** for a visible slot, **Q / R** or the mouse wheel to cycle, or click a slot. Hover a word to see what it does |
-| Reorder words | Drag a word onto another slot, or **Shift+Q / Shift+R** |
-| Say the word | **E** at the thing in front of you, or with nothing near to say it into the room |
-| Look / take / hide / dials | **E** on mirrors, pickups, hiding spots and dial locks |
-| Give a word back (Chapter 3) | Pick it, stand under its owner's broken bubble and hold **E** (or press **E** at their portrait) |
-| Flashlight | **F** or left click, aimed with the mouse (from the end of Chapter 1) |
-| Jump | **Space**, only on the page-spread page in Chapter 3 |
-| Skip a cutscene | **Space** or click (each cutscene plays once per run) |
-| Pause | **Esc** or **P** |
+| Walk | A / D or the arrow keys |
+| Step nearer / further | W / S |
+| Run (loud: it can hear you) | Shift |
+| Jump (only on the page-spread page in Chapter 3) | Space, W / Up |
+| Say the selected word / use doors, locks, hiding spots | E |
+| Steal a word / give a word back | Hold E under it |
+| Pick the word E says | 1-6, Q / R, mouse wheel (or click a slot) |
+| Reorder words | Shift + Q / R, or drag |
+| Flashlight, aimed with the mouse | F or left click |
+| Controls card, any time | F1 or H |
+| Pause | Esc or P |
+| Skip a cutscene | Space or click |
 
-Menus work with the mouse or the keyboard (arrows + Enter; Esc goes back).
+## Built during the jam
 
-## Walkthroughs
+All of the game's code, mechanics, architecture, art and sound were built by
+the team during the jam's 100-hour window. No game starter kits, templates,
+asset packs, plugins or addons are used: the project contains only original
+GDScript, original shaders, data files written for this game, and three audio
+recordings made by the team. Development was assisted by the Claude Code AI
+assistant (visible as `Co-Authored-By` lines in the commit history).
+The original plan is in [`proposal.pdf`](proposal.pdf); see
+[SCOPE.md](SCOPE.md) for what the game delivers against it.
 
-### Chapter 1: The Rotted Bedchamber
+## Third-party assets and code
 
-1. **Awakening.** Optionally press E at the mirror, then walk right.
-2. **The Rotted Bedchamber.** The drawer is locked, and the Crawler rises in
-   the window. Walk right.
-3. **The Landing.** Stand under **OPEN** and **PUSH** (and optionally HELP or
-   WAIT) and hold E. Pick OPEN, then press E at the study door.
-4. **The Study Corridor.** The ink hand passes. Steal **REMEMBER** from the
-   portrait.
-5. **The Study.** PUSH the cabinet, then say REMEMBER behind it: a sketch of
-   **eye, moon, key** appears with an arrow to the far door. REMEMBER only
-   shows the code. Press E at the door, set its dials to **eye, moon, key**
-   and press TRY (Enter). Wrong codes get "?"; the right one opens it.
-6. **The Back Stair.** Take the flashlight, then go through the right-hand
-   door. Chapter 2's intro follows.
+- **Godot Engine 4.7.2** and its Web export templates: MIT License.
+- **Godot's built-in default font** (used for all text; no font files are
+  included): see [CREDITS.md](CREDITS.md).
+- Nothing else: no third-party art, audio, shaders, plugins or code snippets.
+  Full list and items to verify: [CREDITS.md](CREDITS.md).
 
-Optional: OPEN the bedchamber drawer to get **HUSH**.
+## License
 
-### Chapter 2: The Hallway of Shadows
+[MIT](LICENSE).
 
-Light puzzles: every one fills the noticed meter where the Crawler is, so use
-the light in short bursts.
+## For developers
 
-1. **The Long Hallway** (safe). Turn the light on. The wall reads *MRS. VANE
-   KEEPS THE CELLAR KEY AS A SHADOW. READ ARTHUR'S CLOCK FROM XII,
-   CLOCKWISE.* (both are clues, below). Hold the light on the **ink over the
-   far door** until it shrinks away.
-2. **The Portrait Gallery.** The Crawler sleeps by the far door, and the door
-   has no handle. The plaque (in the light) says *THE BOLT IS UNDER THE
-   SECOND FRAME. DON'T LIGHT THE SLEEPER.* **Sweep the light** under the
-   second portrait to find a lever, and
-   pull it with E while it is lit. Then turn the light off and walk (don't
-   run) past the sleeper. If it wakes, stand still in the dark until it sinks.
-3. **The Servants' Passage.** After a growl and a warning, the Crawler rises
-   behind you. Press E at the wardrobe, curtain or table to hide. When it has
-   gone, **burn back the ink growth** over the far door with a long look of
-   light (it creeps back in the dark).
-4. **The Housekeeper's Pantry.** Mrs. Vane's flashback cutscene plays. Steal
-   **HIDE, HUSH and WAIT** from her (optional).
-5. **The Clock Room.** The Crawler patrols, and the far door is bolted to the
-   dial box beside the clock. Light the clock face: three marks show, at XII,
-   IV and VIII. They shudder while the pendulum swings (say **WAIT** at the
-   pendulum to hold them still, or catch them as it passes the middle). Then
-   *something happens*: run or hide behind the curtain. Then press E at the
-   dial box and set the marks **read from XII, clockwise: hand, spiral,
-   house** (left to right would be house, hand, spiral: wrong). TRY opens
-   the door.
-6. **The Locked Cellar Stair.** A **shadow puzzle**: stand on the glowing
-   chalk X and light the iron key on its stand until its shadow fits the
-   keyhole outline on the wall. *Something happens* a moment later (the
-   worst scare in the game: it goes quiet first). Then say **OPEN** at the
-   padlock and run.
-7. **The Cellar.** A cutscene leads into Chapter 3.
-
-**Minimum:** OPEN, REMEMBER (Chapter 1's study) and the flashlight. HUSH and
-WAIT only make the Clock Room easier: you can wait for the patrol to turn
-away, light the clock, then hide.
-
-### Every clue, and what it solves
-
-| Clue text | Where | What it solves |
-| --- | --- | --- |
-| The alcove sketch: eye, moon, key (with an arrow) | Ch1 Study, after PUSH + REMEMBER | The Study door's dials |
-| "MRS. VANE KEEPS THE CELLAR KEY AS A SHADOW." | Ch2 Long Hallway wall (light) | The cellar shadow puzzle: make the key's *shadow* fit the keyhole |
-| "READ ARTHUR'S CLOCK FROM XII, CLOCKWISE." | Ch2 Long Hallway wall (light) | The order for the clock's dial box |
-| "THE BOLT IS UNDER THE SECOND FRAME. DON'T LIGHT THE SLEEPER." | Ch2 Portrait Gallery plaque (light) | Where the hidden lever is |
-| Three marks at XII, IV, VIII | Ch2 Clock face (light) | The clock's dial box: hand, spiral, house |
-| The keyhole outline and chalk X | Ch2 Cellar wall and floor | Where to stand and what the shadow must fill |
-| "LIGHT THE GLASS" | Ch3 spread, dark panel B (light) | The lens |
-| "PULL" | Ch3 spread, panel C (shown by the lens) | The lever that unbolts panel D's door |
-| "Artist's note: fix this page / erase the red one?" etc. | Ch3 Ink Heart and Last Page margins | Atmosphere: the Artist's own notes about you |
-
-### Chapter 3: The Ink Heart
-
-Every frame is more broken than the last. Giving words back calms it all.
-
-1. **The Gallery of Words: a page spread.** The whole screen is a comic page
-   of four small panels. Walk off a panel's edge to hop across the gutter;
-   **Space** jumps. The white gutter is nothing: fall in and you are spat
-   back where you entered that panel. Leaving the torch on too long makes ink
-   fingers poke up through the gutter under you (a warning first). Mrs. Vane
-   and the Portrait plead in the top-left panel; nothing can be given back
-   yet.
-   - Top-left **A** → walk off its right edge (jump the tear in the floor
-     on the way) → top-right **B**, which is dark. Sweep the light: hold it
-     on the **glass lens** high on the left. It throws light down into
-     bottom-left **C** and shows a lever there. Hold the light on the **ink
-     pool** on B's floor to clear a hole, and walk into it to drop to **D**.
-   - From D walk left into C, pull the **lever** (E). Back right into D and
-     say **OPEN** at the door.
-   - Other ways: drop through A's floor tear into C. Cross C's gutter tear by
-     jumping, by lighting the pencil-sketched plank (solid only while lit), or
-     by saying **PUSH** at A's crate so it falls into the tear. Jump in C's
-     left corner to climb back to A, or in D's right corner to climb to B.
-2. **The Margin.** The Artist's hand slams across the page. Then the **Ink
-   Shadow** rises at the left after a warning. Run (Shift) for the door, or
-   hide (lingering gets your hiding place scribbled out).
-3. **The Ink Heart.** The torch doesn't work here ("the ink drinks the
-   light"). Move only while the Shadow isn't listening (its eyes go white),
-   stand under **ERASE** and hold E.
-4. **The reveal** (~35 s). Then the goal line reads *Give back what you
-   took.*
-5. **The Returning Room.** Arthur, Mrs. Vane, the Portrait and the old drawer
-   wait together. Pick one of their words and hold E under any of that
-   person's broken bubbles (or at the drawer). Dodge the Artist's hand (hide
-   behind the curtain on the far left). When everyone is whole, go right.
-6. **The Ink Heart again.** Hold E under the hand's open palm with ERASE: the
-   page mends (cutscene), and a lit gap opens in the border.
-7. **The Last Page.** Walk out through the gap: the ending pages and credits.
-
-**Minimum word set for the whole game:** OPEN, PUSH, REMEMBER (Chapter 1) and
-ERASE. Words are never used up, so no order of play can lock you out.
-**Estimated first-time runtime:** about 16-16½ minutes (estimate; see the
-Stage 4D notes in CLAUDE.md).
-
-## Scares and the recorded cry (spoilers)
-
-Six one-time scares, each fired by something you just did, and only at a
-fair moment (no menu, cutscene or dial box up, nothing chasing you, never
-within 60 s of another, never after the twist):
-
-| Scare | Room | After |
-| --- | --- | --- |
-| Lights die, a face beside you | Ch2 Long Hallway | the ink door clears |
-| A portrait snaps round | Ch2 Portrait Gallery | the lever |
-| A wardrobe flies open | Ch2 Servants' Passage | the stalker gives up |
-| The Crawler's face, then it hunts you | Ch2 Clock Room | reading the clock face |
-| Silence, a distant cry growing, the light flickers out, a huge face | Ch2 Cellar Stair | the key's shadow fits |
-| The Artist's hand slams a nib across the page | Ch3 Gallery of Words | the lens lights up |
-
-The team's recorded cry is heard three times, once each per run: faintly at
-the end of the opening (as the first panel inks in), slowed and muffled in
-the cellar scare, and cut short in the reveal as the eraser rubs you out.
-Settings: `user://settings.cfg` `[accessibility] scare_intensity` (0-1)
-scales the shake and the red flash.
-
-## How it fits together
-
-```
-autoload/         EventBus (all signals), GameState (inventory, flags, comic damage,
-                  chapter, checkpoints, seen cutscenes/scares), FrameManager, TransitionManager,
-                  LightingSystem, AbilityRegistry, AudioManager, ShakeManager, CutsceneSystem,
-                  MusicManager
-data/abilities/   AbilityData .tres, one per word ability (8)
-data/bubbles/     BubbleData .tres, one per stealable word
-data/chapters/    ChapterData: title, intro captions, first frame, damage scale, line wobble
-data/cutscenes/   CutsceneData C1-C6 (beats: panels, drawings, caption, camera, sound)
-data/frames/      FrameData .tres, one per comic panel
-scripts/abilities/  one handler per ability (open, push, remember, hush, help, wait, hide)
-scripts/audio/    SfxSynth / SfxSynth2: every sound; MusicSynth + MusicRenderer: the music;
-                  CryBank: the recorded cry and its variants
-scripts/enemy/    InkCrawler (brain: states and senses), CrawlerView (stop-motion look), CrawlerArt,
-                  InkShadow + ShadowView (the huge Chapter 3 version)
-scripts/events/   scripted moments: ink hand, crawler window, pantry fingers, passage stalker,
-                  cellar chase, return gate, margin chase
-scripts/frame/    Frame, exits, fixed lights, backgrounds/ (art per room), spread/ (the page
-                  spread: SpreadController, panel views, gutter fingers)
-scripts/interactables/  doors, drawers, latches, cabinets, pickups, locks, memories,
-                  light-revealed writing, the clock and its pendulum; HidingSpot and
-                  ReturnSpot and LightPuzzle (light ink, lens, shadow puzzle, lever) are
-                  subclasses (Frame.KIND_CLASSES)
-scripts/npc/      characters (Arthur, the portrait, Mrs. Vane) and their art
-scripts/player/   Player, Interactor (steal / speak), Flashlight
-scripts/systems/  notice meter, feedback FX, save system, debug room jump
-shaders/          halftone paper, ink-splash wipe, ink bleed, danger vignette, glitch
-ui/               menus, pause, intro and ending (ComicPages), cutscene view and art, reveal,
-                  jumpscares, goal line, end card, inventory, lock dials, page overlay
-tests/            debug tests (not exported)
-tools/datagen/    Python generators for the chapter .tres files (not exported)
-```
-
-**Returning words (Chapter 3)**
-- `GameState.return_bubble(bubble, screen_pos)` takes the word out of the
-  inventory and out of `stolen_bubble_ids`, adds it to `returned_bubble_ids`
-  (saved; a returned word is gone for good), lowers `stolen_bubble_count` and
-  `comic_damage`, and emits **`EventBus.bubble_returned(bubble, screen_pos)`**
-  plus `comic_damage_changed`.
-- Who listens: the bubble (whole again, never stealable), its character
-  (relief caption, outline completes), return spots and the gallery gate,
-  FeedbackFx (THANK YOU, red-to-white drops), AudioManager (soft chime). The
-  cracks, ink bleed, wobble and glitch all heal through `comic_damage_changed`.
-- Only chapters with `ChapterData.allows_return` (Chapter 3) let you give
-  words back, so OPEN can't be returned before the doors that need it.
-- Stage 4B hooks are marked `TODO(later)` in `return_bubble` and `InkShadow`.
-
-**Comic damage** = stolen words / 9 (every stealable word in the game: 6 in
-Chapter 1, 3 in Chapter 2). Each chapter scales how strongly it shows.
-
-**Adding content**
-- **A frame:** add a `FrameData` .tres in `data/frames/` named after its `id`,
-  plus a background style in `scripts/frame/backgrounds/`.
-- **A chapter:** add a `ChapterData`, and set `next_chapter` on the previous
-  chapter's last frame.
-- **A word:** add a `BubbleData` .tres in `data/bubbles/`. Bubbles must be
-  their own files, because saves store their paths.
-- **An ability:** add an `AbilityData` .tres pointing at a script that
-  extends `AbilityHandler`, and list it in `AbilityRegistry.ABILITY_PATHS`.
-- **A scripted moment:** add a script in `scripts/events/` and register it in
-  `Frame.EVENT_SCRIPTS`.
-- **A Crawler:** set `crawler_spawn` on a frame, plus `crawler_patrol = true`
-  if it should walk the room.
-
-## Tests
-
-- **Debug keys (debug builds only, e.g. the editor's ▶):** **F6** plays the
-  next cutscene, **F7** plays the next jumpscare where you are (cycles through
-  all six; the sixth goes quiet for 3 s first), **F8** jumps to the
-  reveal, **F9** goes to the next Chapter 3 room, **F10** jumps to the page
-  spread.
-- **Jump to any room (debug builds only):** on the web add `?frame=ch3_margin`
-  (any frame id) to the page URL; on desktop run with `-- --frame=ch3_margin`.
-  You get the words a player would normally carry into that chapter.
-- **Inventory test** (steals 12 words, then checks it can add, cycle, show,
-  speak and save/load them; your real save is restored afterwards):
-  ```
-  godot --path . res://tests/inventory_test.tscn
-  ```
-  It prints `INVENTORY TEST PASSED` and exits with code 0.
-
-## Export to Web (itch.io)
-
-You need the export templates, a one-time install: **Editor → Manage Export
-Templates → Download and Install**.
-
-1. **Project → Export…**, select the **Web** preset (threads off, output
-   `build/web/index.html`, `tests/` and `tools/` excluded), then **Export
-   Project**. Untick *Export With Debug*.
-2. Test locally:
-   ```
-   cd build/web && python3 -m http.server 8000
-   ```
-   then open http://localhost:8000.
-3. For itch.io, zip the *contents* of `build/web` (`index.html` at the zip's
-   root). Upload as an HTML project at 1280x720 and turn on *Fullscreen
-   button*. *SharedArrayBuffer support* is not needed.
-
-## Web notes
-
-- **Keep `editor/export/convert_text_resources_to_binary=false`** in
-  project.godot. With it on, Godot 4.7.2's export silently empties every
-  `PackedStringArray` in our data (captions, lines, lock answers).
-- Compatibility renderer only. 2D lights, `CanvasModulate` and the shaders
-  all run on WebGL 2. Each object is lit by at most about 8 lights, and our
-  rooms use 1-3 plus the player's two (aura, flashlight) and the Crawler's
-  eye glow.
-- The Crawler's "glowing" eyes are a tiny light on its head, because darkness
-  (`CanvasModulate`) dims everything drawn in the world.
-- Sound is pre-rendered `AudioStreamWAV` built in code. Nothing plays until
-  the first click or key press.
-- Saves and settings go to `user://`, which is IndexedDB in the browser.
-
-## Fonts
-
-The game uses Godot's built-in default font only.
+`CLAUDE.md` documents the architecture, systems and test scripts in detail
+(`tests/` and `tools/` are excluded from the export).
