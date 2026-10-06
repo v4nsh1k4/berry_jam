@@ -18,7 +18,8 @@ extends Node
 ## Stage 7: the bed is soft piano now (MusicSynth4's piano_bed, handed over
 ## by MusicManager once rendered via set_piano_bed); it loops by itself and
 ## gets the same level, dip, drop and return as bg_track did. bg_track.wav
-## stays in the project: set USE_BG_TRACK to true to switch back to it.
+## was removed before submission (unused); USE_BG_TRACK only matters if the
+## file is put back (a missing file falls back to the piano safely).
 
 ## Stage 7: false = the synthesized piano bed under Chapters 1-3; true = the
 ## team's bg_track.wav again (the only switch needed).

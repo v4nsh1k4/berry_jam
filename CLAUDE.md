@@ -64,8 +64,8 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
   default font only. **No audio files except three team-made ones**:
   `res://audio/baby_cry.wav` (Stage 5, CryBank), `res://audio/bg_track.wav`
   and `res://audio/ending.wav` (Stage 6, MusicFiles). Everything else is
-  synthesized. (Stage 7: bg_track.wav stays in the repo but is unused; the
-  bed is synthesized piano. `MusicFiles.USE_BG_TRACK` switches it back.)
+  synthesized. (Stage 7: the bed is synthesized piano; bg_track.wav was
+  removed before submission. ending.wav is from SnipSound, royalty-free.)
 - **Static typing everywhere** (`var x: float = 1.0`, typed returns).
 - **Systems talk only through `EventBus` signals.** Small public methods on
   autoloads (`GameState.add_bubble`, `AbilityRegistry.speak`) are the
@@ -869,8 +869,8 @@ by the shadow puzzle.
    *sounds* like a piano, and the right mood, needs ears. Tuning knobs: the
    scores and `GAIN` in `music_synth4.gd`, `MusicFiles.PIANO_DB`,
    `MusicManager.BASE_DB`. The web title check ran in headless Chrome on an
-   M2 Mac, not Safari / Firefox / a slower machine. bg_track.wav (18.9 MB) is
-   unused now; deleting it would shrink the pack (the user's call).
+   M2 Mac, not Safari / Firefox / a slower machine. bg_track.wav (18.9 MB) was
+   unused and was removed before submission.
 
 0. **Stage 6**: `bg_track.wav` is 18.9 MB (stereo 48 kHz, 98.6 s): convert it
    to OGG (the user's call). Not heard by the agent: the new groan / growl /

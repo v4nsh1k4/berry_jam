@@ -69,7 +69,7 @@ func _pos() -> float:
 	return mm._files._bg[mm._files._cur].get_playback_position()
 
 func _files_info() -> void:
-	for path in [MusicFiles.BG_PATH, MusicFiles.ENDING_PATH]:
+	for path in [MusicFiles.ENDING_PATH]:
 		var exists: bool = ResourceLoader.exists(path)
 		_check("%s exists" % path, exists)
 		if not exists:
@@ -81,8 +81,7 @@ func _files_info() -> void:
 		var src: String = "%.2f MB source" % (f.get_length() / 1048576.0) if f != null else "source not in this pack"
 		print("%s: %.2f s, %s, %d Hz, format %d, %.2f MB imported data, %s, load %.1f ms" % [path, w.get_length(),
 			"stereo" if w.stereo else "mono", w.mix_rate, w.format, w.data.size() / 1048576.0, src, load_ms])
-	_check("Stage 7: bg_track.wav still in the repo but not used (USE_BG_TRACK false)", ResourceLoader.exists(MusicFiles.BG_PATH)
-		and not MusicFiles.USE_BG_TRACK and not MusicFiles.bg_exists())
+	_check("bg_track.wav removed and not used (USE_BG_TRACK false)", not MusicFiles.USE_BG_TRACK and not MusicFiles.bg_exists())
 	_check("the piano bed is the bed; ending.wav loaded at start-up", mm._files.piano and mm._files.bg != null and mm._files.ending != null)
 
 func _bg() -> void:
