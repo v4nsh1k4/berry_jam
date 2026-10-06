@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2026 [TEAM NAMES]
+Copyright (c) 2026 Ananya Sinha, Sai Akshara Bysani, Vanshika Rallapalli,
+Shevani Vinod, Hasini Toleti
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,5 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Godot Engine is used under its own MIT License (Copyright (c) 2014-present
-Godot Engine contributors; (c) 2007-2014 Juan Linietsky, Ariel Manzur). See
-CREDITS.md for third-party notices.
+Godot Engine contributors; (c) 2007-2014 Juan Linietsky, Ariel Manzur).
+`audio/ending.wav` is royalty-free music from SnipSound and the built-in
+font is Open Sans (SIL OFL 1.1); see CREDITS.md for third-party notices.

@@ -1,10 +1,32 @@
 # Scope: planned vs delivered
 
-## Hour 12 submitted scope
+## Hour 12 submitted scope (taken from our proposal, `proposal.pdf`)
 
-> [PASTE THE SCOPE WE SUBMITTED AT HOUR 12 HERE]
-
-(The original proposal is also in [`proposal.pdf`](proposal.pdf).)
+> **High-level concept.** INK-BLEED is a 2D psychological horror puzzle game
+> set inside the comic book *The Silent House of Hollow Hill*. The player
+> awakens without a speech bubble, making them an "unperson" in the comic's
+> world. Presented as a playable comic, the game is divided into three scenes
+> made up of multiple individual frames. The player uses a flashlight to
+> explore dark rooms, interact with characters, and steal speech bubbles
+> containing words that can later be used to solve puzzles and move between
+> frames. Comic-style camera movement and panel transitions make the player
+> feel like they are moving through the pages of a comic.
+>
+> **Themes.** *Comic:* the game takes place inside comic panels, with comic
+> borders, speech bubbles and black-and-white ink styles. *Light:* rooms are
+> dark; the flashlight reveals the way but keeping it on alerts the Ink
+> Crawler ("Do I use the light to see, or do I stay hidden?"). *Twist:* the
+> player believes they are the victim; at the climax they steal the final
+> speech bubble from the apparent monster and discover the monster is the
+> Comic Artist's hand, trying to erase the anomaly that entered the comic.
+>
+> **Flow.** *Intro:* a teenager reading the comic is pulled inside by
+> erupting ink. *Chapter 1, The Rotted Bedchamber:* dark Victorian frames,
+> Arthur the Butler, learning to use speech bubbles as abilities. *Chapter 2,
+> The Hallway of Shadows:* the flashlight, hidden details, the Ink Crawler,
+> another character's ability. *Chapter 3, The Ink Heart:* distorted frames,
+> the Ink Shadow, the damage stealing has done; the player returns what they
+> took, the comic repairs, a path out of the page opens and they escape.
 
 ## What the game delivers
 
@@ -30,4 +52,8 @@
 
 ## Differences from the plan
 
-> [NOTE ANY ADDED / CUT FEATURES COMPARED WITH THE HOUR 12 SCOPE]
+Every part of the proposal above is in the game, in the same order. Beyond
+it, the game adds: six comic-panel cutscenes, light puzzles, a four-panel
+page-spread level, one-time scares, the Artist's hand pressuring the player
+during the return phase, a listening guardian for the final word, and an
+epilogue in the real world.

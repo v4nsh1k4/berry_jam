@@ -18,18 +18,20 @@ the comic before the story falls apart.
 
 ## Team
 
-| Name | Role | Discord |
-| --- | --- | --- |
-| [NAME] | [ROLE] | [DISCORD] |
-| [NAME] | [ROLE] | [DISCORD] |
-| [NAME] | [ROLE] | [DISCORD] |
+| Name | Discord |
+| --- | --- |
+| Ananya Sinha | ananya.s2025 |
+| Sai Akshara Bysani | ak.0370 |
+| Vanshika Rallapalli | midnightblooom |
+| Shevani Vinod | serpentwantsthelimelight_01849 |
+| Hasini Toleti | marshmallow._.0 |
 
 ## Engine
 
 Godot **4.7.2**, GDScript only, Compatibility renderer, Web export without
 threads. All art, animation, music and sound are generated in code; the only
-asset files are three team recordings in `audio/` (see
-[CREDITS.md](CREDITS.md)).
+asset files are a cry recorded by the team and a royalty-free music sting from
+SnipSound, in `audio/` (see [CREDITS.md](CREDITS.md)).
 
 ## Run locally (from the repo root)
 
@@ -77,10 +79,11 @@ Keep `editor/export/convert_text_resources_to_binary=false` in
 ## Built during the jam
 
 All of the game's code, mechanics, architecture, art and sound were built by
-the team during the jam's 100-hour window. No game starter kits, templates,
+the team during the jam's 100-hour window (except the royalty-free SnipSound
+music sting credited below). No game starter kits, templates,
 asset packs, plugins or addons are used: the project contains only original
-GDScript, original shaders, data files written for this game, and three audio
-recordings made by the team. Development was assisted by the Claude Code AI
+GDScript, original shaders, data files written for this game, an audio
+recording made by the team, and one royalty-free music sting (SnipSound). Development was assisted by the Claude Code AI
 assistant (visible as `Co-Authored-By` lines in the commit history).
 The original plan is in [`proposal.pdf`](proposal.pdf); see
 [SCOPE.md](SCOPE.md) for what the game delivers against it.
@@ -88,10 +91,12 @@ The original plan is in [`proposal.pdf`](proposal.pdf); see
 ## Third-party assets and code
 
 - **Godot Engine 4.7.2** and its Web export templates: MIT License.
-- **Godot's built-in default font** (used for all text; no font files are
-  included): see [CREDITS.md](CREDITS.md).
-- Nothing else: no third-party art, audio, shaders, plugins or code snippets.
-  Full list and items to verify: [CREDITS.md](CREDITS.md).
+- **Open Sans**, Godot's built-in default font (used for all text; no font
+  files are included): SIL Open Font License 1.1.
+- **`audio/ending.wav`**: Music from SnipSound
+  (https://snipsound.com/free-music/?track=278), royalty-free.
+- Nothing else: no third-party art, shaders, plugins or code snippets.
+  Full list: [CREDITS.md](CREDITS.md).
 
 ## License
 
