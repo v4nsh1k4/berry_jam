@@ -1,7 +1,19 @@
-.DS_Store
+# Godot cache and imports (regenerated on open)
 .godot/
+# Build output and upload zips
 /build/
+*.zip
+# OS and editor junk
+.DS_Store
+Thumbs.db
+desktop.ini
 *.tmp
+*.bak
+*.orig
+*.swp
+*~
+.vscode/
+.idea/
 # Local tools, not part of the game
 godot-mcp-toolkit/
 .mcp.json
