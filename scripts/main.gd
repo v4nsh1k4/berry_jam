@@ -21,6 +21,11 @@ var _pending: ChapterData
 
 
 func _ready() -> void:
+	# Web performance: render at the 1280x720 base resolution and scale the
+	# result up (on a 2x screen ~4x fewer pixels for every full-screen shader);
+	# desktop keeps canvas_items (project setting unchanged).
+	if OS.has_feature("web"):
+		get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
 	FrameManager.register_world(_frame_root, _player)
 	_player.visible = false
 	EventBus.game_started.connect(_on_click_to_start)

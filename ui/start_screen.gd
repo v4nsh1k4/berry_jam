@@ -12,9 +12,17 @@ func _ready() -> void:
 	add_child(TitleArt.new())
 
 
+var _tick: int = -1
+
+
+## Redraw only when the line boil ticks (~7x a second): the backdrop and the
+## title only change then (the prompt's pulse steps with it).
 func _process(delta: float) -> void:
 	_time += delta
-	queue_redraw()
+	var tick: int = InkDraw.boil_tick()
+	if tick != _tick:
+		_tick = tick
+		queue_redraw()
 
 
 func _gui_input(event: InputEvent) -> void:

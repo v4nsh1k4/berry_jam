@@ -32,7 +32,15 @@ func _draw() -> void:
 	TitleLive.draw(self, size, InkDraw.boil_tick())
 
 
+var _tick: int = -1
+
+
+## Redraw only when the line boil ticks (everything here is drawn per tick).
 func _process(_delta: float) -> void:
+	var tick: int = InkDraw.boil_tick()
+	if tick == _tick:
+		return
+	_tick = tick
 	queue_redraw()
 	_title.queue_redraw()
 	for art in [_credits_art, _about_art]:

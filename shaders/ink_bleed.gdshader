@@ -25,6 +25,11 @@ void fragment() {
 	}
 	vec2 px = UV * rect_size;
 	float edge = min(min(px.x, rect_size.x - px.x), min(px.y, rect_size.y - px.y));
+	// Ink and blots never reach further than ~90 * damage px from the edge
+	// (reach <= 83 * damage): skip the noise everywhere else.
+	if (edge > 92.0 * damage + 4.0) {
+		discard;
+	}
 	float drift = TIME * 0.015;
 	float n = noise(px / 42.0 + drift) * 0.65 + noise(px / 12.0 - drift) * 0.35;
 	float reach = damage * 52.0 * n * n * 1.6;
