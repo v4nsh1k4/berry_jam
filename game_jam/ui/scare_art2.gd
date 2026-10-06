@@ -89,7 +89,7 @@ static func _ordinary_panel(ci: CanvasItem, r: Rect2, i: int, tick: int) -> void
 			1.0, tick + 20 + i * 4 + k, Color(InkDraw.INK, 0.25))
 	var who: StringName = [&"butler", &"housekeeper", &"butler", &"housekeeper"][i % 4]
 	RevealArt._character(ci, who, Vector2(r.position.x + r.size.x * (0.3 + 0.4 * float(i % 2)), r.end.y - r.size.y * 0.2), r.size.y / 300.0, tick + i)
-	CreditsArt._halftone(ci, r, r.end)
+	CreditsArt.halftone(ci, r, r.end)
 	InkDraw.rect(ci, r, 4.0, tick + 40 + i, Color.TRANSPARENT, InkDraw.INK, 1.4)
 
 

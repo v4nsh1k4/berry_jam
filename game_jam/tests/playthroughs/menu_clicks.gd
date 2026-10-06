@@ -45,4 +45,33 @@ func _run() -> void:
 	print("controls page opened by click: ", ctrl_page_visible)
 	var top = root.gui_get_hovered_control() if root.has_method("gui_get_hovered_control") else "n/a"
 	print("hovered control: ", top, " path=", top.get_path() if top is Node else "")
+	# Stage 7: About opens by a click; its Back (click) and Esc both return.
+	menu._show_page("main")
+	await _wait(0.3)
+	var about_btn: Button = null
+	for b in menu.find_children("*", "Button", true, false):
+		if b.text == "About" and b.is_visible_in_tree():
+			about_btn = b
+	print("about button rect=", about_btn.get_global_rect() if about_btn != null else "missing")
+	await _click(about_btn.get_global_rect().get_center())
+	var about_open: bool = menu._pages["about"].visible and not menu._pages["main"].visible
+	var back: Button = menu._first_button(menu._pages["about"])
+	await _click(back.get_global_rect().get_center())
+	var back_ok: bool = menu._pages["main"].visible and not menu._pages["about"].visible
+	await _click(about_btn.get_global_rect().get_center())
+	var esc := InputEventKey.new()
+	esc.keycode = KEY_ESCAPE
+	esc.physical_keycode = KEY_ESCAPE
+	esc.pressed = true
+	Input.parse_input_event(esc)
+	await _wait(0.3)
+	var esc_ok: bool = menu._pages["main"].visible and not menu._pages["about"].visible
+	# No spoilers: the twist's words never appear on the page.
+	var text: String = load("res://ui/about_art.gd").TEXT.to_lower()
+	var spoilers: Array = []
+	for word in ["artist", "author", "hand", "erase", "give back", "giving", "monster", "return"]:
+		if text.contains(word):
+			spoilers.append(word)
+	print("about page opened by click: ", about_open, ", Back click returns: ", back_ok, ", Esc returns: ", esc_ok, ", spoiler words: ", spoilers)
+	print("MENU CLICKS ", "PASSED" if ctrl_page_visible and about_open and back_ok and esc_ok and spoilers.is_empty() else "FAILED")
 	quit()

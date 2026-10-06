@@ -4,13 +4,15 @@ extends RefCounted
 ## stepped at the line-boil rate: the white centre's spiral of looping lines
 ## turning slowly, the crows' small pale eyes (a glint, a rare blink), a
 ## feather shiver now and then, and the one red thing: a tiny unperson
-## standing in the middle. Plus TitleLettering with a paper wash behind it.
+## standing in the middle. Plus TitleLettering (Stage 7: no paper wash
+## behind it any more; it read as a blurry cloud).
 
 
 ## `centre`: the spiral and the red figure too (the End Card covers the
 ## middle with its credits page, so it leaves them out).
 static func draw(ci: CanvasItem, screen: Vector2, tick: int, centre: bool = true) -> void:
 	var sc: Vector2 = screen / Vector2(TitleArt.SIZE)
+	TitleArt.ground(ci, screen)
 	if TitleArt.texture != null:
 		ci.draw_texture_rect(TitleArt.texture, Rect2(Vector2.ZERO, screen), false)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, sc)
@@ -52,16 +54,30 @@ static func _spiral(ci: CanvasItem, c: Vector2, tq: float) -> void:
 		ci.draw_polyline(pts, Color(InkDraw.INK, 0.55), 1.4)
 
 
-## A soft paper wash (Stage 6b; a dark ink smudge before) so the black
-## lettering reads over the crows.
-static func smudge(ci: CanvasItem, c: Vector2, radii: Vector2) -> void:
-	for i in 16:
-		var k: float = 1.0 - i / 16.0
-		ci.draw_colored_polygon(InkDraw.ellipse_points(c, radii * (0.4 + 0.7 * k), 36), Color(InkDraw.PAPER, 0.12))
-
-
-## The title block: "ink-bleed" and the subtitle, scrawled in white.
+## The title block: "ink-bleed" and the subtitle, scrawled in ink on a
+## paper plate.
 static func title(ci: CanvasItem, c: Vector2, tick: int, alpha: float = 1.0) -> void:
-	smudge(ci, c + Vector2(0, -12), Vector2(360, 96))
+	_plate(ci, c, tick, alpha)
 	TitleLettering.draw(ci, "ink-bleed", c, 46.0, tick, alpha)
 	TitleLettering.draw(ci, "The Silent House of Hollow Hill", c + Vector2(0, 62), 12.0, tick + 1, alpha)
+
+
+## A crisp, slightly torn paper plate behind the title (Stage 7; it replaced
+## a soft wash that read as a blurry cloud) so the lettering stays readable
+## over the crows. Paper fill, thin boiling ink edge.
+static func _plate(ci: CanvasItem, c: Vector2, tick: int, alpha: float) -> void:
+	var half: Vector2 = Vector2(TitleLettering.width("ink-bleed", 46.0) * 0.5 + 56.0, 0.0)
+	var r: Rect2 = Rect2(c + Vector2(-half.x, -108.0), Vector2(half.x * 2.0, 190.0))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 727
+	var pts: PackedVector2Array = PackedVector2Array()
+	var corners: Array[Vector2] = [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		var steps: int = int(a.distance_to(b) / 26.0)
+		for k in steps:
+			var p: Vector2 = a.lerp(b, float(k) / steps)
+			pts.append(p + (b - a).normalized().orthogonal() * rng.randf_range(-3.5, 3.5))
+	InkDraw.fill(ci, pts, Color(InkDraw.PAPER, alpha))
+	InkDraw.polyline(ci, pts, 2.2, tick * 3, true, Color(InkDraw.INK, alpha), 1.0)

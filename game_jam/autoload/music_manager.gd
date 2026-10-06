@@ -7,14 +7,16 @@ extends Node
 ##   Layers: intensity follows the noticed meter and the Crawler's nearness;
 ##   hunt plays while it hunts. Safe rooms (no Crawler) sit near-silent.
 ##   Stingers: a new room, danger, relief on a return, cutscene cues.
-##   Bed: the team's bg_track.wav under Chapters 1-3 rooms (MusicFiles), in
-##   place of the ch1-ch3 tracks; the synthesized bed if the file is missing.
-##   Menu: a quiet melancholy layer (MusicSynth3) over the menu track.
-##   Ending: the team's ending.wav once, then the synthesized ending, quiet.
+##   Bed (Stage 7): soft piano (MusicSynth4 piano_bed) under Chapters 1-3
+##   rooms, played by MusicFiles in place of the ch1-ch3 tracks with
+##   bg_track.wav's level / dip / drop / return (MusicFiles.USE_BG_TRACK
+##   switches back to the file). Menu: a soft piano piece (MusicSynth4).
+##   Ending: the team's ending.wav once over the synthesized ending for the
+##   epilogue; then the End Card's own piano piece (piano_end).
+##   Volume / mute / focus: the MusicSettings child (split out in Stage 7).
 ##   All of it ducks for cutscenes and scares (and a scare's build-up), drops
 ##   out before a lunge, mutes on focus loss, and is back within ~2 s.
 
-const SETTINGS_PATH: String = "user://settings.cfg"
 const BUS: StringName = &"Music"
 ## Stage 6b: every music level +6 dB (and the slider default +3 dB): it was
 ## too quiet. Was -10 / -20.
@@ -22,17 +24,20 @@ const BASE_DB: float = -4.0
 const SAFE_DB: float = -14.0
 ## Stingers keep their old level (BASE_DB + 2 before Stage 6b).
 const STING_DB: float = -8.0
-const PRIORITY: Array[StringName] = [&"menu", &"menu_sad", &"ch1", &"bed", &"ch2", &"layer_pulse", &"layer_intensity", &"layer_hunt", &"ch3",
-	&"reveal", &"return", &"erase", &"warm", &"ending"]
+## Render order: the menu first (ready right after the first click), then
+## the piano bed. The ch1-ch3 tracks and the Stage 5 bed are never rendered:
+## the bed (piano or bg_track) covers those rooms.
+const PRIORITY: Array[StringName] = [&"menu", &"piano_bed", &"layer_pulse", &"layer_intensity", &"layer_hunt",
+	&"reveal", &"return", &"erase", &"warm", &"ending", &"piano_end"]
 const BED_UNDER: Array[StringName] = [&"ch1", &"ch2", &"ch3"]
-const BED_DB: float = -8.0
-## The menu's melancholy layer: ~9 dB under the menu track.
-const SAD_DB: float = -13.0
 const CUES: Dictionary = {&"sting_descent": &"danger", &"sting_heart": &"danger", &"repair": &"relief", &"flashback": &"discover"}
 
-## Default 0.85 (-1.4 dB; 0.6 before Stage 6b). Old saves are moved up once.
-var music_volume: float = 0.85
-var music_muted: bool = false
+var music_volume: float:
+	get:
+		return _settings.volume
+var music_muted: bool:
+	get:
+		return _settings.muted
 
 var _renderer: MusicRenderer = MusicRenderer.new()
 var _started: bool = false
@@ -40,8 +45,7 @@ var _want: StringName = &""
 var _playing: StringName = &""
 var _players: Array[AudioStreamPlayer] = []
 var _active: int = 0
-var _bed: AudioStreamPlayer
-var _sad: AudioStreamPlayer
+var _settings: MusicSettings = MusicSettings.new()
 var _files: MusicFiles = MusicFiles.new()
 var _layers: MusicLayers = MusicLayers.new()
 var _sting: AudioStreamPlayer
@@ -64,12 +68,17 @@ func _ready() -> void:
 		_players.append(_make_player())
 	add_child(_layers)
 	_layers.setup(_make_player)
-	_bed = _make_player()
-	_sad = _make_player()
 	_sting = _make_player()
 	add_child(_files)
 	_files.setup(BUS)
-	_load_settings()
+	add_child(_settings)
+	_settings.setup(BUS)
+	# Stage 7: rendering starts at boot (CPU only, a chunk per frame), so the
+	# menu's piano is ready by the first click; playback waits for the click.
+	_renderer.queue = PRIORITY.duplicate()
+	if MusicFiles.bg_exists():
+		# bg_track is the bed: the piano bed isn't needed.
+		_renderer.queue.erase(&"piano_bed")
 	EventBus.game_started.connect(start)
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.returned_to_menu.connect(func() -> void: _choose(&"menu"); _files.stop_all())
@@ -77,6 +86,8 @@ func _ready() -> void:
 	EventBus.reveal_started.connect(_choose.bind(&"reveal"))
 	EventBus.twist_revealed.connect(_choose.bind(&"return"))
 	EventBus.comic_repaired.connect(func() -> void: _choose(&"warm"); stinger(&"relief"))
+	# The End Card's own piece once the epilogue (and ending.wav) is over.
+	EventBus.epilogue_finished.connect(_choose.bind(&"piano_end"))
 	# Stage 6b: ducks are softer (-6 dB at most) and short; only the cellar
 	# build and the reveal's silent beat still go near-silent.
 	EventBus.crawler_telegraph.connect(duck.bind(0.5, 0.7))
@@ -103,10 +114,6 @@ func start() -> void:
 	_started = true
 	# Stingers are built one per frame once the first track is ready.
 	_stinger_jobs = MusicSynth2.stinger_jobs()
-	_renderer.queue = PRIORITY.duplicate()
-	if MusicFiles.bg_exists():
-		# bg_track covers these: never render them.
-		_renderer.queue = _renderer.queue.filter(func(t: StringName) -> bool: return not (t in BED_UNDER or t == &"bed"))
 	if _want == &"":
 		_want = &"menu"
 
@@ -154,14 +161,17 @@ func _choose(track: StringName) -> void:
 
 func _process(delta: float) -> void:
 	_files.load_step()
+	_renderer.step()
 	if not _started:
 		return
-	_renderer.step()
 	if not _stinger_jobs.is_empty() and _renderer.streams.has(&"menu"):
 		var id: StringName = _stinger_jobs.keys()[0]
 		_stingers[id] = (_stinger_jobs[id] as Callable).call()
 		_stinger_jobs.erase(id)
-	if _want != _playing and (_renderer.streams.has(_want) or _files.holds(_want)):
+	if not _files.has_bg() and _renderer.streams.has(&"piano_bed"):
+		_files.set_piano_bed(_renderer.streams[&"piano_bed"])
+	# A chapter room never keeps the previous track while the bed renders.
+	if _want != _playing and (_renderer.streams.has(_want) or _files.holds(_want) or _want in BED_UNDER):
 		_switch(_want)
 	if _duck_left > 0.0:
 		_duck_left -= delta
@@ -176,18 +186,13 @@ func _process(delta: float) -> void:
 	_layers.update(delta, BASE_DB, duck_db, _ensure_layer)
 	var bed_on: bool = _want in BED_UNDER and GameState.is_playing
 	_files.update(delta, bed_on, duck_db, _duck >= 0.9)
-	var bed_db: float = BED_DB + duck_db if bed_on and not _files.has_bg() else -80.0
-	_bed.volume_db = move_toward(_bed.volume_db, bed_db, delta * (140.0 if bed_db < _bed.volume_db else 40.0))
-	_ensure_layer(_bed, &"bed")
-	_sad.volume_db = move_toward(_sad.volume_db, SAD_DB + duck_db if _playing == &"menu" else -80.0, delta * 20.0)
-	_ensure_layer(_sad, &"menu_sad")
 
 
 func _switch(track: StringName) -> void:
 	_playing = track
 	_active = 1 - _active
 	var p: AudioStreamPlayer = _players[_active]
-	p.stream = _renderer.streams.get(track)
+	p.stream = null if _files.holds(track) or track in BED_UNDER else _renderer.streams.get(track)
 	p.volume_db = -40.0
 	if p.stream != null:
 		p.play()
@@ -206,38 +211,8 @@ func is_ready(track: StringName) -> bool:
 
 
 func set_music_volume(value: float) -> void:
-	music_volume = clampf(value, 0.0, 1.0)
-	_apply()
-	_save_settings()
+	_settings.set_volume(value)
 
 
 func set_music_muted(value: bool) -> void:
-	music_muted = value
-	_apply()
-	_save_settings()
-
-
-func _apply(focus_lost: bool = false) -> void:
-	var index: int = AudioServer.get_bus_index(BUS)
-	if index < 0:
-		return
-	AudioServer.set_bus_volume_db(index, linear_to_db(maxf(music_volume, 0.0001)))
-	AudioServer.set_bus_mute(index, music_muted or focus_lost)
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
-		_apply(true)
-	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
-		_apply(false)
-
-
-func _load_settings() -> void:
-	var loaded: Array = MusicSynth2.load_setting(SETTINGS_PATH, music_volume, music_muted)
-	music_volume = loaded[0]
-	music_muted = loaded[1]
-	_apply()
-
-
-func _save_settings() -> void:
-	MusicSynth2.save_setting(SETTINGS_PATH, music_volume, music_muted)
+	_settings.set_muted(value)

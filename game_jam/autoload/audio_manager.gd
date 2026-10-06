@@ -184,7 +184,7 @@ func hush(seconds: float) -> void:
 
 
 func _on_footstep(loud: bool) -> void:
-	play(&"step", -10.0 if loud else -16.0, 0.15)
+	play(&"step", -6.0 if loud else -12.0, 0.15) # Stage 7: +4 dB (was -10 / -16)
 
 
 func play_ui_click() -> void:

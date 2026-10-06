@@ -7,12 +7,22 @@ extends SubViewport
 ## page shows the build inking in), then frozen. The live layer on top
 ## (TitleLive) adds the turning spiral, blinking eyes, feather shivers and the
 ## tiny red figure. StartScreen owns it; MainMenu draws the same texture.
+## Stage 7: the page was plain white on the web. The ground (paper + hatched
+## corners) was the first job, drawn in the SubViewport's very first update,
+## and WebGL loses that first update; the target is never cleared or redrawn,
+## so it never came back (later batches, the crows, persisted). Now the
+## paper is drawn live under the texture (TitleLive.draw), the texture is
+## transparent, painting waits WARMUP rendered frames, and the corners and
+## the comic decor (gutter, pencil guides, drips, page number) are ordinary
+## jobs.
 
 const SIZE: Vector2i = Vector2i(1280, 720)
 const CENTRE: Vector2 = Vector2(640, 330)
 const RING: Vector2 = Vector2(480, 262)
 const CROWS: int = 9
 const BUDGET_MS: int = 3
+## Rendered frames to wait before the first job (see the header).
+const WARMUP: int = 3
 ## The scenes' paper (Stage 6b: the home page was whiter).
 const PAPER: Color = InkDraw.PAPER
 
@@ -25,11 +35,12 @@ static var done: bool = false
 var _jobs: Array = []
 var _painter: Node2D
 var _rendered: bool = true
+var _warm: int = 0
 
 
 func _ready() -> void:
 	size = SIZE
-	transparent_bg = false
+	transparent_bg = true
 	render_target_clear_mode = SubViewport.CLEAR_MODE_ONCE
 	render_target_update_mode = SubViewport.UPDATE_ONCE
 	_painter = Node2D.new()
@@ -43,7 +54,11 @@ func _ready() -> void:
 
 ## Every hatched shape becomes one job: [polygon (screen), hatch angles, spacing].
 func _plan() -> void:
-	_jobs.append([&"ground"])
+	for c in [Vector2.ZERO, Vector2(SIZE.x, 0), Vector2(SIZE), Vector2(0, SIZE.y)]:
+		var tri: PackedVector2Array = PackedVector2Array([c, c + Vector2(0, (SIZE.y * 0.62) * (1.0 if c.y == 0.0 else -1.0)),
+			c + Vector2(SIZE.x * 0.4 * (1.0 if c.x == 0.0 else -1.0), 0)])
+		_jobs.append([&"hatch", tri, [0.6, -0.6], 0.0, 5.0])
+	_jobs.append([&"decor"])
 	for i in CROWS:
 		var a: float = -PI * 0.5 + TAU * (i + 0.5) / CROWS
 		var at: Vector2 = CENTRE + Vector2(cos(a) * RING.x, sin(a) * RING.y)
@@ -61,6 +76,9 @@ func _process(_delta: float) -> void:
 	if done or not _rendered:
 		return
 	_rendered = false
+	if _warm < WARMUP:
+		_warm += 1
+		return
 	queue_redraw_painter()
 
 
@@ -74,24 +92,23 @@ func _paint() -> void:
 	var t0: int = Time.get_ticks_msec()
 	while not _jobs.is_empty() and Time.get_ticks_msec() - t0 < BUDGET_MS:
 		var job: Array = _jobs.pop_front()
-		if job[0] == &"ground":
-			_ground()
+		if job[0] == &"decor":
+			TitleDecor.paint(_painter, Vector2(SIZE))
 		else:
 			_hatch(job[1], job[2], job[3], job[4])
 	if _jobs.is_empty():
 		done = true
 
 
-## Paper, dark cross-hatched corners, a soft white well in the middle.
-func _ground() -> void:
-	_painter.draw_rect(Rect2(Vector2.ZERO, Vector2(SIZE)), PAPER)
-	for c in [Vector2.ZERO, Vector2(SIZE.x, 0), Vector2(SIZE), Vector2(0, SIZE.y)]:
-		var tri: PackedVector2Array = PackedVector2Array([c, c + Vector2(0, (SIZE.y * 0.62) * (1.0 if c.y == 0.0 else -1.0)),
-			c + Vector2(SIZE.x * 0.4 * (1.0 if c.x == 0.0 else -1.0), 0)])
-		_hatch(tri, [0.6, -0.6], 0.0, 5.0)
+## The paper and the soft white well in the middle, drawn live under the
+## texture every frame (cheap: one rect, six polygons), so the page is never
+## white even if the texture is late or lost.
+static func ground(ci: CanvasItem, screen: Vector2) -> void:
+	var sc: Vector2 = screen / Vector2(SIZE)
+	ci.draw_rect(Rect2(Vector2.ZERO, screen), PAPER)
 	for i in 6:
 		var k: float = 1.0 - i / 6.0
-		_painter.draw_colored_polygon(InkDraw.ellipse_points(CENTRE, Vector2(260, 190) * (0.4 + 0.6 * k), 40), Color(InkDraw.PAPER.lightened(0.25), 0.16))
+		ci.draw_colored_polygon(InkDraw.ellipse_points(CENTRE * sc, Vector2(260, 190) * sc * (0.4 + 0.6 * k), 40), Color(InkDraw.PAPER.lightened(0.25), 0.16))
 
 
 ## Fills `poly` with paper, then crossed pen strokes (one set per angle,

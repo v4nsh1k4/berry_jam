@@ -75,13 +75,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## The controls card's grid, a reminder line and Back (Esc goes back too).
 func _controls_page(center: Control) -> Control:
-	var panel: PanelContainer = PanelContainer.new()
-	var box: VBoxContainer = VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
-	box.add_child(UiTheme.make_label("CONTROLS", 36))
-	box.add_child(ControlsCard.grid())
-	box.add_child(UiTheme.make_button("Back", _show_controls.bind(false)))
-	panel.add_child(box)
+	var panel: PanelContainer = ControlsCard.page("CONTROLS", UiTheme.make_button("Back", _show_controls.bind(false)))
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	center.add_child(panel)
 	panel.hide()
 	return panel

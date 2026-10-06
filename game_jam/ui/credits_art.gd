@@ -25,7 +25,7 @@ static func page(ci: CanvasItem, area: Rect2, heading: String, tick: int) -> voi
 	var right: Rect2 = Rect2(left.end.x + g, mid_y, area.end.x - left.end.x - g, mid_h)
 	for r in [top, left, right]:
 		ci.draw_rect(r, InkDraw.PAPER)
-		_halftone(ci, r, r.end)
+		halftone(ci, r, r.end)
 	_top(ci, top, heading, tick)
 	_speaker(ci, left, &"butler", TEAM.split("|"), tick + 10)
 	_speaker(ci, right, &"housekeeper", ENGINE.split("|"), tick + 20)
@@ -36,7 +36,7 @@ static func page(ci: CanvasItem, area: Rect2, heading: String, tick: int) -> voi
 
 
 ## Dots shrinking away from `corner` (Ben-Day shading).
-static func _halftone(ci: CanvasItem, r: Rect2, corner: Vector2) -> void:
+static func halftone(ci: CanvasItem, r: Rect2, corner: Vector2) -> void:
 	var reach: float = minf(r.size.x, r.size.y) * 0.6
 	var dir: Vector2 = Vector2(-1.0 if corner.x > r.get_center().x else 1.0, -1.0 if corner.y > r.get_center().y else 1.0)
 	var step: float = 11.0
@@ -61,12 +61,17 @@ static func caption(ci: CanvasItem, at: Vector2, text: String, size: int, tick: 
 static func _top(ci: CanvasItem, r: Rect2, heading: String, tick: int) -> void:
 	var font: Font = ThemeDB.fallback_font
 	caption(ci, r.position + Vector2(18, 16), "CREDITS", 18, tick)
-	var size: int = 64
-	var w: float = font.get_string_size(heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-	var base: Vector2 = Vector2(r.get_center().x - w * 0.5, r.get_center().y + 18)
-	ci.draw_string_outline(font, base + Vector2(5, 5), heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 6, Color(InkDraw.INK, 0.25))
-	ci.draw_string_outline(font, base, heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 5, InkDraw.INK)
-	ci.draw_string(font, base, heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size, InkDraw.WHITE)
+	if heading == TITLE:
+		# The game's name in the title page's own scrawl (Stage 7), lowercase
+		# like the title page (the stroke font has lowercase plus T, S, H).
+		TitleLettering.draw(ci, "ink-bleed", Vector2(r.get_center().x, r.get_center().y + 22), 46.0, tick)
+	else:
+		var size: int = 64
+		var w: float = font.get_string_size(heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		var base: Vector2 = Vector2(r.get_center().x - w * 0.5, r.get_center().y + 18)
+		ci.draw_string_outline(font, base + Vector2(5, 5), heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 6, Color(InkDraw.INK, 0.25))
+		ci.draw_string_outline(font, base, heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 5, InkDraw.INK)
+		ci.draw_string(font, base, heading, HORIZONTAL_ALIGNMENT_LEFT, -1, size, InkDraw.WHITE)
 	var sub: String = SUBTITLE if heading == TITLE else TITLE + "  -  " + SUBTITLE
 	var sw: float = font.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 	caption(ci, Vector2(r.end.x - sw - 46, r.end.y - 52), sub, 20, tick + 1)

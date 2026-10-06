@@ -7,9 +7,6 @@ extends Node
 ## The chapter a new game starts with.
 @export var chapter: ChapterData
 
-## Seconds the last panel of a chapter stays up before the next intro.
-const CHAPTER_HANDOFF: float = 1.5
-
 @onready var _frame_root: Node2D = $World/FrameRoot
 @onready var _player: Player = $World/Player
 @onready var _start_layer: CanvasLayer = $StartLayer
@@ -78,6 +75,7 @@ func _on_intro_finished() -> void:
 ## Chapter) and applies its look (line wobble). `frame_id` overrides the
 ## chapter's first frame (debug jumps).
 func _start_chapter(next: ChapterData, frame_id: StringName = &"") -> void:
+	GameState.modal_open = false
 	GameState.current_chapter = next
 	GameState.chapter_start = {}
 	GameState.current_frame_id = frame_id if frame_id != &"" else next.first_frame_id
@@ -148,15 +146,24 @@ func _on_frame_changed(data: FrameData) -> void:
 		_hand_off(data.next_chapter)
 
 
-## The last panel of a chapter holds for a beat, then the next intro plays.
+## The last panel of a chapter hands straight over to the next chapter's
+## title card. Stage 7: no walkable hold any more. The player used to get 1.5 s
+## (and more) in the hand-off panel, because FrameManager restores the
+## controls when its page turn ends; now the card waits only for that page
+## turn and for a chapter-end cutscene (C4), the player is held by modal_open
+## throughout (FrameManager's restore can't undo that), and only
+## _start_chapter gives control back.
 func _hand_off(next: ChapterData) -> void:
+	GameState.modal_open = true
 	_player.controls_enabled = false
-	await get_tree().create_timer(CHAPTER_HANDOFF).timeout
+	while TransitionManager.is_playing:
+		await get_tree().process_frame
+	_player.controls_enabled = false
 	# A chapter-end cutscene plays first; the next intro waits for it.
 	while CutsceneSystem.is_playing:
 		await EventBus.cutscene_finished
 	if GameState.is_playing:
-		_player.controls_enabled = true
+		_player.controls_enabled = false
 		_play_intro(next)
 
 

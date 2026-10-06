@@ -1,10 +1,12 @@
 extends Control
-## Title page with Start / Continue / Controls / Credits.
+## Title page with Start / Continue / Controls / About / Credits.
 
 var _pages: Dictionary = {}
 var _continue_button: Button
 ## The credits page's comic drawing (CreditsArt), redrawn with the line boil.
 var _credits_art: Control
+## The About page's comic drawing (AboutArt).
+var _about_art: Control
 var _title: Control
 
 
@@ -13,6 +15,7 @@ func _ready() -> void:
 	_pages["main"] = _build_main().get_parent()
 	_pages["controls"] = _build_controls_page().get_parent()
 	_pages["credits"] = _build_credits_page().get_parent()
+	_pages["about"] = _build_about_page().get_parent()
 	EventBus.returned_to_menu.connect(open)
 	hide()
 
@@ -32,8 +35,9 @@ func _draw() -> void:
 func _process(_delta: float) -> void:
 	queue_redraw()
 	_title.queue_redraw()
-	if _credits_art.is_visible_in_tree():
-		_credits_art.queue_redraw()
+	for art in [_credits_art, _about_art]:
+		if (art as Control).is_visible_in_tree():
+			(art as Control).queue_redraw()
 
 
 ## Pages are full-screen wrappers; only the shown one is visible, so a
@@ -77,19 +81,25 @@ func _build_main() -> Control:
 	box.add_child(title)
 	box.add_child(_spacer(150))
 	_continue_button = UiTheme.make_button("Continue", _on_continue)
-	for b in [UiTheme.make_button("Start", _on_start), _continue_button, UiTheme.make_button("Controls", _show_page.bind("controls")),
-			UiTheme.make_button("Credits", _show_page.bind("credits"))]:
+	for b in [UiTheme.make_button("Start", _on_start), _continue_button, UiTheme.make_button("Controls", _show_page.bind("controls"))]:
 		(b as Button).custom_minimum_size.x = 340
 		(b as Button).size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		box.add_child(b)
+	# About and Credits share the last row (five full rows would not fit).
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for b in [UiTheme.make_button("About", _show_page.bind("about")), UiTheme.make_button("Credits", _show_page.bind("credits"))]:
+		(b as Button).custom_minimum_size.x = 163
+		row.add_child(b)
+	box.add_child(row)
 	return box
 
 
 func _build_controls_page() -> Control:
 	var box: VBoxContainer = _centered_column()
-	box.add_child(UiTheme.make_label("CONTROLS", 48))
-	box.add_child(ControlsCard.grid())
-	box.add_child(UiTheme.make_button("Back", _show_page.bind("main")))
+	box.add_child(ControlsCard.page("CONTROLS", UiTheme.make_button("Back", _show_page.bind("main"))))
 	return box
 
 
@@ -102,6 +112,21 @@ func _build_credits_page() -> Control:
 	_credits_art.draw.connect(func() -> void:
 		CreditsArt.page(_credits_art, Rect2(Vector2.ZERO, _credits_art.size), CreditsArt.TITLE, InkDraw.boil_tick()))
 	box.add_child(_credits_art)
+	var back: Button = UiTheme.make_button("Back", _show_page.bind("main"))
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(back)
+	return box
+
+
+## About: the premise (no twist) as a comic page, like Credits.
+func _build_about_page() -> Control:
+	var box: VBoxContainer = _centered_column()
+	_about_art = Control.new()
+	_about_art.custom_minimum_size = Vector2(1130, 566)
+	_about_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_about_art.draw.connect(func() -> void:
+		AboutArt.page(_about_art, Rect2(Vector2.ZERO, _about_art.size), InkDraw.boil_tick()))
+	box.add_child(_about_art)
 	var back: Button = UiTheme.make_button("Back", _show_page.bind("main"))
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(back)

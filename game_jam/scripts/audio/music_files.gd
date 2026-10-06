@@ -15,13 +15,23 @@ extends Node
 ##                 previous track fades); then the synthesized ending carries on.
 ## Both are loaded a few frames after start-up, one per frame (never on the
 ## first click). A missing file leaves the synthesized music in its place.
+## Stage 7: the bed is soft piano now (MusicSynth4's piano_bed, handed over
+## by MusicManager once rendered via set_piano_bed); it loops by itself and
+## gets the same level, dip, drop and return as bg_track did. bg_track.wav
+## stays in the project: set USE_BG_TRACK to true to switch back to it.
 
+## Stage 7: false = the synthesized piano bed under Chapters 1-3; true = the
+## team's bg_track.wav again (the only switch needed).
+const USE_BG_TRACK: bool = false
 const BG_PATH: String = "res://audio/bg_track.wav"
 const ENDING_PATH: String = "res://audio/ending.wav"
 ## bg_track's level: the file is loud (RMS ~-15 dBFS); this keeps it ~8 dB
 ## under the sound effects.
 ## Stage 6b: +6 dB (was -17): the music was too quiet.
 const BG_DB: float = -11.0
+## The piano bed's level: its RMS (~-23 dBFS) lands where bg_track's did
+## (RMS ~-15 dBFS at BG_DB -11).
+const PIANO_DB: float = -3.0
 const ENDING_DB: float = 0.0
 const XFADE: float = 2.0
 const BG_START: float = 0.21
@@ -37,6 +47,8 @@ const LOAD_AT: Array[int] = [8, 16]
 enum End { IDLE, WAITING, PLAYING, DONE }
 
 var bg: AudioStream = null
+## The bed is MusicSynth4's piano (a looping stream: no crossfade needed).
+var piano: bool = false
 var ending: AudioStream = null
 var level: float = -80.0
 var end_state: End = End.IDLE
@@ -66,15 +78,26 @@ func setup(bus: StringName) -> void:
 			_end = p
 
 
-## True when bg_track is in the project (checked without loading it).
+## True when bg_track is in use and in the project (checked without loading it).
 static func bg_exists() -> bool:
-	return ResourceLoader.exists(BG_PATH)
+	return USE_BG_TRACK and ResourceLoader.exists(BG_PATH)
+
+
+## The rendered piano bed (MusicManager, once MusicRenderer has it).
+func set_piano_bed(stream: AudioStream) -> void:
+	bg = stream
+	piano = true
+
+
+## The bed's level when nothing ducks or dips it.
+func bed_db() -> float:
+	return PIANO_DB if piano else BG_DB
 
 
 ## Called every frame from start-up: loads one file on each of LOAD_AT's frames.
 func load_step() -> void:
 	_frame += 1
-	if _frame == LOAD_AT[0]:
+	if _frame == LOAD_AT[0] and USE_BG_TRACK:
 		bg = _load(BG_PATH)
 	elif _frame == LOAD_AT[1]:
 		ending = _load(ENDING_PATH)
@@ -98,8 +121,10 @@ func holds(track: StringName) -> bool:
 	return bg != null and track in [&"ch1", &"ch2", &"ch3"]
 
 
-func on_sfx(_sound: StringName, volume_db: float) -> void:
-	if volume_db >= LOUD_DB:
+func on_sfx(sound: StringName, volume_db: float) -> void:
+	# Footsteps never dip the bed (running steps reach -6 dB since Stage 7):
+	# the music would pump on every step.
+	if volume_db >= LOUD_DB and sound != &"step":
 		_dip = DIP_TIME
 
 
@@ -112,7 +137,7 @@ func update(delta: float, on: bool, duck_db: float, drop: bool) -> void:
 		return
 	# The SFX dip never stacks on a duck (Stage 6b: -6 dB at most in all).
 	var dip: float = DIP_DB * smoothstep(0.0, 0.08, _dip) if _dip > 0.0 and duck_db > -1.0 else 0.0
-	var target: float = BG_DB + duck_db - dip if on and not drop else -80.0
+	var target: float = bed_db() + duck_db - dip if on and not drop else -80.0
 	# Big drops fast (~0.3 s), returns within ~2 s, the small dip eased (12 dB/s).
 	var speed: float = 12.0
 	if target < level - DIP_DB - 0.5:
@@ -126,6 +151,9 @@ func update(delta: float, on: bool, duck_db: float, drop: bool) -> void:
 			stop_bg()
 		return
 	_idle = 0.0
+	if piano:
+		_update_piano(delta)
+		return
 	if not _bg[_cur].playing and not _fading:
 		_start(_cur, 0.0)
 	_time += delta
@@ -146,6 +174,17 @@ func update(delta: float, on: bool, duck_db: float, drop: bool) -> void:
 		_cur = 1 - _cur
 		_fading = false
 		loops += 1
+
+
+## The piano bed loops by itself (its seam is folded when it is rendered).
+func _update_piano(delta: float) -> void:
+	if not _bg[_cur].playing:
+		_start(_cur, 0.0)
+	_bg[_cur].volume_db = level
+	var pos: float = _bg[_cur].get_playback_position()
+	if pos + 0.5 < _time:
+		loops += 1
+	_time = pos if pos > 0.0 else _time + delta
 
 
 func _start(index: int, from: float) -> void:

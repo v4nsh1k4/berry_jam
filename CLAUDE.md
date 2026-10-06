@@ -63,7 +63,8 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
   default font only. **No audio files except three team-made ones**:
   `res://audio/baby_cry.wav` (Stage 5, CryBank), `res://audio/bg_track.wav`
   and `res://audio/ending.wav` (Stage 6, MusicFiles). Everything else is
-  synthesized.
+  synthesized. (Stage 7: bg_track.wav stays in the repo but is unused; the
+  bed is synthesized piano. `MusicFiles.USE_BG_TRACK` switches it back.)
 - **Static typing everywhere** (`var x: float = 1.0`, typed returns).
 - **Systems talk only through `EventBus` signals.** Small public methods on
   autoloads (`GameState.add_bubble`, `AbilityRegistry.speak`) are the
@@ -89,11 +90,13 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 | 5 | Atmosphere pass: a shorter intro (25 s → 18.5 s) where the reader is sucked into the comic; C1, C2 and C4 first person (red hands, empty bubble, vignette); more detail in every cutscene (same beats, same 32.64 s); a wooden door creak (3 variants, pitch jittered) for every door, exit and secret door; an ominous music bed under all of Chapters 1-3; a sixth scare (the cellar: silence, the cry, lights out, a huge face); the team's recorded cry at three one-time moments |
 | 6 | C1 back to third person (a comic page: the theft from outside); reveal second half rewritten ("author", "You were the monster." held in near-silence) + recap; the return-phase hand holds the ERASER end in every state; tonal `groan` / `growl` replace the old flatulent `creak` / `growl`; the team's `bg_track.wav` as the Chapter 1-3 bed (dips under SFX, drops for big moments) and `ending.wav` once at the epilogue; a melancholy layer on the menu; comic black-and-white credits; the awakening mirror's ghoul; cobwebs and watching eyes in 11 rooms; psychedelic fill in cutscene panels; crows + scrawled lettering on the title page and menu; an abstract falling figure in the intro |
 | 6b | Credits without the font / licence lines; the crow ring round the End Card credits; a new mirror line (+ `repeat_caption`); C2 without hands; the intro finger normal-length (arm with fixed bone lengths) and the pull a red whoosh (no figure); the home page on the scenes' beige with black lettering; clearer instructions (hints queued at the bottom right, NOTICED / HUNTED! meter, E-says-the-selected-word, Controls card lines); clickable inventory arrows; the controls card any time (F1 / H, pause menu Controls page); cutscenes re-timed for reading (32.64 s → 48.40 s); two new scares (closet, panel escape: eight in all); the music +9 dB everywhere with softer ducks |
+| 7 | Polish pass: footsteps +4 dB (never dip the bed); an About page (premise, no twist); the controls grid rebuilt (fixed columns, one bordered page in all four places); the blurry cloud behind the title replaced by a crisp paper plate; the title page white on the web fixed (WebGL lost the SubViewport's first update) + sparse comic decor; chapter title cards straight after the last room (no walkable hand-off); the Credits title in the title scrawl; soft synthesized piano for the bed (in bg_track's place), the menu and the End Card |
 | 4D | 22 playtest fixes: real Study and Clock dial locks (TRY + "?"), every clue used (hallway, plaque, clock), decoy doors removed, forgiving spread jump (buffer + coyote, W/Up), no duplicate words (x2 slots), WAIT made useful (pendulum, gutter fingers) with a frost effect, unified unlock feedback (captions, pop-ups, sound, pulse, padlocks that drop, gated exit doors, off-screen arrow), word tooltips + selected-word line, reorder (drag, Shift+Q/R), controls card on New Game, noticed-meter cause icons + noise from running, margin doodles, clean chapter title cards, reveal rebuilt (morph, label card, recap), five one-time scares, return/erase music + build-up layers, the Artist's pencil, save v4 |
 
 Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B,
 Stage 4C, the study-lock cut (since reverted by 4D), Stage 4D (d1e2764).
-Stage 5 (d462ec3). Stage 6 (804ed89). Stage 6b (the commit after it).
+Stage 5 (d462ec3). Stage 6 (804ed89). Stage 6b (06591e7). Stage 7 is
+uncommitted until the user asks.
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
 Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
@@ -126,6 +129,19 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   jump, lens, pool drop, gutter fall, crate bridge, lever, fingers, door),
   `scare_check` (both scares, once only), `music_check` (render time, slowest
   frame, clipping, loop seams), `cinematics_check` (intro and ending pages).
+  Stage 7 added `chapter_card` (walks into the Ch1 and Ch2 exits with real
+  input: the title card shows in the hand-off panel, before the next
+  chapter's first room exists, and the player never has control between
+  leaving the room and the card) and extended `menu_clicks` (About: click,
+  Back, Esc, no spoiler words), `ui_check` (About shot, Esc, Back) and
+  `music_check` (see Stage 7 systems). `tests/visual/menu_shots.gd` shoots
+  the title page, menu pages, controls card (New Game, F1, pause) and the
+  End Card for before/after checks; `tests/visual/zz_piano_probe.gd`
+  renders the piano tracks offline (render frames, worst chunk, peak, RMS,
+  seam). Web checks: export, serve `build/web`, and drive headless Chrome
+  over the DevTools protocol (a small Node script: real-time waits,
+  `Page.captureScreenshot`, a rAF frame-time recorder); the sandbox needs
+  to be off for the local server.
   Older playthroughs skip cutscenes by connecting `cutscene_started` to
   `CutsceneSystem._finish`. Stage 4D added `gates_check` (Study and Clock
   locks incl. wrong codes and save/load, unlock captions, the gallery lever,
@@ -211,7 +227,7 @@ box). Don't name test methods after `SceneTree` methods.
 | `TransitionManager` | SLIDE (page sheet) and INK_SPLASH (shader) wipes around a swap |
 | `AbilityRegistry` | ability id → `AbilityData` + handler instance, `speak()`, cooldowns (`ABILITY_PATHS` list) |
 | `CutsceneSystem` | CanvasLayer 55. Loads `data/cutscenes/*.tres` (`CUTSCENE_PATHS`), plays one when its trigger fires (`first_steal`, `resolved:<id>`, `frame:<id>`, `repaired`), pauses the tree, skippable after 0.6 s, marks it in `GameState.seen` |
-| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame (`MusicRenderer` + `MusicSynth`/`MusicSynth2`/`MusicSynth3`), crossfades, build-up layers (`MusicLayers` child: pulse → strings swell → hunt), the team's files (`MusicFiles` child: bg_track under ch1/ch2/ch3 rooms, ending.wav at the epilogue; the Stage 5 synthesized **bed** only if bg_track is missing), the menu's melancholy layer (`menu_sad`, `SAD_DB` -19), stingers, ducking, focus-loss mute; music volume/mute in `settings.cfg` |
+| `MusicManager` | Music bus (→ Master), tracks rendered a chunk per frame from boot (`MusicRenderer` + `MusicSynth`/`MusicSynth2`/`MusicSynth4`), crossfades, build-up layers (`MusicLayers` child: pulse → strings swell → hunt), the bed under ch1/ch2/ch3 rooms (`MusicFiles` child: Stage 7 the synthesized `piano_bed`, bg_track.wav behind `USE_BG_TRACK`; ending.wav at the epilogue), the menu's and End Card's piano pieces, stingers, ducking; volume / mute / focus-loss mute in the `MusicSettings` child (`settings.cfg`) |
 
 ### Scene tree (`scenes/main.tscn`) and canvas layers
 World (layer 0: the `Frame` under `World/FrameRoot`, plus `World/Player`; the
@@ -695,6 +711,86 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   - *Intro*: `IntroArt2._falling` is an abstract red streak (blot head,
     torso ribbon, limbs dissolving into dashes, fragments peeling off).
 
+- **Stage 7 systems.**
+  - *Footsteps*: walk -12 dB, run -6 dB (were -16 / -10). `MusicFiles.on_sfx`
+    ignores `&"step"` by name, so no footstep ever dips the bed (running steps
+    cross the -8 dB `LOUD_DB` threshold now). `NoticeSystem._on_footstep` is
+    unchanged (running steps still add 0.07 within 430 px).
+  - *About page* (`ui/about_art.gd`, `AboutArt`): a comic page like Credits
+    (white gutter, two ink-bordered paper panels, halftone corner, an
+    "ABOUT THE GAME" caption box): the premise wrapped on the left (one
+    `TEXT` string, paragraphs split at "|" at runtime), the red unperson with
+    its empty bubble and OPEN / PUSH / HIDE floating on the right. No twist
+    words (artist, author, hand, erase, giving back, monster): `menu_clicks`
+    checks. About and Credits share the menu's last row (half-width buttons:
+    five full rows don't fit under the title). Back and Esc return (the menu's
+    existing page logic; wrappers `MOUSE_FILTER_IGNORE`).
+  - *Controls layout* (`ControlsCard.page(title, button)` + `grid()`): the
+    cause was the page, not the grid. The card drew a fixed paper rect
+    (150..1130 x 40..680) that didn't match its content (the grid poked out at
+    both sides, OK sat on the border), and the grid's columns sized to the
+    longest line (the E row ran to the box edge). Now one PanelContainer page
+    (paper, ink border, shadow) holds the title, the grid and OK / Back,
+    sized to its content, in all four places (New Game card, F1 card, the
+    menu's and the pause menu's Controls pages); the card adds a white gutter
+    round it on the dark desk (redrawn on `item_rect_changed`). Grid: keys
+    250 px, descriptions 600 px with word wrap, both top-aligned
+    (`SIZE_SHRINK_BEGIN`), key text with consistent separators.
+  - *Title page*: the soft paper wash under the lettering (`TitleLive.smudge`,
+    16 stacked ellipses: the "blurry cloud") is gone; a crisp torn-paper
+    plate with a boiling ink edge (`TitleLive._plate`) keeps the lettering
+    readable over the crows. The same for "click or press any key" (no wash;
+    its paper outline stays).
+  - *Why the title page was white on the web*: TitleArt drew the ground
+    (paper + hatched corners) as its first job, in the SubViewport's first
+    `UPDATE_ONCE` render; WebGL loses that first update (desktop doesn't), and
+    with `CLEAR_MODE_ONCE` nothing ever redraws it, so the page showed the
+    white clear colour with only the crows (later batches persist). Now the
+    paper and the soft centre well are drawn live under the texture
+    (`TitleArt.ground`), the SubViewport is transparent, painting waits
+    `WARMUP` (3) rendered frames, and the corners are ordinary hatch jobs.
+    Verified in headless Chrome (WebGL2): built by 3 s; frame median 16.7 ms,
+    p95 17.5 ms during the build + music render.
+  - *Title decor* (`ui/title_decor.gd`, one job into the texture): a white
+    gutter and ink panel border round the page, faint pencil construction
+    lines, three short drips from the top border, a "1" page number box.
+  - *Chapter hand-off* (`main._hand_off`): the card used to appear only after
+    the player had walked about the hand-off panel (`ch1_end` / `ch2_end`):
+    `FrameManager.go_to` restores the controls when its page turn ends,
+    undoing the hand-off's lock, and the 1.5 s `CHAPTER_HANDOFF` hold let them
+    walk; the old code also re-enabled controls before the card. Now: no
+    hold, `GameState.modal_open` holds the player from the moment the panel
+    loads (FrameManager can't undo it), the card shows as soon as the page
+    turn (and C4, at `ch2_end`) is over, and `_start_chapter` clears
+    `modal_open`. Both hand-offs had the problem; both are fixed.
+  - *Credits title*: `CreditsArt._top` writes "ink-bleed" in TitleLettering
+    (46 px, the boil) when the heading is the game's title; the End Card's
+    "THE END" heading is unchanged.
+  - *Piano* (`scripts/audio/music_synth4.gd`): `piano_bed` (60 s, A minor),
+    `menu` (28 s, D Dorian with a B-flat), `piano_end` (40 s, C major through
+    Am / F, resolving). Voice: 3-6 inharmonic partials (B = 0.00035), a 6 ms
+    raised-cosine hammer, a two-stage decay (quick drop + long ring, upper
+    partials faster), each partial stopped at its own -50 dB, a detuned second
+    fundamental (string beat), velocity shaping loudness and brightness, a
+    0.28 s damper after `hold`; a two-tap damped feedback room applied in place
+    per chunk; notes that ring past the loop's end are also rendered one loop
+    earlier. Desktop: menu 0.78 s CPU, bed 1.5 s, end 1.4 s; worst chunk
+    ~5.8 ms (piano chunks are half size). Peaks -6 dBFS, RMS ~-23 dBFS,
+    seams 0. Rendering starts at boot (CPU only), so the menu is usually
+    ready by the first click; playback still waits for the click.
+  - *Bed*: `MusicFiles.USE_BG_TRACK = false` (one switch back to the file);
+    MusicManager hands the rendered `piano_bed` to `MusicFiles.set_piano_bed`;
+    it loops by itself (no crossfade) at `PIANO_DB` -3 (its effective
+    loudness ~-27 dBFS, the 6b bed's), with bg_track's dip, ducks, drops,
+    ~2 s return, off for reveal / return / erase. A chapter room never keeps
+    the previous track while the bed renders (`_switch` to a silent base).
+  - *Menu / End Card*: the `menu` track id is kept (now piano); the music box
+    and the `menu_sad` layer (MusicSynth3) are gone. `epilogue_finished` →
+    `piano_end` (crossfade from the synthesized ending that plays under the
+    epilogue with ending.wav); Back to Menu → `menu`. `stop_all()` unchanged.
+  - *Split*: MusicManager's volume / mute / focus code is the `MusicSettings`
+    child (MusicManager keeps `music_volume`, `music_muted`, `set_music_*`).
+
 ### Split precedents (for the 250-line rule)
 `InventoryArt` (strip drawing), `InteractableArt` / `InteractableArt2`, the
 `HidingSpot` / `ReturnSpot` subclasses chosen by `Frame.KIND_CLASSES`, the
@@ -709,7 +805,8 @@ Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 `CutsceneArt5`, `CutsceneFill`, `MusicFiles`, `MusicLayers` (split out of
 MusicManager), `MusicSynth3`, `SfxSynth3`, `CreditsArt`, `RoomDecor`,
 `TitleArt`/`CrowShapes`/`TitleLive`/`TitleLettering`, (6b) `ScareArt2`,
-the closet event.
+the closet event, (7) `MusicSettings`, `MusicSynth4`, `AboutArt`,
+`TitleDecor`.
 
 ## 7. Content, chapter by chapter
 
@@ -765,6 +862,15 @@ by the shadow puzzle.
 
 ## 8. Open issues and next steps
 
+00. **Stage 7**: not heard by the agent: the piano voice, the three pieces,
+   their levels against the SFX, the footsteps' new level. They are measured
+   (peaks, RMS, seams, loudness vs. the 6b bed) but whether the piano
+   *sounds* like a piano, and the right mood, needs ears. Tuning knobs: the
+   scores and `GAIN` in `music_synth4.gd`, `MusicFiles.PIANO_DB`,
+   `MusicManager.BASE_DB`. The web title check ran in headless Chrome on an
+   M2 Mac, not Safari / Firefox / a slower machine. bg_track.wav (18.9 MB) is
+   unused now; deleting it would shrink the pack (the user's call).
+
 0. **Stage 6**: `bg_track.wav` is 18.9 MB (stereo 48 kHz, 98.6 s): convert it
    to OGG (the user's call). Not heard by the agent: the new groan / growl /
    moan, the menu layer, bg_track's levels and dips. Not checked in a real
@@ -781,8 +887,8 @@ by the shadow puzzle.
 3. `ch3_systems` prints `E2 WAIT froze hand=false` (also at d1e2764, before
    Stage 5): WAIT near the Returning Room's hand freezes something else
    first. Check WaitAbility's target order vs. the test.
-4. `ink_crawler.gd` is 261 lines (unchanged since 4C); `music_manager.gd`
-   is at 250. Split the Crawler's senses / MusicManager's settings next time.
+4. `ink_crawler.gd` is 261 lines (unchanged since 4C): split the Crawler's
+   senses next time. (`music_manager.gd` was split in Stage 7: 216 lines.)
 5. Credits say "the Berry Jam team" (placeholder); real names go in
    `ui/credits_art.gd` (`TEAM`). "Voice: the team" and the "Code, art..." line
    were removed in Stage 6.
@@ -796,6 +902,15 @@ by the shadow puzzle.
 - **SubViewports and hidden test windows:** TitleArt builds only on frames
   that are actually drawn; tests force draws (`ui_check` does) or the
   backdrop stays half-inked.
+- **WebGL loses a SubViewport's very first update.** Never put something
+  that is drawn only once into the first `UPDATE_ONCE` render of a
+  `CLEAR_MODE_ONCE` viewport (TitleArt waits `WARMUP` frames), and draw
+  anything essential (the page's paper) live, not only into the texture.
+  Desktop GL doesn't show this; check the web build.
+- **`FrameManager.go_to` restores the player's controls when its page turn
+  ends** (to what they were before it). Anything that must keep the player
+  still across a transition (the chapter hand-off) holds them with
+  `GameState.modal_open`, not `controls_enabled`.
 - **WAV import (4.7.2):** the importer refuses WAVE_FORMAT_EXTENSIBLE
   headers ("not PCM"). The team's `baby_cry.wav` arrived that way; its
   header was rewritten as plain PCM (samples byte-identical). Keep its

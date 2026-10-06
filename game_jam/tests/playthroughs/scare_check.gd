@@ -92,7 +92,7 @@ func _run() -> void:
 				print("cellar build at %.2fs: bg_track %.1f dB, drone %.1f dB, cry %s (seen %s), light %s" % [ov._build_t, mm._files.level,
 					am._drone.volume_db, am.last_played, gs.seen.has(&"cry_scare"), root.get_node("/root/LightingSystem").is_light_on])
 				_check("cellar build: music + ambience near silent, the cry playing, the light out", mm._files.level < -40.0
-					and mm._bed.volume_db < -40.0
+					and mm._players[mm._active].volume_db < -40.0
 					and am._drone.volume_db <= -59.0 and gs.seen.has(&"cry_scare") and not root.get_node("/root/LightingSystem").is_light_on)
 		await _wait(0.12)
 		await _shot("sc_%s.png" % id)
@@ -131,7 +131,7 @@ func _run() -> void:
 	await _wait(3.4)
 	_check("the torch flickered out with the room's light", lit_before and not lights.is_light_on)
 	await _wait(3.6)
-	_check("bg_track is back ~2 s after the scare's silence (%.1f dB)" % mm._files.level, mm._files.level > MusicFiles.BG_DB - 4.0)
+	_check("the bed is back ~2 s after the scare's silence (%.1f dB)" % mm._files.level, mm._files.level > mm._files.bed_db() - 4.0)
 	_check("eight scares in the table", ov.scares().size() == 8)
 	# Stage 6b: the panel escape mid-zoom.
 	ov.play(&"scare_escape")

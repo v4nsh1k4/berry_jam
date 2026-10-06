@@ -42,7 +42,6 @@ func _draw() -> void:
 	TitleLive.title(self, Vector2(size.x * 0.5, 150), tick)
 	var font: Font = ThemeDB.fallback_font
 	var alpha: float = 0.55 + 0.45 * sin(_time * 3.0)
-	TitleLive.smudge(self, Vector2(size.x * 0.5, 676), Vector2(230, 30))
 	_centered(font, "- click or press any key -", Vector2(size.x * 0.5, 684), 22, Color(InkDraw.INK, alpha))
 
 

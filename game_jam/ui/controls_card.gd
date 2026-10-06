@@ -12,22 +12,27 @@ signal accepted
 
 ## "keys | what they do" per line (plain text: typed constant arrays of
 ## packed arrays read back empty in exported builds).
-const TEXT: String = """A / D  or  arrows | move
+const TEXT: String = """A / D, arrow keys | walk left / right
 W / S | step nearer / further
 Shift | run (loud: it can hear you, so walk near it)
-Space  (W / Up) | jump (on the page spread)
-E | say the highlighted word (whichever is selected); use doors, locks, hiding spots
+Space, W / Up | jump (on the page spread)
+E | say the selected word; use doors, locks and hiding spots
 Hold E | steal a word / give a word back
-1 - 6, Q / R, wheel | pick the word E says (click the strip's arrows to scroll)
-Shift + Q / R  or  drag | reorder your words
-F  or  left click | flashlight, aimed with the mouse
-The light | draws it: the NOTICED blot fills; full = it hunts you
+1 - 6, Q / R, wheel | pick the word E says (or click the strip's arrows)
+Shift + Q / R, drag | reorder your words
+F, left click | flashlight, aimed with the mouse
+The light | draws it: the NOTICED blot fills; full means it hunts you
 To be safe | light off and stand still: the blot drains
-F1  or  H | these controls, any time
-Esc  or  P | pause
-Read | the text at the bottom right of the screen"""
+F1, H | these controls, any time
+Esc, P | pause
+Tips | the text at the bottom right of the screen"""
+## Column widths of the grid (Stage 7: fixed, so every row lines up and a long
+## description wraps under its own column instead of widening the page).
+const KEY_WIDTH: float = 250.0
+const TEXT_WIDTH: float = 600.0
 
 var _ok: Button
+var _page: Control
 var _in_game: bool = false
 var _was_paused: bool = false
 var _was_modal: bool = false
@@ -41,35 +46,57 @@ func _ready() -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
-	var box: VBoxContainer = VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	center.add_child(box)
-	box.add_child(UiTheme.make_label("HOW TO PLAY", 44))
-	box.add_child(grid())
+	_ok = UiTheme.make_button("OK", _accept)
+	_page = page("HOW TO PLAY", _ok)
+	center.add_child(_page)
+	_page.item_rect_changed.connect(queue_redraw)
 	EventBus.frame_changed.connect(func(_d: FrameData) -> void:
 		if GameState.is_playing:
 			Hints.once("f1_controls", "F1 or H: see the controls again, any time.", 5.0))
-	_ok = UiTheme.make_button("OK", _accept)
-	box.add_child(_ok)
 	hide()
 
 
-## The two-column key / action grid (also used by the main menu).
-static func grid() -> PanelContainer:
+## The controls as one comic page (paper, ink border, shadow): the title,
+## the grid and `button` (OK / Back), sized to its content. Used by this
+## card, the main menu's Controls page and the pause menu's.
+static func page(title: String, button: Button) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(UiTheme.make_label(title, 40))
+	box.add_child(grid())
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(button)
+	panel.add_child(box)
+	return panel
+
+
+## The two-column key / action grid: fixed column widths, both columns
+## top-aligned, descriptions wrapping inside their own column.
+static func grid() -> GridContainer:
 	var g: GridContainer = GridContainer.new()
 	g.columns = 2
-	g.add_theme_constant_override("h_separation", 28)
-	g.add_theme_constant_override("v_separation", 6)
+	g.add_theme_constant_override("h_separation", 24)
+	g.add_theme_constant_override("v_separation", 5)
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for line in TEXT.split("\n"):
 		var parts: PackedStringArray = line.split("|")
-		var key: Label = UiTheme.make_label(parts[0].strip_edges(), 19, HORIZONTAL_ALIGNMENT_LEFT)
+		var key: Label = _cell(parts[0].strip_edges(), KEY_WIDTH)
 		key.add_theme_color_override("font_color", InkDraw.RED)
 		g.add_child(key)
-		g.add_child(UiTheme.make_label(parts[1].strip_edges() if parts.size() > 1 else "", 19, HORIZONTAL_ALIGNMENT_LEFT))
-	panel.add_child(g)
-	return panel
+		g.add_child(_cell(parts[1].strip_edges() if parts.size() > 1 else "", TEXT_WIDTH))
+	return g
+
+
+static func _cell(text: String, width: float) -> Label:
+	var label: Label = UiTheme.make_label(text, 19, HORIZONTAL_ALIGNMENT_LEFT)
+	label.custom_minimum_size.x = width
+	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return label
 
 
 func open() -> void:
@@ -119,12 +146,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _draw() -> void:
-	# A comic page behind the buttons: paper, a heavy border, speed lines.
-	var tick: int = InkDraw.boil_tick()
+	# A dark desk, a white gutter round the page (the page is page()'s panel,
+	# so its ink border reads on the dark).
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.07, 0.06, 0.08))
-	var page: Rect2 = Rect2(Vector2(150, 40), size - Vector2(300, 80))
-	InkDraw.rect(self, page, 8.0, tick, InkDraw.PAPER)
-	for i in 10:
-		var y: float = page.position.y + 30 + i * 62
-		InkDraw.line(self, Vector2(page.position.x + 16, y), Vector2(page.position.x + 70, y + 6), 2.0, tick + i, Color(InkDraw.INK, 0.25))
-		InkDraw.line(self, Vector2(page.end.x - 70, y), Vector2(page.end.x - 16, y + 6), 2.0, tick + 20 + i, Color(InkDraw.INK, 0.25))
+	draw_rect(_page.get_global_rect().grow(10.0), InkDraw.WHITE)

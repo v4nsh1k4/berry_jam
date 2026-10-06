@@ -103,6 +103,24 @@ func _run() -> void:
 	await _wait(0.3)
 	var click_ok: bool = menu._pages["main"].visible
 	print("credits: Esc back=", esc_ok, " click Back=", click_ok, " back button at ", back.get_global_rect())
+	# Stage 7: the About page (premise, no twist): opens, Esc and Back return.
+	menu._show_page("about")
+	await _wait(0.4)
+	await _shot("ui_about.png")
+	Input.parse_input_event(esc)
+	await _wait(0.3)
+	var about_esc: bool = menu._pages["main"].visible and not menu._pages["about"].visible
+	menu._show_page("about")
+	await _wait(0.3)
+	var about_back: Button = menu._first_button(menu._pages["about"])
+	click.position = about_back.get_global_rect().get_center()
+	click.global_position = click.position
+	Input.parse_input_event(click)
+	var up2: InputEventMouseButton = click.duplicate()
+	up2.pressed = false
+	Input.parse_input_event(up2)
+	await _wait(0.3)
+	print("about: Esc back=", about_esc, " click Back=", menu._pages["main"].visible)
 	main.get_node("MenuLayer/MainMenu").hide()
 	bus.menu_new_game.emit()
 	await _wait(0.4)

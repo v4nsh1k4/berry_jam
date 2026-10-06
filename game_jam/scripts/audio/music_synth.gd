@@ -4,7 +4,8 @@ extends RefCounted
 ## sum of passes over a sample range so MusicManager can render it a chunk
 ## at a time across frames. Loops are made seamless by rendering FADE extra
 ## seconds and folding that tail back over the start.
-##   menu     music box (detuned) over a beating drone; the game's motif
+##   menu     soft piano (MusicSynth4; Stage 7, was a music box + the
+##            menu_sad layer)
 ##   ch1      quiet drone with a minor-second rub and sparse low plucks
 ##   ch2      low pulse over a Shepard tone that rises for ever
 ##   ch3      distorted, stuttering drone with a wavering whine
@@ -13,16 +14,15 @@ extends RefCounted
 ##   ending   the motif slower, one note left unresolved
 ##   layer_intensity / layer_hunt   dynamic layers (MusicManager fades them)
 ##   return / erase / layer_pulse / bed   in MusicSynth2
-##   menu_sad (the menu's melancholy layer)  in MusicSynth3
+##   piano_bed (under Chapters 1-3) / piano_end (End Card)  in MusicSynth4
 
 const RATE: int = 22050
 const FADE: float = 0.5
 const TRACKS: Dictionary = {
-	&"menu": 16.0, &"ch1": 12.0, &"ch2": 12.0, &"ch3": 12.0, &"reveal": 24.0,
+	&"menu": 28.0, &"piano_bed": 60.0, &"piano_end": 40.0, &"ch1": 12.0, &"ch2": 12.0, &"ch3": 12.0, &"reveal": 24.0,
 	&"warm": 16.0, &"ending": 16.0, &"layer_intensity": 8.0, &"layer_hunt": 8.0,
-	&"return": 20.0, &"erase": 12.0, &"layer_pulse": 8.0, &"bed": 24.0, &"menu_sad": MusicSynth3.LENGTH,
+	&"return": 20.0, &"erase": 12.0, &"layer_pulse": 8.0, &"bed": 24.0,
 }
-const MOTIF: PackedInt32Array = [76, 72, 69, 71, 72, 69, 64, 65, 76, 72, 69, 71, 69, 68, 64, -1]
 const MOTIF_MAJOR: PackedInt32Array = [76, 73, 69, 71, 73, 69, 64, 66, 76, 73, 69, 71, 69, 68, 64, -1]
 
 
@@ -42,9 +42,8 @@ static func hz(midi: float) -> float:
 ## Adds the track's samples [from, to) into buf.
 static func render(track: StringName, buf: PackedFloat32Array, from: int, to: int) -> void:
 	match track:
-		&"menu":
-			_drone(buf, from, to, 55.0, 55.35, 0.10)
-			_melody(buf, from, to, MOTIF, 1.0, 0.16, 2.4, 0.18)
+		&"menu", &"piano_bed", &"piano_end":
+			MusicSynth4.render(track, buf, from, to)
 		&"ch1":
 			_drone(buf, from, to, 73.42, 77.78, 0.08 * 1.0)
 			for n in [[0.0, 50], [4.5, 44], [8.0, 48]]:
@@ -69,8 +68,6 @@ static func render(track: StringName, buf: PackedFloat32Array, from: int, to: in
 			_tremolo(buf, from, to)
 		&"return", &"erase", &"layer_pulse", &"bed":
 			MusicSynth2.render(track, buf, from, to)
-		&"menu_sad":
-			MusicSynth3.render(track, buf, from, to)
 		&"layer_hunt":
 			for i in 20:
 				_kick(buf, from, to, i * 0.4, 0.24, 90.0)

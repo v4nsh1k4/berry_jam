@@ -47,7 +47,9 @@ func step() -> void:
 				_finish()
 				return
 			continue
-		var end: int = mini(_pos + CHUNK, _buf.size())
+		# Piano tracks (MusicSynth4) cost more per sample: smaller chunks keep
+		# one chunk inside the frame budget.
+		var end: int = mini(_pos + (CHUNK / 2 if MusicSynth4.LENGTHS.has(_job) else CHUNK), _buf.size())
 		MusicSynth.render(_job, _buf, _pos, end)
 		_pos = end
 		if _pos >= _buf.size():
