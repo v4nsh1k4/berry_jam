@@ -18,6 +18,14 @@ extends Node2D
 ##   scare_hand      the Hand slams a nib stab across the page (lens lit)
 ##   scare_cellar    silence, a cry, lights out, then a huge distorted face
 ##                   (the cellar's shadow puzzle solved: the player relaxes)
+##   scare_closet    (6b) the bedchamber wardrobe bursts open on a stretched
+##                   pale face (ClosetScare: a crack + creak first, then the
+##                   player walking near sets `closet_near`)
+##   scare_escape    (6b) "out of the frame": a comic page where one figure
+##                   has stepped out of its panel and stares at you (the
+##                   spread's ink pool cleared). Any entry with art &"escape"
+##                   + `figure` / `caption` / `panel` reuses it (data only).
+## Optional per entry: `sound` (default scare_hit), `shake` (0.7), `flash`.
 ## `intensity` (0..1, settings.cfg [accessibility] scare_intensity) scales
 ## shake and flash for Stage 5's "reduce shake and flashing" option.
 
@@ -40,6 +48,7 @@ var _since_last: float = 999.0
 var _debug_index: int = -1
 var _building: Dictionary = {}
 var _build_t: float = 0.0
+var _scare: Dictionary = {}
 
 
 ## Built at runtime (typed constant arrays of containers misbehave in exports).
@@ -52,6 +61,11 @@ static func scares() -> Array:
 		{id = &"scare_hand", frame = &"ch3_gallery_words", flag = &"spread_lens", delay = 1.5, art = &"hand", length = 0.45},
 		{id = &"scare_cellar", frame = &"ch2_cellar", flag = &"cellar_dials_set", delay = 1.2, art = &"cry_face", length = 0.5,
 			build = 3.0, patience = 90.0},
+		{id = &"scare_closet", frame = &"ch1_bedchamber", flag = &"closet_near", delay = 0.05, art = &"closet", length = 0.45,
+			sound = &"shriek", shake = 0.85, patience = 60.0},
+		{id = &"scare_escape", frame = &"ch3_gallery_words", flag = &"spread_pool", delay = 1.5, art = &"escape", length = 1.3,
+			sound = &"shriek_low", shake = 0.8, flash = false, patience = 90.0, figure = &"butler", caption = "Not the page. You.",
+			panel = 4},
 	]
 
 
@@ -119,13 +133,15 @@ func _hit(s: Dictionary) -> void:
 		GameState.seen.append(s.id)
 	_kind = s.id
 	_art = s.art
+	_scare = s
 	_length = s.length
 	_t = 0.0
 	_seed = randi()
 	_since_last = 0.0
 	EventBus.scare.emit(_kind, intensity)
-	AudioManager.play(&"scare_hit", 0.0, 0.0)
-	EventBus.shake_requested.emit((1.0 if _kind == &"scare_cellar" else 0.9 if _kind == &"scare_clock" else 0.7) * intensity)
+	AudioManager.play(s.get("sound", &"scare_hit"), 0.0, 0.0)
+	var shake: float = 1.0 if _kind == &"scare_cellar" else 0.9 if _kind == &"scare_clock" else float(s.get("shake", 0.7))
+	EventBus.shake_requested.emit(shake * intensity)
 	if _kind == &"scare_cellar":
 		AudioManager.stop_cry()
 		AudioManager.play(&"scare_low", 2.0, 0.0)
@@ -209,6 +225,12 @@ func _draw() -> void:
 	var screen: Vector2 = get_viewport_rect().size
 	var player: Node2D = get_tree().get_first_node_in_group(&"player") as Node2D
 	var player_pos: Vector2 = player.get_global_transform_with_canvas().origin if player != null else screen * 0.5
-	ScareArt.draw(self, _art, screen, _t, _seed, player_pos)
-	if _t < FLASH_TIME:
+	match _art:
+		&"closet":
+			ScareArt2.closet(self, screen, _t, _seed)
+		&"escape":
+			ScareArt2.panel_escape(self, screen, _t, _seed, _scare.get("figure", &"faceless"), _scare.get("caption", ""), _scare.get("panel", 4))
+		_:
+			ScareArt.draw(self, _art, screen, _t, _seed, player_pos)
+	if _t < FLASH_TIME and _scare.get("flash", true):
 		draw_rect(Rect2(Vector2.ZERO, screen), Color(InkDraw.RED, 0.45 * intensity * (1.0 - _t / FLASH_TIME)))

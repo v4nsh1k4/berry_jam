@@ -13,7 +13,8 @@ const CENTRE: Vector2 = Vector2(640, 330)
 const RING: Vector2 = Vector2(480, 262)
 const CROWS: int = 9
 const BUDGET_MS: int = 3
-const PAPER: Color = Color(0.95, 0.93, 0.88)
+## The scenes' paper (Stage 6b: the home page was whiter).
+const PAPER: Color = InkDraw.PAPER
 
 ## The shared, finished (or still inking) backdrop.
 static var texture: ViewportTexture
@@ -90,7 +91,7 @@ func _ground() -> void:
 		_hatch(tri, [0.6, -0.6], 0.0, 5.0)
 	for i in 6:
 		var k: float = 1.0 - i / 6.0
-		_painter.draw_colored_polygon(InkDraw.ellipse_points(CENTRE, Vector2(260, 190) * (0.4 + 0.6 * k), 40), Color(1, 1, 1, 0.18))
+		_painter.draw_colored_polygon(InkDraw.ellipse_points(CENTRE, Vector2(260, 190) * (0.4 + 0.6 * k), 40), Color(InkDraw.PAPER.lightened(0.25), 0.16))
 
 
 ## Fills `poly` with paper, then crossed pen strokes (one set per angle,

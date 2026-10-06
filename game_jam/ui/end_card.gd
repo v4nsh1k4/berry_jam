@@ -65,8 +65,11 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var tick: int = InkDraw.boil_tick()
 	if _credits:
-		# After the epilogue: THE END heads the comic credits page (CreditsArt).
-		CreditsArt.page(self, Rect2(70, 34, size.x - 140, 540), _text, tick)
+		# After the epilogue: the title's crow ring (TitleArt's cached texture,
+		# built at start-up) round a smaller comic credits page headed THE END.
+		draw_rect(Rect2(Vector2.ZERO, size), InkDraw.PAPER)
+		TitleLive.draw(self, size, tick, false)
+		CreditsArt.page(self, Rect2(size.x * 0.5 - 390, 96, 780, 440), _text, tick)
 		return
 	var text_size: Vector2 = font.get_string_size(_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 54)
 	var top: float = 140.0 if _credits else size.y * 0.5 - 140.0

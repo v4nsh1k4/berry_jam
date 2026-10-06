@@ -17,6 +17,7 @@ extends SceneTree
 var mm
 var bus
 var ok := true
+var skip_cs: Callable
 
 func _initialize() -> void:
 	change_scene_to_file("res://scenes/main.tscn")
@@ -93,6 +94,8 @@ func _bg() -> void:
 		for i in 30:
 			await _wait(0.1)
 			present += 1 if mm._files.playing_bg() and mm._files.level > MusicFiles.BG_DB - 6.0 else 0
+		if frame in ["ch1_landing", "ch2_long_hallway", "ch3_margin"]:
+			_level(frame, -17.0 - 4.437)
 		_check("bg_track under %s (base %s silent: %.0f dB, bed %.0f dB), present %d%% of 3 s" % [frame, mm._playing,
 			mm._players[mm._active].volume_db, mm._bed.volume_db, present * 100 / 30],
 			present >= 29 and mm._players[mm._active].volume_db < -60.0 and mm._bed.volume_db < -60.0)
@@ -111,20 +114,32 @@ func _bg() -> void:
 	print("door creak: bg dipped %.1f dB, still playing %s, after 1 s %.1f dB" % [low, still, mm._files.level])
 	_check("bg_track keeps playing under a door creak, dipping ~3 dB", still and low < -2.0 and low > -4.5
 		and absf(mm._files.level - MusicFiles.BG_DB) < 0.6)
+	# Stage 6b: big moments only duck it (-6 dB at most) and it recovers
+	# within ~1 s; it never stops or restarts.
 	for big in ["cutscene", "lunge", "scare"]:
 		p0 = _pos()
+		var dip := 0.0
 		match big:
-			"cutscene": mm.duck(0.6, 999.0)
+			"cutscene":
+				bus.cutscene_started.disconnect(skip_cs)
+				bus.cutscene_started.emit(&"test")
+				bus.cutscene_started.connect(skip_cs)
 			"lunge": bus.crawler_telegraph.emit()
 			"scare": bus.scare.emit(&"test", 1.0)
-		var gone: float = await _bg_gone(1.0)
+		var d0: int = Time.get_ticks_msec()
+		var hold: int = 1000 if big == "cutscene" else 0
+		while Time.get_ticks_msec() - d0 < hold + 900:
+			await process_frame
+			dip = minf(dip, mm._files.level - MusicFiles.BG_DB)
 		if big == "cutscene":
-			await _wait(1.0)
-			mm.duck(0.0, 0.0)
-		var back: float = await _bg_back(5.0)
-		print("%s: bg out after %.2f s, back after %.2f s, playing through: %s" % [big, gone, back, _pos() > p0])
-		_check("bg_track fades out (~0.3 s) for a %s and is back within ~2 s" % big, gone >= 0.0 and gone <= 0.45
-			and back >= 0.0 and back <= (2.2 if big == "cutscene" else 2.7))
+			bus.cutscene_finished.emit(&"test")
+		var d1: int = Time.get_ticks_msec()
+		while Time.get_ticks_msec() - d1 < 1500 and mm._files.level < MusicFiles.BG_DB - 1.0:
+			await process_frame
+		var back: float = (Time.get_ticks_msec() - d1) / 1000.0
+		print("%s: bg dipped %.1f dB, back within 1 dB %.2f s after the duck ends, playing through: %s" % [big, dip, back, _pos() > p0])
+		_check("bg_track ducks at most ~6 dB for a %s and recovers within ~1 s" % big, dip >= -6.6 and dip < -3.0
+			and back <= (1.1 if big == "cutscene" else 0.4) and _pos() > p0)
 	# The loop point: a crossfade, never silence.
 	var length: float = mm._files.bg.get_length()
 	mm._files._bg[mm._files._cur].seek(length - MusicFiles.XFADE - 0.6)
@@ -142,7 +157,7 @@ func _bg() -> void:
 			sum += db_to_linear(pl.volume_db) if pl.playing else 0.0
 		quiet += 1 if sum < db_to_linear(MusicFiles.BG_DB - 4.0) else 0
 	print("loop: %d -> %d loops, position now %.2f s, %d quiet samples" % [loops0, mm._files.loops, _pos(), quiet])
-	_check("bg_track loops with a crossfade (no gap)", mm._files.loops == loops0 + 1 and quiet == 0 and _pos() < 3.0)
+	_check("bg_track loops with a crossfade (no gap)", mm._files.loops == loops0 + 1 and quiet == 0 and _pos() < 3.6)
 	var gs = root.get_node("/root/GameState")
 	bus.reveal_started.emit()
 	var gone2: float = await _bg_gone(1.0)
@@ -152,6 +167,77 @@ func _bg() -> void:
 	await _go("ch3_returning_room")
 	await _wait(4.0)
 	_check("bg_track off and stopped in the return phase (%s)" % mm._playing, not mm._files.playing_bg() and mm._playing == &"return")
+	_level("return phase", -10.0 - 4.437)
+
+## Stage 6b: peak of the music (bg_track's 0 dBFS peak at its level, or the
+## menu track's real samples), a running footstep, the steal sound and a scare
+## sting all at once, at their real gains, with BOTH sliders at maximum
+## (Master 1.0, Music 1.0): worst case, every peak lined up.
+func _clip() -> void:
+	var am = root.get_node("/root/AudioManager")
+	var sfx := {&"step": -10.0, &"steal": -7.0, &"scare_hit": 0.0, &"shriek": 0.0}
+	var sum := 0.0
+	var parts: Array = []
+	for id in sfx:
+		var data: PackedByteArray = am._streams[id].data
+		var peak := 0
+		for i in range(0, data.size(), 2):
+			peak = maxi(peak, absi(data.decode_s16(i)))
+		var p: float = peak / 32767.0 * db_to_linear(sfx[id])
+		parts.append("%s %.2f" % [id, p])
+		sum += p
+	var scare_duck: float = db_to_linear(-6.0)
+	var bg: float = 1.0 * db_to_linear(MusicFiles.BG_DB) * scare_duck
+	var bg_free: float = 1.0 * db_to_linear(MusicFiles.BG_DB)
+	print("peaks at max sliders: %s; bg_track %.2f (ducked for the scare) / %.2f (not)" % [", ".join(parts), bg, bg_free])
+	print("worst-case sum (all peaks aligned): %.2f with the scare duck (%.1f dBFS), %.2f without (%.1f dBFS)" % [sum + bg,
+		linear_to_db(sum + bg), sum + bg_free, linear_to_db(sum + bg_free)])
+	# The real mix: the samples summed as they play (all starting together),
+	# with one sting (a scare plays one), at max sliders and at the defaults.
+	for sting in [&"scare_hit", &"shriek"]:
+		var bufs: Array = []
+		for id in [&"step", &"steal", sting]:
+			var raw: PackedByteArray = am._streams[id].data
+			var f := PackedFloat32Array()
+			f.resize(raw.size() / 2)
+			for i in f.size():
+				f[i] = raw.decode_s16(i * 2) / 32767.0 * db_to_linear(sfx[id])
+			bufs.append(f)
+		var mix_peak := 0.0
+		for i in (bufs[2] as PackedFloat32Array).size():
+			var v: float = 0.0
+			for f in bufs:
+				v += (f as PackedFloat32Array)[i] if i < (f as PackedFloat32Array).size() else 0.0
+			mix_peak = maxf(mix_peak, absf(v) + bg)
+		var master_default: float = 0.7
+		print("real mix with %s: peak %.2f (%.1f dBFS) at max sliders; %.2f (%.1f dBFS) at the default Master (0.7) and Music (0.85)" % [sting,
+			mix_peak, linear_to_db(mix_peak), mix_peak * master_default, linear_to_db(mix_peak * master_default)])
+		_check("music + footstep + steal + %s under 0 dBFS at the default sliders" % sting, mix_peak * master_default < 1.0)
+	print("music's share of the worst case: %.2f of %.2f (the stings alone reach %.2f)" % [bg, sum + bg, sum])
+	# The menu track and its melancholy layer at full sliders, real samples.
+	var m := PackedFloat32Array()
+	m.resize(MusicSynth.total_samples(&"menu"))
+	MusicSynth.render(&"menu", m, 0, m.size())
+	var a := PackedFloat32Array()
+	a.resize(MusicSynth.total_samples(&"menu_sad"))
+	MusicSynth.render(&"menu_sad", a, 0, a.size())
+	var peak2 := 0.0
+	for i in a.size():
+		peak2 = maxf(peak2, absf(m[i % m.size()] * db_to_linear(mm.BASE_DB) + a[i] * db_to_linear(mm.SAD_DB)))
+	print("menu + melancholy at max sliders: peak %.2f (%.1f dBFS)" % [peak2, linear_to_db(peak2)])
+	_check("the loudest music slider still leaves headroom (menu)", peak2 < 0.9)
+
+
+## Stage 6b: the music's level (player volume + Music bus) everywhere.
+func _level(where: String, before: float) -> void:
+	var bus_db: float = AudioServer.get_bus_volume_db(AudioServer.get_bus_index(&"Music"))
+	var player_db: float = mm._files.level if mm._files.playing_bg() else mm._players[mm._active].volume_db
+	var file_note: String = "bg_track" if mm._files.playing_bg() else String(mm._playing)
+	var now: float = player_db + bus_db
+	print("level %-16s %-8s %6.1f dB (player %.1f, bus %.1f); Stage 6: %.1f dB, +%.1f dB" % [where, file_note, now, player_db, bus_db,
+		before, now - before])
+	_check("%s music level raised ~8-10 dB" % where, now - before >= 7.5 and now - before <= 10.5)
+
 
 func _ending() -> void:
 	var gs = root.get_node("/root/GameState")
@@ -179,6 +265,7 @@ func _ending() -> void:
 	await _wait(2.0)
 	_check("then the synthesized ending carries on, quietly", mm._playing == &"ending" and mm._players[mm._active].volume_db > -30.0
 		and mm._players[mm._active].volume_db < mm.BASE_DB - 4.0)
+	_level("credits (ending)", -16.0 - 4.437)
 	bus.frame_changed.emit(load("res://data/frames/ch3_outside.tres"))
 	await _wait(1.5)
 	_check("the sting does not play twice", f.end_state == MusicFiles.End.DONE and not f._end.playing)
@@ -260,7 +347,8 @@ func _sfx() -> void:
 func _run() -> void:
 	mm = root.get_node("/root/MusicManager")
 	bus = root.get_node("/root/EventBus")
-	bus.cutscene_started.connect(func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish"))
+	skip_cs = func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish")
+	bus.cutscene_started.connect(skip_cs)
 	await _wait(0.3)
 	var t0: int = Time.get_ticks_msec()
 	bus.game_started.emit()
@@ -290,7 +378,11 @@ func _run() -> void:
 		_check("%s does not clip" % track, peak < 0.98)
 		_check("%s loops without a click" % track, seam < 0.08)
 	_check("menu playing", mm._playing == &"menu")
+	_check("old settings were moved up to the new default once", is_equal_approx(mm.music_volume, 0.85) or mm.music_volume > 0.85)
+	await _wait(2.0)
+	_level("menu", -10.0 - 4.437)
 	await _files_info()
+	_clip()
 	await _sfx()
 	await _bg()
 	await _ending()

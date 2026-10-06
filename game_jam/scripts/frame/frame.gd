@@ -18,6 +18,7 @@ const EVENT_SCRIPTS: Dictionary = {
 	&"margin_chase": preload("res://scripts/events/margin_chase_event.gd"),
 	&"artist_hand": preload("res://scripts/enemy/artist_hand.gd"),
 	&"mirror_ghoul": preload("res://scripts/events/mirror_ghoul_event.gd"),
+	&"closet_scare": preload("res://scripts/events/closet_scare_event.gd"),
 }
 
 ## Interactable kinds with their own behaviour; everything else is the base class.

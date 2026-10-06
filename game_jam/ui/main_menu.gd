@@ -25,7 +25,7 @@ func open() -> void:
 
 ## The crows backdrop (TitleArt, built by the start screen) on every page.
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), InkDraw.WHITE)
+	draw_rect(Rect2(Vector2.ZERO, size), InkDraw.PAPER)
 	TitleLive.draw(self, size, InkDraw.boil_tick())
 
 

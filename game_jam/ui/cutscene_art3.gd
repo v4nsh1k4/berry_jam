@@ -1,7 +1,7 @@
 class_name CutsceneArt3
 extends RefCounted
-## First-person (POV) cutscene panels (Stage 5): C2 the torch and C4 the
-## descent, seen through the player's eyes (C1 went third person in Stage 6,
+## First-person (POV) cutscene panels (Stage 5): C2 the torch (no hands since
+## Stage 6b) and C4 the descent (rail hands), seen through the player's eyes (C1 went third person in Stage 6,
 ## see CutsceneArt5). Two layers:
 ##   draw()     the scene, under CutsceneView's camera (pov_* camera modes
 ##              look around, breathe and step)
@@ -29,8 +29,8 @@ static func overlay(ci: CanvasItem, id: String, s: Vector2, t: float, tick: int,
 	var sway: Vector2 = Vector2(sin(t * 1.7) * 5.0, sin(t * 3.4) * 3.0)
 	match id:
 		"pov_torch", "pov_watch":
-			var pose: Array = CutsceneArt4.torch_pose(id == "pov_watch", s, t)
-			torch_hand(ci, pose[0] + sway * 0.5, pose[1], u, tick)
+			# Stage 6b: no hands in C2; the beam rises from below the frame.
+			pass
 		"pov_stairs", "pov_ink_rise":
 			CutsceneArt4.rail_hands(ci, id == "pov_ink_rise", s, t, u, sway, tick)
 	vignette(ci, s, 0.75)
@@ -63,19 +63,6 @@ static func hand(ci: CanvasItem, tip: Vector2, dir: Vector2, k: float, grip: flo
 	var thumb_base: Vector2 = palm - side * 38.0 * k
 	var thumb_tip: Vector2 = (thumb_base + dir.rotated(-0.8) * 46.0 * k).lerp(index_tip + side * 6.0 * k, grip)
 	IntroArt2.digit(ci, thumb_base, thumb_tip, 15.0 * k, red, tick + 8)
-
-
-## Your hand holding the torch at `lens`, pointing along `angle`: a fist
-## round the barrel, the forearm running on behind it out of view.
-static func torch_hand(ci: CanvasItem, lens: Vector2, angle: float, u: float, tick: int) -> void:
-	var dir: Vector2 = Vector2.from_angle(angle)
-	var side: Vector2 = dir.orthogonal()
-	var back: Vector2 = lens - dir * 170.0 * u
-	InkDraw.shape(ci, PackedVector2Array([lens + side * 22 * u, lens - side * 22 * u, back - side * 17 * u, back + side * 17 * u]), 4.0, tick,
-		Color(0.25, 0.24, 0.27))
-	InkDraw.line(ci, lens - dir * 20.0 * u + side * 12.0 * u, back + side * 10.0 * u, 2.0, tick + 2, Color(1, 1, 1, 0.25))
-	hand(ci, lens - dir * 40.0 * u, dir, u * 0.8, 1.0, tick + 10)
-	InkDraw.ellipse(ci, lens, Vector2(24, 10) * u, 3.0, tick + 1, Color(1.0, 0.97, 0.85))
 
 
 ## A soft dark edge round the view (never red): gradient trapezoids.

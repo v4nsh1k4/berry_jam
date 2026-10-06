@@ -4,16 +4,19 @@ extends RefCounted
 ## stepped at the line-boil rate: the white centre's spiral of looping lines
 ## turning slowly, the crows' small pale eyes (a glint, a rare blink), a
 ## feather shiver now and then, and the one red thing: a tiny unperson
-## standing in the middle. Plus TitleLettering with a dark smudge behind it.
+## standing in the middle. Plus TitleLettering with a paper wash behind it.
 
 
-static func draw(ci: CanvasItem, screen: Vector2, tick: int) -> void:
+## `centre`: the spiral and the red figure too (the End Card covers the
+## middle with its credits page, so it leaves them out).
+static func draw(ci: CanvasItem, screen: Vector2, tick: int, centre: bool = true) -> void:
 	var sc: Vector2 = screen / Vector2(TitleArt.SIZE)
 	if TitleArt.texture != null:
 		ci.draw_texture_rect(TitleArt.texture, Rect2(Vector2.ZERO, screen), false)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, sc)
 	var tq: float = tick * InkDraw.BOIL_INTERVAL_MS / 1000.0
-	_spiral(ci, TitleArt.CENTRE, tq)
+	if centre:
+		_spiral(ci, TitleArt.CENTRE, tq)
 	for i in TitleArt.crows.size():
 		var xf: Transform2D = TitleArt.crows[i][0]
 		var eye: Vector2 = xf * CrowShapes.EYE
@@ -32,7 +35,8 @@ static func draw(ci: CanvasItem, screen: Vector2, tick: int) -> void:
 		for k in 4:
 			var at: Vector2 = xf2 * (CrowShapes.WING_TIP + Vector2(rng.randf_range(-20, 20), rng.randf_range(-12, 12)))
 			ci.draw_line(at, at + Vector2(rng.randf_range(-12, 12), rng.randf_range(-12, 12)), InkDraw.INK, 2.0)
-	RevealArt.red_figure(ci, TitleArt.CENTRE + Vector2(0, 34), 0.42, tick)
+	if centre:
+		RevealArt.red_figure(ci, TitleArt.CENTRE + Vector2(0, 34), 0.42, tick)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -48,11 +52,12 @@ static func _spiral(ci: CanvasItem, c: Vector2, tq: float) -> void:
 		ci.draw_polyline(pts, Color(InkDraw.INK, 0.55), 1.4)
 
 
-## A soft dark smudge (ink wash) so white lettering reads over the crows.
+## A soft paper wash (Stage 6b; a dark ink smudge before) so the black
+## lettering reads over the crows.
 static func smudge(ci: CanvasItem, c: Vector2, radii: Vector2) -> void:
 	for i in 16:
 		var k: float = 1.0 - i / 16.0
-		ci.draw_colored_polygon(InkDraw.ellipse_points(c, radii * (0.4 + 0.7 * k), 36), Color(0.03, 0.03, 0.04, 0.085))
+		ci.draw_colored_polygon(InkDraw.ellipse_points(c, radii * (0.4 + 0.7 * k), 36), Color(InkDraw.PAPER, 0.12))
 
 
 ## The title block: "ink-bleed" and the subtitle, scrawled in white.

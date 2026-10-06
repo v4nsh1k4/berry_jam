@@ -16,17 +16,22 @@ extends Node
 
 const SETTINGS_PATH: String = "user://settings.cfg"
 const BUS: StringName = &"Music"
-const BASE_DB: float = -10.0
-const SAFE_DB: float = -20.0
+## Stage 6b: every music level +6 dB (and the slider default +3 dB): it was
+## too quiet. Was -10 / -20.
+const BASE_DB: float = -4.0
+const SAFE_DB: float = -14.0
+## Stingers keep their old level (BASE_DB + 2 before Stage 6b).
+const STING_DB: float = -8.0
 const PRIORITY: Array[StringName] = [&"menu", &"menu_sad", &"ch1", &"bed", &"ch2", &"layer_pulse", &"layer_intensity", &"layer_hunt", &"ch3",
 	&"reveal", &"return", &"erase", &"warm", &"ending"]
 const BED_UNDER: Array[StringName] = [&"ch1", &"ch2", &"ch3"]
-const BED_DB: float = -14.0
+const BED_DB: float = -8.0
 ## The menu's melancholy layer: ~9 dB under the menu track.
-const SAD_DB: float = -19.0
+const SAD_DB: float = -13.0
 const CUES: Dictionary = {&"sting_descent": &"danger", &"sting_heart": &"danger", &"repair": &"relief", &"flashback": &"discover"}
 
-var music_volume: float = 0.6
+## Default 0.85 (-1.4 dB; 0.6 before Stage 6b). Old saves are moved up once.
+var music_volume: float = 0.85
 var music_muted: bool = false
 
 var _renderer: MusicRenderer = MusicRenderer.new()
@@ -72,12 +77,14 @@ func _ready() -> void:
 	EventBus.reveal_started.connect(_choose.bind(&"reveal"))
 	EventBus.twist_revealed.connect(_choose.bind(&"return"))
 	EventBus.comic_repaired.connect(func() -> void: _choose(&"warm"); stinger(&"relief"))
-	EventBus.crawler_telegraph.connect(duck.bind(1.0, 0.7))
+	# Stage 6b: ducks are softer (-6 dB at most) and short; only the cellar
+	# build and the reveal's silent beat still go near-silent.
+	EventBus.crawler_telegraph.connect(duck.bind(0.5, 0.7))
 	EventBus.player_noticed.connect(stinger.bind(&"danger"))
 	EventBus.bubble_returned.connect(func(_b: BubbleData, _p: Vector2) -> void: stinger(&"relief"))
-	EventBus.cutscene_started.connect(func(_id: StringName) -> void: duck(0.6, 999.0))
+	EventBus.cutscene_started.connect(func(_id: StringName) -> void: duck(0.5, 999.0))
 	EventBus.cutscene_finished.connect(func(_id: StringName) -> void: duck(0.0, 0.0))
-	EventBus.scare.connect(func(_k: StringName, _i: float) -> void: duck(1.0, 1.4))
+	EventBus.scare.connect(func(_k: StringName, _i: float) -> void: duck(0.5, 0.8))
 	EventBus.scare_building.connect(func(_k: StringName, seconds: float) -> void: duck(0.97 if seconds > 0.0 else 0.0, seconds))
 	EventBus.music_cue.connect(_on_cue)
 
@@ -130,7 +137,7 @@ func _on_cue(cue: StringName) -> void:
 func stinger(id: StringName) -> void:
 	if _started and _stingers.has(id):
 		_sting.stream = _stingers[id]
-		_sting.volume_db = BASE_DB + 2.0
+		_sting.volume_db = STING_DB
 		_sting.play()
 
 
@@ -168,7 +175,7 @@ func _process(delta: float) -> void:
 		_players[i].volume_db = move_toward(_players[i].volume_db, target, delta * (40.0 if target > -80.0 else 30.0))
 	_layers.update(delta, BASE_DB, duck_db, _ensure_layer)
 	var bed_on: bool = _want in BED_UNDER and GameState.is_playing
-	_files.update(delta, bed_on, duck_db, _duck >= 0.6)
+	_files.update(delta, bed_on, duck_db, _duck >= 0.9)
 	var bed_db: float = BED_DB + duck_db if bed_on and not _files.has_bg() else -80.0
 	_bed.volume_db = move_toward(_bed.volume_db, bed_db, delta * (140.0 if bed_db < _bed.volume_db else 40.0))
 	_ensure_layer(_bed, &"bed")

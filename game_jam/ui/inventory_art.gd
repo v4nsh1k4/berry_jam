@@ -36,8 +36,17 @@ static func draw_cooldown(ci: CanvasItem, r: Rect2, ability_id: StringName) -> v
 	ci.draw_string(font, r.end - Vector2(34, 8), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, InkDraw.INK)
 
 
-## Small ink arrow with a count of words hidden on that side.
-static func draw_more_arrow(ci: CanvasItem, x: float, dir: float, hidden: int) -> void:
+## The clickable area of a "+N" arrow (Stage 6b: click to scroll the window).
+static func arrow_rect(x: float, dir: float) -> Rect2:
+	return Rect2(Vector2(minf(x, x + 14.0 * dir) - 12.0, 24.0), Vector2(38.0, 76.0))
+
+
+## Small ink arrow with a count of words hidden on that side; `hover` boxes it.
+static func draw_more_arrow(ci: CanvasItem, x: float, dir: float, hidden: int, hover: bool = false) -> void:
+	if hover:
+		var r: Rect2 = arrow_rect(x, dir)
+		ci.draw_rect(r, InkDraw.WHITE)
+		ci.draw_rect(r, InkDraw.INK, false, 2.0)
 	var y: float = 60.0
 	var tip: Vector2 = Vector2(x + 14.0 * dir, y)
 	ci.draw_colored_polygon(PackedVector2Array([tip, Vector2(x, y - 12), Vector2(x, y + 12)]), InkDraw.INK)
@@ -80,7 +89,8 @@ static func draw_selected_line(ci: Control, bubble: BubbleData) -> void:
 	if bubble == null:
 		return
 	var lines: PackedStringArray = describe(bubble)
-	var text: String = lines[0] + ":  " + lines[1]
+	# Stage 6b: say plainly that E speaks whichever word is selected.
+	var text: String = "E says " + lines[0] + ":  " + lines[1]
 	var font: Font = ThemeDB.fallback_font
 	var w: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 	var box: Rect2 = Rect2(Vector2(110, -20), Vector2(w + 20, 20))
@@ -95,3 +105,19 @@ static func draw_badge(ci: CanvasItem, r: Rect2, count: int) -> void:
 	var c: Vector2 = Vector2(r.end.x - 18, r.position.y + 16)
 	ci.draw_circle(c, 13.0, InkDraw.INK)
 	ci.draw_string(ThemeDB.fallback_font, c + Vector2(-10, 5), "x%d" % count, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, InkDraw.WHITE)
+
+
+## A stolen word flying from where it was taken into its slot (`target`),
+## flashing red as it tears away; `landed` runs when it arrives.
+static func fly(parent: Node, text: String, from: Vector2, target: Vector2, time: float, landed: Callable) -> void:
+	var flyer: Node2D = Node2D.new()
+	flyer.draw.connect(func() -> void: BubbleArt.draw(flyer, Vector2.ZERO, text, BubbleArt.NO_TAIL, 3))
+	flyer.position = from
+	flyer.modulate = Color(1.0, 0.25, 0.3)
+	parent.add_child(flyer)
+	var tween: Tween = flyer.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(flyer, "scale", Vector2(1.35, 1.35), 0.12).set_ease(Tween.EASE_OUT)
+	tween.tween_property(flyer, "position", target, time)
+	tween.parallel().tween_property(flyer, "scale", Vector2(0.85, 0.85), time)
+	tween.parallel().tween_property(flyer, "modulate", Color.WHITE, time)
+	tween.tween_callback(func() -> void: flyer.queue_free(); landed.call())

@@ -30,6 +30,9 @@ extends Resource
 @export var prompt: String = ""
 ## Caption shown on inspect / pickup.
 @export_multiline var caption: String = ""
+## Stage 6b: an inspect object's caption on the second and later looks
+## (empty = `caption` every time).
+@export var repeat_caption: String = ""
 ## The "it opened" caption (UnlockFeedback); empty = a default per kind.
 @export var unlock_caption: String = ""
 ## memory: offset (from the sketch's centre) of the thing it is the key to;

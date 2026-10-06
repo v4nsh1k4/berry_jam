@@ -1,12 +1,15 @@
 extends Control
-## Esc / P while playing: Resume, Restart Chapter, Sound on/off, volume,
-## Quit to menu. Pauses the tree; this node keeps running.
+## Esc / P while playing: Resume, Restart Chapter, Controls (Stage 6b: the
+## controls card's grid on its own page), Sound on/off, volume, Music on/off
+## and volume, Quit to menu. Pauses the tree; this node keeps running.
 
 var _mute_button: Button
 var _resume_button: Button
 var _volume: HSlider
 var _music_button: Button
 var _music: HSlider
+var _main: Control
+var _controls: Control
 
 
 func _ready() -> void:
@@ -22,6 +25,8 @@ func _ready() -> void:
 	add_child(center)
 	var panel: PanelContainer = PanelContainer.new()
 	center.add_child(panel)
+	_main = panel
+	_controls = _controls_page(center)
 	var box: VBoxContainer = VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -30,6 +35,7 @@ func _ready() -> void:
 	_resume_button = UiTheme.make_button("Resume", close)
 	box.add_child(_resume_button)
 	box.add_child(UiTheme.make_button("Restart Chapter", _on_restart))
+	box.add_child(UiTheme.make_button("Controls", _show_controls.bind(true)))
 	_mute_button = UiTheme.make_button("", _on_mute)
 	box.add_child(_mute_button)
 	box.add_child(UiTheme.make_label("Volume", 18))
@@ -56,7 +62,9 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("pause"):
 		return
-	if visible:
+	if visible and _controls.visible:
+		_show_controls(false)
+	elif visible:
 		close()
 	elif GameState.is_playing and not GameState.modal_open and not TransitionManager.is_playing:
 		open()
@@ -65,10 +73,34 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
+## The controls card's grid, a reminder line and Back (Esc goes back too).
+func _controls_page(center: Control) -> Control:
+	var panel: PanelContainer = PanelContainer.new()
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	box.add_child(UiTheme.make_label("CONTROLS", 36))
+	box.add_child(ControlsCard.grid())
+	box.add_child(UiTheme.make_button("Back", _show_controls.bind(false)))
+	panel.add_child(box)
+	center.add_child(panel)
+	panel.hide()
+	return panel
+
+
+func _show_controls(on: bool) -> void:
+	_controls.visible = on
+	_main.visible = not on
+	if on:
+		(_controls.get_child(0).get_child(2) as Button).grab_focus()
+	else:
+		_resume_button.grab_focus()
+
+
 func open() -> void:
 	_volume.set_value_no_signal(AudioManager.master_volume)
 	_music.set_value_no_signal(MusicManager.music_volume)
 	_refresh_mute()
+	_show_controls(false)
 	show()
 	get_tree().paused = true
 	_resume_button.grab_focus()

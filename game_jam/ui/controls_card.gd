@@ -2,7 +2,11 @@ class_name ControlsCard
 extends Control
 ## The controls, as a comic page with an OK button. A new game shows it
 ## before anything starts and waits for OK (click, Enter or Space); the main
-## menu's Controls page uses the same text. Continue never shows it.
+## menu's and pause menu's Controls pages use the same text. Continue never
+## shows it. Stage 6b: F1 or H opens it any time while playing (not in a
+## cutscene, transition or another modal): it pauses like the pause menu and
+## closes with F1 / H, Esc or OK, restoring the paused / modal state it found
+## (and never emits `accepted`, which only New Game waits on).
 
 signal accepted
 
@@ -10,20 +14,28 @@ signal accepted
 ## packed arrays read back empty in exported builds).
 const TEXT: String = """A / D  or  arrows | move
 W / S | step nearer / further
-Shift | run (loud: it can hear you)
+Shift | run (loud: it can hear you, so walk near it)
 Space  (W / Up) | jump (on the page spread)
-E | interact: doors, locks, hiding spots, say the selected word
+E | say the highlighted word (whichever is selected); use doors, locks, hiding spots
 Hold E | steal a word / give a word back
-Q / R  or  wheel | cycle your words (1 - 6 picks one)
+1 - 6, Q / R, wheel | pick the word E says (click the strip's arrows to scroll)
 Shift + Q / R  or  drag | reorder your words
 F  or  left click | flashlight, aimed with the mouse
-Esc  or  P | pause"""
+The light | draws it: the NOTICED blot fills; full = it hunts you
+To be safe | light off and stand still: the blot drains
+F1  or  H | these controls, any time
+Esc  or  P | pause
+Read | the text at the bottom right of the screen"""
 
 var _ok: Button
+var _in_game: bool = false
+var _was_paused: bool = false
+var _was_modal: bool = false
 
 
 func _ready() -> void:
 	UiTheme.make_screen(self)
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var center: CenterContainer = CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -35,6 +47,9 @@ func _ready() -> void:
 	center.add_child(box)
 	box.add_child(UiTheme.make_label("HOW TO PLAY", 44))
 	box.add_child(grid())
+	EventBus.frame_changed.connect(func(_d: FrameData) -> void:
+		if GameState.is_playing:
+			Hints.once("f1_controls", "F1 or H: see the controls again, any time.", 5.0))
 	_ok = UiTheme.make_button("OK", _accept)
 	box.add_child(_ok)
 	hide()
@@ -62,17 +77,45 @@ func open() -> void:
 	_ok.grab_focus()
 
 
+## Mid-game (F1 / H): pauses like the pause menu.
+func open_in_game() -> void:
+	if visible:
+		return
+	_in_game = true
+	_was_paused = get_tree().paused
+	_was_modal = GameState.modal_open
+	get_tree().paused = true
+	GameState.modal_open = true
+	open()
+
+
+static func _is_controls_key(event: InputEvent) -> bool:
+	var key: InputEventKey = event as InputEventKey
+	return key != null and key.pressed and not key.echo and (key.keycode == KEY_F1 or key.keycode == KEY_H)
+
+
 func _accept() -> void:
 	if not visible:
 		return
 	hide()
+	if _in_game:
+		_in_game = false
+		get_tree().paused = _was_paused
+		GameState.modal_open = _was_modal
+		return
 	accepted.emit()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if visible and (event.is_action_pressed("ui_accept") or event.is_action_pressed("jump")):
+	var closing: bool = event.is_action_pressed("ui_accept") or event.is_action_pressed("jump")
+	closing = closing or (_in_game and (event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel") or _is_controls_key(event)))
+	if visible and closing:
 		get_viewport().set_input_as_handled()
 		_accept()
+	elif not visible and _is_controls_key(event) and GameState.is_playing and not GameState.modal_open \
+			and not get_tree().paused and not CutsceneSystem.is_playing and not TransitionManager.is_playing:
+		get_viewport().set_input_as_handled()
+		open_in_game()
 
 
 func _draw() -> void:

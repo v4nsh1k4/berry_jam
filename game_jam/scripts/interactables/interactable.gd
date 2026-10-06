@@ -107,7 +107,11 @@ func get_prompt(bubble: BubbleData) -> String:
 func interact_plain() -> void:
 	match data.kind:
 		&"inspect":
-			EventBus.caption_requested.emit(data.caption, 3.5)
+			var looked: StringName = StringName("looked_" + String(data.id))
+			var again: bool = data.repeat_caption != "" and GameState.seen.has(looked)
+			if not GameState.seen.has(looked):
+				GameState.seen.append(looked)
+			EventBus.caption_requested.emit(data.repeat_caption if again else data.caption, 3.0 if again else 4.5)
 			EventBus.inspected.emit(data.id)
 		&"lever":
 			resolve()

@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_cutscene_beat")
-duration = 2.38
+duration = 3.4
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
 draws = PackedStringArray("pov_torch")
 caption = "Light. The house shows what it hides..."
@@ -15,7 +15,7 @@ page_turn = false
 
 [sub_resource type="Resource" id="Resource_2"]
 script = ExtResource("2_cutscene_beat")
-duration = 2.55
+duration = 4.04
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
 draws = PackedStringArray("pov_watch")
 caption = "...and it shows you to whatever is watching."

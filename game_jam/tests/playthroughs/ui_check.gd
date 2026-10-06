@@ -50,6 +50,13 @@ func _run() -> void:
 	bus.cutscene_started.connect(func(_id): root.get_node("/root/CutsceneSystem").call_deferred("_finish"))
 	await _wait(0.3)
 	main = current_scene
+	# Stage 6b: forget the one-time hints, so this run shows them.
+	var progress := ConfigFile.new()
+	if progress.load("user://progress.cfg") == OK and progress.has_section("progress"):
+		for k in progress.get_section_keys("progress"):
+			if String(k).begins_with("hint_"):
+				progress.erase_section_key("progress", k)
+		progress.save("user://progress.cfg")
 	# Stage 6: the crows backdrop inks in over the first frames (a hidden test
 	# window doesn't draw on its own, so force the draws here).
 	var title_art = load("res://ui/title_art.gd")
@@ -145,12 +152,77 @@ func _run() -> void:
 	print("hover slot=", strip._hover_slot)
 	await _shot("ui_tooltip.png")
 	print("words=", gs.inventory.size())
+	# Stage 6b: the "+N" arrows are clickable (hover box, scroll one slot).
+	for w2 in ["arthur_push", "arthur_help", "vane_hide", "vane_hush"]:
+		gs.add_bubble(load("res://data/bubbles/%s.tres" % w2))
+	await _wait(0.8)
+	strip._first = 0
+	strip.queue_redraw()
+	var right_x: float = strip._slot_rect(5).end.x + 6.0
+	var arrow_at: Vector2 = strip.get_global_transform() * Vector2(right_x + 8.0, 60.0)
+	var hover := InputEventMouseMotion.new()
+	hover.position = arrow_at
+	hover.global_position = arrow_at
+	Input.parse_input_event(hover)
+	await _wait(0.3)
+	await _shot("ui_arrows_hover.png")
+	var hovered: int = strip._hover_arrow
+	var first0: int = strip._first
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.position = arrow_at
+	press.global_position = arrow_at
+	press.pressed = true
+	Input.parse_input_event(press)
+	var release: InputEventMouseButton = press.duplicate()
+	release.pressed = false
+	Input.parse_input_event(release)
+	await _wait(0.3)
+	await _shot("ui_arrows_clicked.png")
+	print("arrows: %d words, hover=%d, first %d -> %d (selected slot %d)" % [gs.inventory.size(), hovered, first0, strip._first,
+		root.get_node("/root/InventorySlots").selected_slot() if root.has_node("/root/InventorySlots") else -1])
 	root.warp_mouse(Vector2(640, 200))
 	await _go("ch2_clock_room")
 	root.warp_mouse(Vector2(48 + 600, 32 + 140))
 	root.get_node("/root/LightingSystem").set_light(true)
 	await _wait(1.2)
+	await _wait(1.6)
 	await _shot("ui_meter.png")
+	var meter = main.get_node("HUDLayer/NoticeMeter")
+	var overlay = main.get_node("PageLayer/PageOverlay")
+	print("meter notice=%.2f, hint now \"%s\" (queued %d)" % [meter._notice, overlay._hint, overlay._hints.size()])
+	# Stage 6b: the controls card any time (F1 / H), and from the pause menu.
+	var key := InputEventKey.new()
+	key.keycode = KEY_F1
+	key.physical_keycode = KEY_F1
+	key.pressed = true
+	Input.parse_input_event(key)
+	await _wait(0.4)
+	var card = main.get_node("MenuLayer/ControlsCard")
+	var f1_open: bool = card.visible and paused and gs.modal_open
+	await _shot("ui_controls_midgame.png")
+	var hkey := InputEventKey.new()
+	hkey.keycode = KEY_H
+	hkey.physical_keycode = KEY_H
+	hkey.pressed = true
+	Input.parse_input_event(hkey)
+	await _wait(0.4)
+	var f1_closed: bool = not card.visible and not paused and not gs.modal_open
+	var pause_menu = main.get_node("MenuLayer/PauseMenu")
+	pause_menu.open()
+	await _wait(0.2)
+	pause_menu._show_controls(true)
+	await _wait(0.3)
+	await _shot("ui_pause_controls.png")
+	var esc2 := InputEventKey.new()
+	esc2.keycode = KEY_ESCAPE
+	esc2.physical_keycode = KEY_ESCAPE
+	esc2.pressed = true
+	Input.parse_input_event(esc2)
+	await _wait(0.3)
+	var back_to_pause: bool = pause_menu.visible and pause_menu._main.visible
+	pause_menu.close()
+	print("controls: F1 opens (paused, modal)=%s, H closes=%s, pause-menu Controls page Esc -> pause menu=%s" % [f1_open, f1_closed, back_to_pause])
 	root.get_node("/root/LightingSystem").set_light(false)
 	# Stage 6: webs and watching eyes in some rooms (dark, then the torch on them).
 	for room in ["ch2_servants_passage", "ch2_cellar", "ch1_bedchamber"]:

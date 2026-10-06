@@ -12,6 +12,10 @@ const MAX_CRACKS: int = 7
 
 var _title: String = ""
 var _captions: PackedStringArray = PackedStringArray()
+## One-time hints waiting their turn ([text, seconds]), and the one showing.
+var _hints: Array = []
+var _hint: String = ""
+var _hint_left: float = 0.0
 var _doodles: bool = false
 ## Spread pages fill the whole panel: their captions teach, then get out of
 ## the way after this many seconds.
@@ -33,6 +37,7 @@ var _tick: int = -1
 func _ready() -> void:
 	EventBus.frame_changed.connect(_on_frame_changed)
 	EventBus.caption_requested.connect(_on_caption_requested)
+	EventBus.hint_requested.connect(_on_hint)
 	EventBus.comic_damage_changed.connect(_on_damage_changed)
 	EventBus.returned_to_menu.connect(hide)
 	EventBus.crawler_proximity.connect(_on_crawler_proximity)
@@ -62,6 +67,17 @@ func _on_comic_repaired() -> void:
 		tween.tween_property(self, "_gap", 1.0, 1.5).set_trans(Tween.TRANS_SINE)
 
 
+func _on_hint(text: String, duration: float, urgent: bool) -> void:
+	if not urgent:
+		_hints.append([text, duration])
+		return
+	if _hint != "":
+		_hints.push_front([_hint, maxf(_hint_left, 2.0)])
+	_hints.push_front([text, duration])
+	_hint_left = 0.0
+	_hint = ""
+
+
 func _on_caption_requested(text: String, duration: float) -> void:
 	_toast = text
 	_toast_left = duration
@@ -83,6 +99,18 @@ func _process(delta: float) -> void:
 		if _captions_left <= 0.0:
 			_captions = PackedStringArray()
 			queue_redraw()
+	if _hint_left > 0.0:
+		_hint_left -= delta
+		if _hint_left <= 0.0:
+			_hint = ""
+			queue_redraw()
+	elif not _hints.is_empty():
+		var next: Array = _hints.pop_front()
+		_hint = next[0]
+		# At least its reading time (about 0.06 s a character, 3 s minimum).
+		_hint_left = maxf(float(next[1]), 1.5 + _hint.length() * 0.06)
+		_hint_left = maxf(_hint_left, 3.0)
+		queue_redraw()
 	if _toast_left > 0.0:
 		_toast_left -= delta
 		if _toast_left <= 0.0:
@@ -124,10 +152,14 @@ func _draw() -> void:
 		var toast_size: Vector2 = font.get_string_size(_toast, HORIZONTAL_ALIGNMENT_LEFT, -1, TOAST_FONT_SIZE)
 		_draw_caption(font, _toast, Vector2(panel.get_center().x - toast_size.x * 0.5 - 14, panel.position.y + 16), TOAST_FONT_SIZE, 3, InkDraw.WHITE)
 	var y: float = panel.end.y - 18.0
-	for i in range(_captions.size() - 1, -1, -1):
-		var size: Vector2 = font.get_string_size(_captions[i], HORIZONTAL_ALIGNMENT_LEFT, -1, CAPTION_FONT_SIZE)
+	var stack: PackedStringArray = _captions.duplicate()
+	if _hint != "":
+		stack.append("TIP: " + _hint)
+	for i in range(stack.size() - 1, -1, -1):
+		var size: Vector2 = font.get_string_size(stack[i], HORIZONTAL_ALIGNMENT_LEFT, -1, CAPTION_FONT_SIZE)
 		var top_left: Vector2 = Vector2(panel.end.x - size.x - 46.0, y - size.y - 14.0)
-		_draw_caption(font, _captions[i], top_left, CAPTION_FONT_SIZE, 10 + i)
+		var is_hint: bool = _hint != "" and i == stack.size() - 1
+		_draw_caption(font, stack[i], top_left, CAPTION_FONT_SIZE, 10 + i, InkDraw.WHITE if is_hint else InkDraw.PAPER)
 		y = top_left.y - 10.0
 
 

@@ -12,10 +12,11 @@ const BEAM: Color = Color(1.0, 0.96, 0.82)
 
 ## [lens position (screen), aim angle] of the torch at time `t`.
 static func torch_pose(watching: bool, s: Vector2, t: float) -> Array:
+	# The lens sits just below the panel (Stage 6b: no hand holds it in view).
 	if watching:
-		return [Vector2(s.x * 0.64, s.y * 0.5) + Vector2(sin(t * 31.0), cos(t * 27.0)) * 1.5, -PI * 0.5 + 0.22 + sin(t * 0.8) * 0.03]
+		return [Vector2(s.x * 0.64, s.y * 1.06) + Vector2(sin(t * 31.0), cos(t * 27.0)) * 1.5, -PI * 0.5 + 0.22 + sin(t * 0.8) * 0.03]
 	var lift: float = smoothstep(0.0, 0.55, t)
-	return [Vector2(s.x * 0.66, lerpf(s.y * 1.4, s.y * 0.5, lift)), -PI * 0.5 + sin(t * 1.5 - 1.2) * 0.62]
+	return [Vector2(s.x * 0.66, lerpf(s.y * 1.5, s.y * 1.06, lift)), -PI * 0.5 + sin(t * 1.5 - 1.2) * 0.62]
 
 
 static func dark_room(ci: CanvasItem, watching: bool, s: Vector2, t: float, tick: int) -> void:

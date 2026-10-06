@@ -68,7 +68,8 @@ func start() -> void:
 		&"sting": SfxSynth2.sting, &"scare_hit": SfxSynth2.scare_hit, &"scare_low": SfxSynth2.scare_low,
 		&"door_creak_0": SfxSynth2.door_creak.bind(11), &"door_creak_1": SfxSynth2.door_creak.bind(29),
 		&"door_creak_2": SfxSynth2.door_creak.bind(47), &"groan": SfxSynth3.Groan.new(3),
-		&"moan": SfxSynth3.moan,
+		&"moan": SfxSynth3.moan, &"shriek": SfxSynth3.shriek.bind(1250.0, 0.7, 0.005),
+		&"shriek_low": SfxSynth3.shriek.bind(740.0, 1.1, 0.12),
 	}
 	var cry_player: AudioStreamPlayer = AudioStreamPlayer.new()
 	add_child(cry_player)

@@ -88,11 +88,12 @@ Jam theme: COMIC / LIGHT / TWIST. Target: desktop browser on itch.io (HTML5 zip)
 
 | 5 | Atmosphere pass: a shorter intro (25 s → 18.5 s) where the reader is sucked into the comic; C1, C2 and C4 first person (red hands, empty bubble, vignette); more detail in every cutscene (same beats, same 32.64 s); a wooden door creak (3 variants, pitch jittered) for every door, exit and secret door; an ominous music bed under all of Chapters 1-3; a sixth scare (the cellar: silence, the cry, lights out, a huge face); the team's recorded cry at three one-time moments |
 | 6 | C1 back to third person (a comic page: the theft from outside); reveal second half rewritten ("author", "You were the monster." held in near-silence) + recap; the return-phase hand holds the ERASER end in every state; tonal `groan` / `growl` replace the old flatulent `creak` / `growl`; the team's `bg_track.wav` as the Chapter 1-3 bed (dips under SFX, drops for big moments) and `ending.wav` once at the epilogue; a melancholy layer on the menu; comic black-and-white credits; the awakening mirror's ghoul; cobwebs and watching eyes in 11 rooms; psychedelic fill in cutscene panels; crows + scrawled lettering on the title page and menu; an abstract falling figure in the intro |
+| 6b | Credits without the font / licence lines; the crow ring round the End Card credits; a new mirror line (+ `repeat_caption`); C2 without hands; the intro finger normal-length (arm with fixed bone lengths) and the pull a red whoosh (no figure); the home page on the scenes' beige with black lettering; clearer instructions (hints queued at the bottom right, NOTICED / HUNTED! meter, E-says-the-selected-word, Controls card lines); clickable inventory arrows; the controls card any time (F1 / H, pause menu Controls page); cutscenes re-timed for reading (32.64 s → 48.40 s); two new scares (closet, panel escape: eight in all); the music +9 dB everywhere with softer ducks |
 | 4D | 22 playtest fixes: real Study and Clock dial locks (TRY + "?"), every clue used (hallway, plaque, clock), decoy doors removed, forgiving spread jump (buffer + coyote, W/Up), no duplicate words (x2 slots), WAIT made useful (pendulum, gutter fingers) with a frost effect, unified unlock feedback (captions, pop-ups, sound, pulse, padlocks that drop, gated exit doors, off-screen arrow), word tooltips + selected-word line, reorder (drag, Shift+Q/R), controls card on New Game, noticed-meter cause icons + noise from running, margin doodles, clean chapter title cards, reveal rebuilt (morph, label card, recap), five one-time scares, return/erase music + build-up layers, the Artist's pencil, save v4 |
 
 Git history on `main`: Chapters 1-2, Stage 4A, a handoff note, Stage 4B,
 Stage 4C, the study-lock cut (since reverted by 4D), Stage 4D (d1e2764).
-Stage 5 (d462ec3). Stage 6 (see the commit after d462ec3 on `main`).
+Stage 5 (d462ec3). Stage 6 (804ed89). Stage 6b (the commit after it).
 A Claude Docs page "Ink-Bleed: Game Flow & Architecture" was written after
 Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 
@@ -178,7 +179,7 @@ $GODOT --main-pack build/web/index.pck --resolution 1280x720 --script res://test
   (optionally `&words=arthur_open,vane_hide` and `&twist=1`); on desktop run
   with `-- --frame=ch3_margin [--words=...] [--twist=1]`. **In game (debug
   builds, e.g. the editor's ▶): F6** next cutscene, **F7** next jumpscare
-  (cycles all six, right where you are), **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
+  (cycles all eight, right where you are), **F1 / H** the controls card (all builds), **F8** the reveal, **F9** next Chapter 3 room, **F10** the page
   spread (all in `main._unhandled_key_input`). `DebugJump` adds the
   words a player would carry; return-phase rooms also get ERASE and
   `twist_revealed`.
@@ -520,7 +521,7 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
   - *Noticed meter*: running steps within 430 px add 0.07 each
     (`NoticeSystem._on_footstep`); `EventBus.notice_sources` lights the
     torch / footprint icons (`NoticeIcons`); a quiet tick per 12%.
-  - *Scares* (`ui/jumpscare_overlay.gd` + `ui/scare_art.gd`): a table of five (six since Stage 5)
+  - *Scares* (`ui/jumpscare_overlay.gd` + `ui/scare_art.gd`): a table of five (six since Stage 5, eight since 6b)
     (hallway lights-out face, gallery portrait, passage wardrobe, clock face
     + Crawler strike, spread hand slam), each triggered by a room flag, then
     waiting for a fair moment (no menu/cutscene/turn/dials, no Crawler
@@ -572,6 +573,48 @@ generator for that chapter). `tests/` and `tools/` are excluded from the export.
     cellar chase starts on OPEN as before).
   - *Save*: no version bump; new ids (`scare_cellar`, `cry_*`) are just
     entries in `seen`.
+
+- **Stage 6b systems.**
+  - *Hints* (`Hints.once(id, text, s, urgent)` → `EventBus.hint_requested`):
+    PageOverlay shows ONE at a time at the bottom right of the panel, above
+    the room's captions, as "TIP: ...", held for max(its time, 1.5 s + 0.06 s
+    a character, 3 s). Urgent ones (the light, the half-full meter, Shift)
+    jump the queue and pre-empt a running tip. Toasts (`caption_requested`:
+    inspect lines, unlock captions, pleas) stay top centre. The interact
+    prompt floats over its object.
+  - *Notice meter*: "NOTICED" label; pulses past 70%; while the Crawler
+    hunts (HUNTING / TELEGRAPH / LUNGE) the blot turns jagged and bigger, reads
+    "HUNTED!" and plays a nib snap (plus the existing danger sting).
+  - *Controls*: `ControlsCard.open_in_game()` (F1 or H while playing, not in a
+    cutscene / transition / modal) pauses and sets `modal_open`, closes with
+    F1 / H, Esc or OK and restores what it found; it never emits `accepted`
+    (New Game waits on that). The pause menu has a Controls page (Esc goes
+    back to the pause menu). "F1 or H" hint once.
+  - *Inventory arrows*: `InventoryArt.arrow_rect` hit areas; hover box and
+    pointing cursor; a click scrolls the window one slot (selection kept).
+    The selected-word line reads "E says ...", the strip "E says it".
+  - *Cutscene timing* (`gen_cutscenes.py reading_time`): each beat lasts at
+    least 0.3 s + max(2.5 s, 0.06 s a character) + 0.6 s hold (+0.5 s for
+    a page turn). C1 6.80, C2 7.44, C3 8.72, C4 7.30, C5 7.44, C6 10.70 =
+    48.40 s (was 32.64).
+  - *Scares* (eight): `scare_closet` (ch1_bedchamber; `closet_scare` event:
+    4 s after entering the wardrobe creaks open a crack; 2.5 s later walking
+    within 190 px sets `closet_near`; the doors burst on a stretched pale face
+    (`ScareArt2.closet`), sting `shriek` (1250 Hz, tonal), shake 0.85, one red
+    flash; then they swing shut). `scare_escape` (ch3_gallery_words, flag
+    `spread_pool`: the ink pool cleared): `ScareArt2.panel_escape`, 1.3 s, a
+    comic page where one figure stepped out of its panel, "Not the page.
+    You.", `shriek_low`, shake 0.8, no flash. Any scare entry with art
+    &"escape" and `figure` / `caption` / `panel` reuses it (data only).
+    Entries may set `sound`, `shake`, `flash`.
+  - *Music levels* (+9 dB): MusicManager BASE_DB -10 → -4, SAFE_DB -20 →
+    -14, BED_DB -14 → -8, SAD_DB -19 → -13; MusicFiles BG_DB -17 → -11,
+    ENDING_DB -6 → 0; stingers fixed at STING_DB -8 (unchanged); slider
+    default 0.6 → 0.85, and a settings.cfg without `music_level` 2 is moved
+    to the new default once. Ducks: cutscene / scare / lunge warning -6 dB
+    (0.5), the scare's for 0.8 s; only the cellar build and the reveal's
+    silent beat (duck >= 0.9) still drop bg_track out. The SFX dip never
+    stacks on a duck.
 
 - **Stage 6 systems.**
   - *C1, third person* (`ui/cutscene_art5.gd`, ids `c1_steal`, `c1_tear`,
@@ -665,7 +708,8 @@ Crawler brain/view split, `NpcArt`, `BubbleArt`, `SymbolArt`, `StateSnapshot`
 `CutsceneArt3`/`CutsceneArt4`, `CutsceneDetail`, `CryBank`, (Stage 6)
 `CutsceneArt5`, `CutsceneFill`, `MusicFiles`, `MusicLayers` (split out of
 MusicManager), `MusicSynth3`, `SfxSynth3`, `CreditsArt`, `RoomDecor`,
-`TitleArt`/`CrowShapes`/`TitleLive`/`TitleLettering`.
+`TitleArt`/`CrowShapes`/`TitleLive`/`TitleLettering`, (6b) `ScareArt2`,
+the closet event.
 
 ## 7. Content, chapter by chapter
 

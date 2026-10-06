@@ -1,5 +1,5 @@
 extends SceneTree
-## Jumpscare test (dev, not exported): fires all six scares from their room
+## Jumpscare test (dev, not exported): fires all eight scares from their room
 ## flags (screenshots), checks the clock scare's Crawler hunts close by, the
 ## cellar scare's build-up (music and ambience near silent, the recorded cry
 ## growing, the light out, then the face), that a menu calls the build off and
@@ -71,13 +71,14 @@ func _run() -> void:
 	var ov = main.get_node("FXLayer/JumpscareOverlay")
 	var rooms := {&"scare_hallway": ["ch2_long_hallway", &"hall_panel_open"], &"scare_gallery": ["ch2_gallery", &"gallery_lever"],
 		&"scare_passage": ["ch2_servants_passage", &"survived_passage"], &"scare_clock": ["ch2_clock_room", &"clock_read"],
-		&"scare_hand": ["ch3_gallery_words", &"spread_lens"], &"scare_cellar": ["ch2_cellar", &"cellar_dials_set"]}
+		&"scare_hand": ["ch3_gallery_words", &"spread_lens"], &"scare_cellar": ["ch2_cellar", &"cellar_dials_set"],
+		&"scare_closet": ["ch1_bedchamber", &"closet_near"], &"scare_escape": ["ch3_gallery_words", &"spread_pool"]}
 	var mm = root.get_node("/root/MusicManager")
 	var am = root.get_node("/root/AudioManager")
 	for id in rooms:
 		await _go(rooms[id][0])
 		ov._since_last = 999.0
-		player.global_position = Vector2(48 + 420, 32 + (200 if id == &"scare_hand" else 466))
+		player.global_position = Vector2(48 + 420, 32 + (200 if id in [&"scare_hand", &"scare_escape"] else 466))
 		var before: int = scares.size()
 		gs.set_flag(rooms[id][1])
 		var waited := 0.0
@@ -99,7 +100,8 @@ func _run() -> void:
 		await _wait(0.6)
 		if id == &"scare_cellar":
 			_check("the cellar scare had its silent build-up first", build_seen)
-	_check("all six scares fired once each", scares.size() == 6 and gs.seen.has(&"scare_cellar"))
+	print("fired: ", scares)
+	_check("all eight scares fired once each", scares.size() == 8 and gs.seen.has(&"scare_escape"))
 	# A menu during the build calls it off; it tries again once fair.
 	gs.seen.erase(&"scare_cellar")
 	await _go("ch2_cellar")
@@ -130,6 +132,42 @@ func _run() -> void:
 	_check("the torch flickered out with the room's light", lit_before and not lights.is_light_on)
 	await _wait(3.6)
 	_check("bg_track is back ~2 s after the scare's silence (%.1f dB)" % mm._files.level, mm._files.level > MusicFiles.BG_DB - 4.0)
+	_check("eight scares in the table", ov.scares().size() == 8)
+	# Stage 6b: the panel escape mid-zoom.
+	ov.play(&"scare_escape")
+	await _wait(0.8)
+	await _shot("sc_scare_escape_late.png")
+	await _wait(1.0)
+	# Stage 6b: the closet's own telegraph (a crack and a creak) and the walk-up.
+	gs.seen.erase(&"scare_closet")
+	gs.flags.erase(&"closet_near")
+	await _go("ch1_bedchamber")
+	ov._since_last = 999.0
+	player.global_position = Vector2(48 + 200, 32 + 466)
+	var closet: Node = null
+	for n2 in fm.current_frame.get_node("Props").get_children():
+		if n2.get_script() != null and String(n2.get_script().resource_path).ends_with("closet_scare_event.gd"):
+			closet = n2
+	await _wait(4.4)
+	var cracked: bool = closet._cracked_at >= 0.0
+	await _shot("sc_closet_crack.png")
+	var c0: int = scares.size()
+	await _wait(1.0)
+	var early: bool = scares.size() == c0
+	# A Controls card (F1 / H) open: no scare may start under it.
+	var card = main.get_node("MenuLayer/ControlsCard")
+	card.open_in_game()
+	player.global_position = Vector2(48 + 930, 32 + 466)
+	await _wait(3.0)
+	var held: bool = scares.size() == c0 and paused
+	card._accept()
+	await _wait(1.5)
+	print("closet: cracked=%s (creak %s), quiet before the walk-up=%s, held under the controls card=%s, fired=%s" % [cracked,
+		am.last_played, early, held, scares.size() > c0 and scares[-1] == &"scare_closet"])
+	_check("closet: crack + creak first, then the scare as you walk up (not under a modal)", cracked and early and held
+		and scares.size() == c0 + 1 and scares[-1] == &"scare_closet")
+	await _wait(2.8)
+	await _shot("sc_closet_after.png")
 	# The clock's gameplay half: the Crawler appears and hunts.
 	await _go("ch2_clock_room")
 	ov.play(&"scare_clock")

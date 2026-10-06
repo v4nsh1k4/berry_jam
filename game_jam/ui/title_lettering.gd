@@ -1,13 +1,15 @@
 class_name TitleLettering
 extends RefCounted
 ## The title's hand-scrawled lettering (Stage 6): a small stroke font of
-## polylines (no font files), thin white strokes with tapered ends, wide and
+## polylines (no font files), thin ink strokes (white until Stage 6b moved the
+## home page onto beige paper) with tapered ends, wide and
 ## uneven letter spacing, a wobbling baseline, loop-and-cross letterforms, a
 ## faint glow and the odd drip. Each text is built into one triangle array
 ## (glow + strokes), rebuilt only when the line boil ticks, and drawn with a
 ## single call. Glyph units: x-height = 1, baseline y = 0, up is negative.
 
-const INK_WHITE: Color = Color(0.97, 0.96, 0.92)
+## The lettering's ink (black on the paper since Stage 6b).
+const LETTER: Color = InkDraw.INK
 ## Glyph: [advance, [stroke, stroke...]], strokes as flat [x, y, x, y, ...].
 ## Built at runtime (nested constant arrays read back empty in web exports).
 static func glyphs() -> Dictionary:
@@ -90,7 +92,7 @@ static func _build(text: String, size: float, tick: int) -> Array:
 	var out: Array = [PackedInt32Array(), PackedVector2Array(), PackedColorArray()]
 	var glow: Array = [PackedInt32Array(), PackedVector2Array(), PackedColorArray()]
 	var x: float = -width(text, size) * 0.5
-	var stroke_w: float = maxf(1.3, size * 0.075)
+	var stroke_w: float = maxf(1.5, size * 0.085)
 	var drips: Array = _drips(text)
 	for n in text.length():
 		var glyph: Array = glyphs().get(text[n], glyphs()[" "])
@@ -103,13 +105,13 @@ static func _build(text: String, size: float, tick: int) -> Array:
 				var p: Vector2 = Vector2(stroke[i] - stroke[i + 1] * lean, stroke[i + 1]) * size
 				pts.append(base + p + Vector2(boil.randf_range(-1.0, 1.0), boil.randf_range(-1.0, 1.0)) * size * 0.025)
 			pts = _smooth(pts)
-			_ribbon(glow, pts, stroke_w * 3.2, Color(INK_WHITE, 0.08))
-			_ribbon(out, pts, stroke_w, INK_WHITE)
+			_ribbon(glow, pts, stroke_w * 3.2, Color(LETTER, 0.07))
+			_ribbon(out, pts, stroke_w, LETTER)
 		if n in drips:
 			var top: Vector2 = base + Vector2(float(glyph[0]) * 0.4 * size, 0.02 * size)
 			var length: float = size * rng.randf_range(0.5, 0.9)
-			_ribbon(out, PackedVector2Array([top, top + Vector2(0.5, length)]), stroke_w * 0.7, INK_WHITE)
-			_dot(out, top + Vector2(0.5, length + stroke_w), stroke_w * 0.9, INK_WHITE)
+			_ribbon(out, PackedVector2Array([top, top + Vector2(0.5, length)]), stroke_w * 0.7, LETTER)
+			_dot(out, top + Vector2(0.5, length + stroke_w), stroke_w * 0.9, LETTER)
 		x += float(glyph[0]) * size * rng.randf_range(1.15, 1.42)
 	# Glow under the strokes: one array, glow triangles first.
 	var n0: int = glow[1].size()

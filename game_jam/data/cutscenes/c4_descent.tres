@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Resource_1"]
 script = ExtResource("2_cutscene_beat")
-duration = 2.55
+duration = 3.9
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
 draws = PackedStringArray("pov_stairs")
 caption = "The stair goes down further than the drawing does."
@@ -15,7 +15,7 @@ page_turn = false
 
 [sub_resource type="Resource" id="Resource_2"]
 script = ExtResource("2_cutscene_beat")
-duration = 2.72
+duration = 3.4
 panels = Array[Rect2]([Rect2(0, 0, 1, 1)])
 draws = PackedStringArray("pov_ink_rise")
 caption = "And the ink is rising to meet you."

@@ -28,14 +28,8 @@ var _press_pos: Vector2 = Vector2.ZERO
 var _dragging: bool = false
 var _drag_pos: Vector2 = Vector2.ZERO
 var _tick: int = -1
-
-
-class FlyingBubble:
-	extends Node2D
-	var text: String = ""
-
-	func _draw() -> void:
-		BubbleArt.draw(self, Vector2.ZERO, text, BubbleArt.NO_TAIL, 3)
+## The "+N" arrow under the mouse: -1 left, 1 right, 0 none.
+var _hover_arrow: int = 0
 
 
 func _ready() -> void:
@@ -83,6 +77,7 @@ func _on_ability_used(bubble: BubbleData, _target_id: StringName) -> void:
 
 func _on_mouse_exited() -> void:
 	_hover_slot = -1
+	_hover_arrow = 0
 	queue_redraw()
 
 
@@ -98,6 +93,15 @@ func _slot_rect(slot: int) -> Rect2:
 	return Rect2(Vector2(SLOTS_LEFT + slot * (SLOT_SIZE.x + SLOT_GAP), (size.y - SLOT_SIZE.y) * 0.5), SLOT_SIZE)
 
 
+## -1 / 1 when `pos` is on a shown "+N" arrow, else 0.
+func _arrow_at(pos: Vector2) -> int:
+	if _first > 0 and InventoryArt.arrow_rect(_slot_rect(0).position.x - 6.0, -1.0).has_point(pos):
+		return -1
+	if _first + VISIBLE_SLOTS < InventorySlots.count() and InventoryArt.arrow_rect(_slot_rect(VISIBLE_SLOTS - 1).end.x + 6.0, 1.0).has_point(pos):
+		return 1
+	return 0
+
+
 func _slot_at(pos: Vector2) -> int:
 	for slot in VISIBLE_SLOTS:
 		if _slot_rect(slot).has_point(pos) and _first + slot < InventorySlots.count():
@@ -108,29 +112,18 @@ func _slot_at(pos: Vector2) -> int:
 func _on_bubble_stolen(bubble: BubbleData, from_screen_pos: Vector2) -> void:
 	var slot: int = InventorySlots.slot_of(bubble)
 	_show_slot(slot)
+	Hints.once("say_selected", "The highlighted word is the one you speak. Press E to say it.", 6.0)
 	Hints.once("hover_words", "Hover a word to see what it does (the selected word's effect shows above the strip).", 5.0)
 	if InventorySlots.count() >= 3:
 		Hints.once("reorder_words", "Drag a word to move it, or Shift+Q / Shift+R.", 4.0)
 	if from_screen_pos == Vector2.INF:
 		return
 	_flying_slot = slot
-	var flyer: FlyingBubble = FlyingBubble.new()
-	flyer.text = bubble.text
-	flyer.position = from_screen_pos
-	# Flashes red as it is torn away, fading back to white on the way down.
-	flyer.modulate = Color(1.0, 0.25, 0.3)
-	get_parent().add_child(flyer)
 	var target: Vector2 = get_global_transform() * _slot_rect(slot - _first).get_center()
-	var tween: Tween = flyer.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	tween.tween_property(flyer, "scale", Vector2(1.35, 1.35), 0.12).set_ease(Tween.EASE_OUT)
-	tween.tween_property(flyer, "position", target, FLY_TIME)
-	tween.parallel().tween_property(flyer, "scale", Vector2(0.85, 0.85), FLY_TIME)
-	tween.parallel().tween_property(flyer, "modulate", Color.WHITE, FLY_TIME)
-	tween.tween_callback(_on_flyer_landed.bind(flyer))
+	InventoryArt.fly(get_parent(), bubble.text, from_screen_pos, target, FLY_TIME, _on_flyer_landed)
 
 
-func _on_flyer_landed(flyer: Node2D) -> void:
-	flyer.queue_free()
+func _on_flyer_landed() -> void:
 	_flying_slot = -1
 	queue_redraw()
 
@@ -156,6 +149,11 @@ func _unhandled_input(event: InputEvent) -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var pos: Vector2 = (event as InputEventMouseMotion).position
+		var arrow: int = _arrow_at(pos)
+		if arrow != _hover_arrow:
+			_hover_arrow = arrow
+			mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if arrow != 0 else Control.CURSOR_ARROW
+			queue_redraw()
 		var hover: int = _slot_at(pos)
 		if _press_slot >= 0 and pos.distance_to(_press_pos) > DRAG_START:
 			_dragging = true
@@ -169,6 +167,11 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	if mouse.pressed and (mouse.button_index == MOUSE_BUTTON_WHEEL_UP or mouse.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 		InventorySlots.cycle(-1 if mouse.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
+	elif mouse.button_index == MOUSE_BUTTON_LEFT and mouse.pressed and _arrow_at(mouse.position) != 0:
+		# Stage 6b: the "+N" arrows scroll the window one slot.
+		_first = clampi(_first + _arrow_at(mouse.position), 0, maxi(0, InventorySlots.count() - VISIBLE_SLOTS))
+		_hover_arrow = _arrow_at(mouse.position)
+		queue_redraw()
 	elif mouse.button_index == MOUSE_BUTTON_LEFT and mouse.pressed:
 		_press_slot = _slot_at(mouse.position)
 		_press_pos = mouse.position
@@ -205,6 +208,7 @@ func _draw() -> void:
 	InkDraw.rect(self, Rect2(Vector2.ZERO, size), 4.0, s, InkDraw.PAPER)
 	draw_string(font, Vector2(16, size.y * 0.5 - 12), "WORDS", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, InkDraw.INK)
 	draw_string(font, Vector2(16, size.y * 0.5 + 8), "1-6, Q / R", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(InkDraw.INK, 0.6))
+	draw_string(font, Vector2(16, size.y * 0.5 + 42), "E says it", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, InkDraw.INK)
 	if count > 0:
 		draw_string(font, Vector2(16, size.y * 0.5 + 26), "%d words" % GameState.inventory.size(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(InkDraw.INK, 0.6))
 	for slot in VISIBLE_SLOTS:
@@ -228,9 +232,9 @@ func _draw() -> void:
 		InventoryArt.draw_cooldown(self, r, bubble.ability_id)
 		InventoryArt.draw_badge(self, r, group.size())
 	if _first > 0:
-		InventoryArt.draw_more_arrow(self, _slot_rect(0).position.x - 6.0, -1.0, _first)
+		InventoryArt.draw_more_arrow(self, _slot_rect(0).position.x - 6.0, -1.0, _first, _hover_arrow == -1)
 	if _first + VISIBLE_SLOTS < count:
-		InventoryArt.draw_more_arrow(self, _slot_rect(VISIBLE_SLOTS - 1).end.x + 6.0, 1.0, count - _first - VISIBLE_SLOTS)
+		InventoryArt.draw_more_arrow(self, _slot_rect(VISIBLE_SLOTS - 1).end.x + 6.0, 1.0, count - _first - VISIBLE_SLOTS, _hover_arrow == 1)
 	if _dragging and _press_slot >= 0 and _first + _press_slot < count:
 		var dragged: BubbleData = (list[_first + _press_slot] as Array)[0]
 		BubbleArt.draw(self, _drag_pos, dragged.text, BubbleArt.NO_TAIL, s + 60)

@@ -73,7 +73,14 @@ func _run() -> void:
 			secs += b.duration
 		total += secs
 		print("%-16s beats %d (was %d)  %.2f s (was %.2f)" % [id, data.beats.size(), before[id][0], secs, before[id][1]])
-		ok = ok and data.beats.size() == before[id][0] and secs <= before[id][1] + 0.001
+		# Stage 6b: same beats, each long enough to read its caption (0.3 s
+		# start, 0.06 s a character / 2.5 s at least, a 0.6 s hold, +0.5 s turn).
+		ok = ok and data.beats.size() == before[id][0] and secs >= before[id][1] - 0.001
+		for b in data.beats:
+			var need: float = 0.3 + maxf(2.5, String(b.caption).length() * 0.06) + 0.6 + (0.5 if b.page_turn else 0.0)
+			if b.duration + 0.011 < need:
+				print("   FAIL beat \"%s\" %.2f s < reading time %.2f s" % [b.caption, b.duration, need])
+				ok = false
 		var pov: bool = String(data.beats[0].draws[0]).begins_with("pov_") or id == "c1_first_steal"
 		var worst := 0
 		var times: Array = []
@@ -96,7 +103,7 @@ func _run() -> void:
 		await _wait(0.3)
 		print(id, " finished playing=", cs.is_playing, " paused=", paused)
 		ok = ok and not cs.is_playing and not paused
-	print("all cutscenes: %.2f s (Stage 4D: 32.64 s)" % total)
+	print("all cutscenes: %.2f s (Stage 4D-6: 32.64 s)" % total)
 	# 2. Trigger: the first steal plays C1 once (after a short beat).
 	gs.reset()
 	gs.is_playing = true

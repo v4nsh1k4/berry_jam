@@ -40,7 +40,7 @@ func _on_footstep(loud: bool) -> void:
 		return
 	_noise_left = NOISE_SHOW
 	_set_notice(clampf(notice + STEP_NOISE * (0.25 if _concealed else 1.0), 0.0, 1.0))
-	Hints.once("run_loud", "Running is loud. Walk near it.", 3.5)
+	Hints.once("shift_loud", "Shift is loud. Walk near it.", 4.0, true)
 
 ## HUSH: wipe the meter and keep it empty for `duration` seconds.
 func _on_crawler_hushed(duration: float) -> void:
@@ -71,7 +71,9 @@ func _process(delta: float) -> void:
 	var rate: float = -delta / DRAIN_TIME * (3.0 if _concealed else 1.0)
 	if LightingSystem.is_light_on:
 		rate = delta / FILL_TIME * LightingSystem.light_intensity * (0.25 if _concealed else 1.0)
-		Hints.once("light_notice", "Light makes you noticed: watch the blot by the words.", 4.0)
+		Hints.once("light_draws", "Light draws it. The blot fills. When it is full, it hunts you.", 6.0, true)
+		if notice > 0.5:
+			Hints.once("half_full", "Switch the light off and stay still to be safe.", 5.0, true)
 	_noise_left = maxf(0.0, _noise_left - delta)
 	if _noise_left > 0.0 and rate < 0.0:
 		rate = 0.0

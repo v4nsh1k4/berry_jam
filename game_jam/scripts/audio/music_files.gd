@@ -20,8 +20,9 @@ const BG_PATH: String = "res://audio/bg_track.wav"
 const ENDING_PATH: String = "res://audio/ending.wav"
 ## bg_track's level: the file is loud (RMS ~-15 dBFS); this keeps it ~8 dB
 ## under the sound effects.
-const BG_DB: float = -17.0
-const ENDING_DB: float = -6.0
+## Stage 6b: +6 dB (was -17): the music was too quiet.
+const BG_DB: float = -11.0
+const ENDING_DB: float = 0.0
 const XFADE: float = 2.0
 const BG_START: float = 0.21
 const DIP_DB: float = 3.0
@@ -109,7 +110,8 @@ func update(delta: float, on: bool, duck_db: float, drop: bool) -> void:
 	_update_ending(delta)
 	if bg == null:
 		return
-	var dip: float = DIP_DB * smoothstep(0.0, 0.08, _dip) if _dip > 0.0 else 0.0
+	# The SFX dip never stacks on a duck (Stage 6b: -6 dB at most in all).
+	var dip: float = DIP_DB * smoothstep(0.0, 0.08, _dip) if _dip > 0.0 and duck_db > -1.0 else 0.0
 	var target: float = BG_DB + duck_db - dip if on and not drop else -80.0
 	# Big drops fast (~0.3 s), returns within ~2 s, the small dip eased (12 dB/s).
 	var speed: float = 12.0

@@ -80,11 +80,14 @@ static func bedchamber(ci: FrameBackground, tick: int) -> void:
 	InkDraw.line(ci, Vector2(770, 368), Vector2(776, 404), 6.0, s + 23)
 
 	# Wardrobe, one door hanging off its hinge.
+	# The wardrobe, shut (Stage 6b: ClosetScare cracks it open and bursts it).
 	var wardrobe: Rect2 = Rect2(860, 110, 150, 280)
-	InkDraw.rect(ci, wardrobe, 4.0, s + 24, paper)
-	InkDraw.rect(ci, Rect2(866, 116, 66, 268), 2.0, s + 25, Color(0.05, 0.05, 0.06))
-	InkDraw.shape(ci, PackedVector2Array([Vector2(866, 120), Vector2(820, 140), Vector2(824, 380), Vector2(866, 384)]), 3.0, s + 26, WOOD)
-	ci.draw_circle(Vector2(946, 250), 4.0, InkDraw.INK)
+	InkDraw.rect(ci, wardrobe, 4.0, s + 24, WOOD)
+	InkDraw.line(ci, Vector2(935, 116), Vector2(935, 384), 2.5, s + 25)
+	InkDraw.rect(ci, Rect2(872, 130, 52, 110), 2.0, s + 26, Color.TRANSPARENT, Color(InkDraw.INK, 0.6))
+	InkDraw.rect(ci, Rect2(946, 130, 52, 110), 2.0, s + 27, Color.TRANSPARENT, Color(InkDraw.INK, 0.6))
+	ci.draw_circle(Vector2(926, 260), 4.0, InkDraw.INK)
+	ci.draw_circle(Vector2(944, 260), 4.0, InkDraw.INK)
 	InkDraw.line(ci, Vector2(850, 108), Vector2(1020, 108), 5.0, s + 27)
 
 	# Far doorway where Arthur waits.

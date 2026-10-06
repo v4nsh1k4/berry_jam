@@ -120,11 +120,20 @@ static func stinger_jobs() -> Dictionary:
 	}
 
 
+## Stage 6b moved the music up: a settings.cfg saved before then (no
+## `music_level` 2) gets the new default volume once, mute kept, and is
+## re-saved so later changes by the player stick.
 static func load_setting(path: String, volume: float, muted: bool) -> Array:
 	var config: ConfigFile = ConfigFile.new()
-	if config.load(path) == OK:
-		return [float(config.get_value("audio", "music_volume", volume)), bool(config.get_value("audio", "music_muted", muted))]
-	return [volume, muted]
+	if config.load(path) != OK:
+		return [volume, muted]
+	var saved_muted: bool = bool(config.get_value("audio", "music_muted", muted))
+	if int(config.get_value("audio", "music_level", 1)) < 2:
+		config.set_value("audio", "music_level", 2)
+		config.set_value("audio", "music_volume", volume)
+		config.save(path)
+		return [volume, saved_muted]
+	return [float(config.get_value("audio", "music_volume", volume)), saved_muted]
 
 
 ## Music volume / mute into the shared settings file (loads it first so the
@@ -134,4 +143,5 @@ static func save_setting(path: String, volume: float, muted: bool) -> void:
 	config.load(path)
 	config.set_value("audio", "music_volume", volume)
 	config.set_value("audio", "music_muted", muted)
+	config.set_value("audio", "music_level", 2)
 	config.save(path)

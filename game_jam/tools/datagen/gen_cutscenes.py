@@ -8,9 +8,25 @@ THREE = [(0, 0, 0.34, 1), (0.34, 0, 0.33, 1), (0.67, 0, 0.33, 1)]
 TOP_BOTTOM = [(0, 0, 1, 0.5), (0, 0.5, 1, 0.5)]
 
 
+# Stage 6b reading-time pass (playtesters could not finish the captions):
+# a beat lasts at least the caption's start delay, its reading time (0.06 s a
+# character, 2.5 s at least) and a short hold; page turns add their turn.
+TYPE_START = 0.3
+READ_PER_CHAR = 0.06
+MIN_READ = 2.5
+HOLD = 0.6
+TURN = 0.5
+
+
+def reading_time(caption, page_turn=False):
+    return TYPE_START + max(MIN_READ, len(caption) * READ_PER_CHAR) + HOLD + (TURN if page_turn else 0.0)
+
+
 def beat(duration, panels, draws, caption="", camera="still", sfx="", page_turn=False):
-    # Stage 4D runtime pass: every beat 15% shorter (captions still readable).
-    return Sub("cutscene_beat", duration=round(float(duration) * 0.85, 2), panels=R2Arr(panels), draws=PSA(draws),
+    # Stage 4D runtime pass: every beat 15% shorter; Stage 6b: never shorter
+    # than its reading time.
+    seconds = max(float(duration) * 0.85, reading_time(caption, page_turn))
+    return Sub("cutscene_beat", duration=round(seconds, 2), panels=R2Arr(panels), draws=PSA(draws),
                caption=caption, camera=SN(camera), sfx=SN(sfx), page_turn=page_turn)
 
 

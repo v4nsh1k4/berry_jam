@@ -8,8 +8,7 @@ extends RefCounted
 
 ## Credit lines (plain text, split at runtime: see the export gotchas).
 const TEAM: String = "Made for the Infinium 26 game jam|by the Berry Jam team."
-const ENGINE: String = "Made with the Godot Engine.|MIT licence: godotengine.org/license"
-const FONT_LINE: String = "Font: Godot's built-in default font."
+const ENGINE: String = "Made with the Godot Engine."
 const TITLE: String = "INK-BLEED"
 const SUBTITLE: String = "The Silent House of Hollow Hill"
 
@@ -19,21 +18,21 @@ static func page(ci: CanvasItem, area: Rect2, heading: String, tick: int) -> voi
 	RevealArt.set_view(ci, Transform2D.IDENTITY)
 	ci.draw_rect(area.grow(8), InkDraw.WHITE)
 	var g: float = 14.0
-	var top: Rect2 = Rect2(area.position, Vector2(area.size.x, area.size.y * 0.34))
+	var top: Rect2 = Rect2(area.position, Vector2(area.size.x, area.size.y * 0.42))
 	var mid_y: float = top.end.y + g
-	var mid_h: float = area.size.y * 0.42
+	var mid_h: float = area.end.y - mid_y
 	var left: Rect2 = Rect2(area.position.x, mid_y, area.size.x * 0.56 - g * 0.5, mid_h)
 	var right: Rect2 = Rect2(left.end.x + g, mid_y, area.end.x - left.end.x - g, mid_h)
-	var bottom: Rect2 = Rect2(area.position.x, mid_y + mid_h + g, area.size.x, area.end.y - mid_y - mid_h - g)
-	for r in [top, left, right, bottom]:
+	for r in [top, left, right]:
 		ci.draw_rect(r, InkDraw.PAPER)
 		_halftone(ci, r, r.end)
 	_top(ci, top, heading, tick)
 	_speaker(ci, left, &"butler", TEAM.split("|"), tick + 10)
 	_speaker(ci, right, &"housekeeper", ENGINE.split("|"), tick + 20)
-	_bottom(ci, bottom, tick + 30)
-	for i in 4:
-		InkDraw.rect(ci, [top, left, right, bottom][i], 7.0, tick + 40 + i, Color.TRANSPARENT, InkDraw.INK, 2.2)
+	# A row of ink drops and a nib under the right-hand speaker (doodles).
+	_drops(ci, Rect2(right.position.x + right.size.x * 0.35, right.end.y - 70, right.size.x * 0.6, 40), tick + 30)
+	for i in 3:
+		InkDraw.rect(ci, [top, left, right][i], 7.0, tick + 40 + i, Color.TRANSPARENT, InkDraw.INK, 2.2)
 
 
 ## Dots shrinking away from `corner` (Ben-Day shading).
@@ -102,15 +101,13 @@ static func _speaker(ci: CanvasItem, r: Rect2, style: StringName, lines: PackedS
 		caption(ci, Vector2(minf(c.x - cw * 0.3, r.end.x - cw - 14), c.y + bsize.y * 0.6 + 18), lines[1], 19, tick + 3)
 
 
-static func _bottom(ci: CanvasItem, r: Rect2, tick: int) -> void:
-	var box: Rect2 = caption(ci, r.position + Vector2(24, r.size.y * 0.5 - 16), FONT_LINE, 19, tick)
-	# A row of ink drops falling, and a nib, along the strip.
-	for i in 5:
-		var x: float = box.end.x + 60 + i * (r.end.x - box.end.x - 140) / 5.0
-		var y: float = r.position.y + r.size.y * (0.35 + 0.1 * (i % 2))
+static func _drops(ci: CanvasItem, r: Rect2, tick: int) -> void:
+	for i in 4:
+		var x: float = r.position.x + i * r.size.x / 5.0
+		var y: float = r.position.y + r.size.y * (0.3 + 0.2 * (i % 2))
 		ci.draw_colored_polygon(PackedVector2Array([Vector2(x, y - 12), Vector2(x + 6, y + 2), Vector2(x, y + 8), Vector2(x - 6, y + 2)]), InkDraw.INK)
-	CrawlerArt.nib(ci, Vector2(r.end.x - 40, r.get_center().y + 10), PI * 0.6, 7.0)
-	InkDraw.line(ci, Vector2(r.end.x - 120, r.get_center().y + 22), Vector2(r.end.x - 52, r.get_center().y - 6), 2.0, tick + 5)
+	CrawlerArt.nib(ci, Vector2(r.end.x - 10, r.get_center().y + 6), PI * 0.6, 7.0)
+	InkDraw.line(ci, Vector2(r.end.x - 80, r.get_center().y + 18), Vector2(r.end.x - 20, r.get_center().y - 6), 2.0, tick)
 
 
 static func _spiral(ci: CanvasItem, c: Vector2, radius: float, tick: int) -> void:

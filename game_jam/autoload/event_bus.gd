@@ -178,3 +178,8 @@ signal sfx_played(sound: StringName, volume_db: float)
 ## Stage 6: E on a plain "inspect" object (the awakening mirror's ghoul).
 @warning_ignore("unused_signal")
 signal inspected(id: StringName)
+
+## Stage 6b: a one-time tutorial hint (Hints.once). PageOverlay queues them
+## at the bottom right, one at a time, each held for its reading time.
+@warning_ignore("unused_signal")
+signal hint_requested(text: String, duration: float, urgent: bool)

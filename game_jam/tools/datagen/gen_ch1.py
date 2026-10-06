@@ -15,12 +15,14 @@ for bid, text, ability, owner in [
 
 # ---- Frames ----------------------------------------------------------------
 frame("ch1_awakening", "Awakening", "awakening", 0.1, (230, 470),
-      ["You wake. Your speech bubble is empty.", "A/D: walk.   E: look at things."],
+      ["You wake. Your speech bubble is empty.", "A/D: walk.   E: look at things.",
+       "Read the text at the bottom right of the screen."],
       "Look in the mirror if you like. Then walk right, through the door.",
       exits=[exit_((1080, 396, 104, 112), "ch1_bedchamber", (150, 466), SLIDE)],
       lights=[light("candle", (382, 278), 260, 0.85), light("moon", (880, 150), 330, 0.5)],
       items=[item(id="mirror", kind="inspect", position=(580, 120), size=(120, 262),
-                  caption="There is no one in the glass. You are not written here.")], doodles=True,
+                  caption="The looking-glass keeps no likeness of you. You were never drawn into this house.",
+                  repeat_caption="Still no likeness. You do not belong here.")], doodles=True,
       events=["mirror_ghoul"])
 
 frame("ch1_bedchamber", "The Rotted Bedchamber", "bedchamber", 0.09, (150, 466),
@@ -34,7 +36,7 @@ frame("ch1_bedchamber", "The Rotted Bedchamber", "bedchamber", 0.09, (150, 466),
                   prompt="A locked drawer. It needs a word.", reward_bubble=bubble_ext("drawer_hush"))],
       npcs=[Sub("npc_data", id=SN("arthur_far"), display_name="Arthur", position=V2((1114, 382)),
                 visual_style=SN("butler"), scale=0.72)],
-      events=["crawler_window"])
+      events=["crawler_window", "closet_scare"])
 
 frame("ch1_landing", "The Landing", "landing", 0.1, (170, 466),
       ["Arthur the Butler. He is full of words.", "Stand under a word and hold E to take it."],

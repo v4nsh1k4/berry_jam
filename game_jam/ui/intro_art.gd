@@ -9,6 +9,8 @@ extends RefCounted
 ## the player.
 
 const BOOK: Vector2 = Vector2(660, 466)
+## Where the reader's hand rests before it reaches for the page.
+const REST_HAND: Vector2 = Vector2(566, 474)
 const HEAD: Vector2 = Vector2(452, 318)
 const SHOULDER: Vector2 = Vector2(398, 372)
 const HIP: Vector2 = Vector2(300, 520)
@@ -36,7 +38,7 @@ static func room(ci: CanvasItem, t: float, glow: float, ink: float, reach: float
 	else:
 		book(ci, BOOK, glow, tick)
 	if reader > 0.0:
-		var hand: Vector2 = Vector2(566, 474).lerp(BOOK + Vector2(46, -12), smoothstep(0.0, 1.0, reach))
+		var hand: Vector2 = REST_HAND.lerp(BOOK + Vector2(46, -12), smoothstep(0.0, 1.0, reach))
 		_reader(ci, hand, red, glow, reader, tick)
 		_tendrils(ci, t, ink, hand, tick)
 	ci.draw_set_transform_matrix(view)
@@ -149,7 +151,15 @@ static func _reader(ci: CanvasItem, hand: Vector2, red: float, glow: float, alph
 	# The page light catching the underside of the face.
 	ci.draw_colored_polygon(InkDraw.ellipse_points(HEAD + Vector2(12, 24), Vector2(20, 9), 12), Color(RealWorldArt.BOOK_GLOW, 0.35 * glow * alpha))
 	# The arm and the hand.
-	var elbow: Vector2 = SHOULDER.lerp(hand, 0.5) + Vector2(30, 60)
+	# Fixed bone lengths (Stage 6b: the arm never stretches): the hand stops
+	# where the arm can reach and the elbow bends to get there.
+	var upper: float = 150.0
+	var fore: float = 166.0
+	var to_hand: Vector2 = hand - SHOULDER
+	var d: float = clampf(to_hand.length(), 1.0, upper + fore - 1.0)
+	hand = SHOULDER + to_hand.normalized() * d
+	var along: float = (upper * upper - fore * fore + d * d) / (2.0 * d)
+	var elbow: Vector2 = SHOULDER + to_hand.normalized() * along + to_hand.normalized().orthogonal() * -sqrt(maxf(upper * upper - along * along, 0.0))
 	InkDraw.line(ci, SHOULDER, elbow, 13.0, tick + 8, cloth)
 	InkDraw.line(ci, elbow, hand, 11.0, tick + 9, cloth)
 	var skin: Color = Color(SKIN.lerp(InkDraw.RED, red), alpha)

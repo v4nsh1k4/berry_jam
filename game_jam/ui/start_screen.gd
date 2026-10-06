@@ -43,11 +43,11 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var alpha: float = 0.55 + 0.45 * sin(_time * 3.0)
 	TitleLive.smudge(self, Vector2(size.x * 0.5, 676), Vector2(230, 30))
-	_centered(font, "- click or press any key -", Vector2(size.x * 0.5, 684), 22, Color(TitleLettering.INK_WHITE, alpha))
+	_centered(font, "- click or press any key -", Vector2(size.x * 0.5, 684), 22, Color(InkDraw.INK, alpha))
 
 
 func _centered(font: Font, text: String, baseline_center: Vector2, font_size: int, color: Color) -> void:
 	var w: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	var pos: Vector2 = baseline_center - Vector2(w * 0.5, 0)
-	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color(0, 0, 0, 0.5))
+	draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, 6, Color(InkDraw.PAPER, 0.8))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)

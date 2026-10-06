@@ -150,6 +150,29 @@ static func moan() -> AudioStreamWAV:
 	return wav
 
 
+## A shrill, tonal scare sting (Stage 6b): beating high partials gliding UP
+## fast, a hard 5 ms attack, a 9 Hz vibrato, a short metallic ring; a body
+## partial at base / 4 keeps it from being thin. No noise, nothing low.
+## closet: base 1250 Hz, 0.7 s; panel escape: base 740 Hz, 1.1 s, slower swell.
+static func shriek(base: float, length: float, attack: float) -> AudioStreamWAV:
+	var out: PackedFloat32Array = SfxSynth._buffer(length)
+	var tone: PackedFloat32Array = _table([[1, 0.6], [1.5, 0.25], [2.13, 0.3], [3.0, 0.12]])
+	var pa: float = 0.0
+	var pb: float = 0.0
+	var pc: float = 0.0
+	for i in out.size():
+		var t: float = float(i) / RATE
+		var glide: float = 1.0 + 0.15 * smoothstep(0.0, 0.09, t)
+		var f: float = base * glide * (1.0 + sin(TAU * 9.0 * t) * 0.012)
+		pa = fposmod(pa + f / RATE, 1.0)
+		pb = fposmod(pb + f * 1.064 / RATE, 1.0)
+		pc = fposmod(pc + f * 0.25 / RATE, 1.0)
+		var env: float = minf(t / attack, 1.0) * exp(-maxf(t - attack, 0.0) * 4.2 / length)
+		out[i] = (tone[int(pa * TABLE)] + tone[int(pb * TABLE)] * 0.8 + sin(pc * TAU) * 0.5) * env
+	_normalize(out, 0.8)
+	return SfxSynth._to_wav(out)
+
+
 ## A short feedback echo (a stairwell), in place.
 static func _echo(out: PackedFloat32Array, delay: float, feedback: float) -> void:
 	var d: int = int(delay * RATE)
