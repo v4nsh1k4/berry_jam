@@ -5,7 +5,7 @@ quickest way to lay out a whole chapter (rooms, exits, lights, objects, NPCs,
 words) in one place.
 
 ```
-cd game_jam
+# from the repo root
 python3 tools/datagen/gen_ch1.py .
 python3 tools/datagen/gen_ch2.py .
 ```

@@ -1,5 +1,5 @@
 extends SceneTree
-## Scripted playthrough (dev test, not exported). Run from game_jam/:
+## Scripted playthrough (dev test, not exported). Run from the repo root:
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/ch1_flows.gd
 ## Screenshots go to $SHOT_DIR (default: the user data folder). Prints a log.
 ## Second pass: drawer reward, wrong word, quit + continue, restart, caught.

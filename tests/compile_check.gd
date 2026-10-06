@@ -12,7 +12,9 @@ func _initialize() -> void:
 func _scan(dir_path: String) -> void:
 	var dir: DirAccess = DirAccess.open(dir_path)
 	for sub in dir.get_directories():
-		if not sub.begins_with(".") and sub not in ["tests", "tools", "build", "addons"]:
+		# Folders with a .gdignore (local tools) are not part of the project.
+		if not sub.begins_with(".") and sub not in ["tests", "tools", "build", "addons"] \
+				and not FileAccess.file_exists(dir_path.path_join(sub).path_join(".gdignore")):
 			_scan(dir_path.path_join(sub))
 	for file in dir.get_files():
 		if file.ends_with(".gd"):

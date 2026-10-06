@@ -1,8 +1,9 @@
 # INK-BLEED: handoff for Claude Code
 
 This repo (`v4nsh1k4/berry_jam`; the work is on **`main`**, mirrored on branch
-`ink-bleed`) holds a game-jam entry. **The game lives in `game_jam/`.** Ignore `berry-jam/` (an old, unrelated
-first attempt) and `ink-bleed-(4.3)/` (a stale editor backup the user should
+`ink-bleed`) holds a game-jam entry. **The game is the Godot project at the repo root**
+(moved up from `game_jam/` before submission; `berry-jam/`, an old first
+attempt, was removed). Ignore `ink-bleed-(4.3)/` (a stale editor backup the user should
 delete; never commit it). `proposal.pdf` is the original proposal.
 
 Read this whole file before changing anything. It records what was built, how
@@ -103,7 +104,7 @@ Stage 2. It does **not** cover Stages 3-4B; this file is the up-to-date source.
 ## 5. How to run, test and export
 
 ```
-cd game_jam
+# from the repo root
 GODOT=/Users/vanshikar/Downloads/Godot.app/Contents/MacOS/Godot   # see §2 for other machines
 $GODOT --headless --path . --import            # re-import after adding files
 $GODOT --headless --path . --script res://tests/compile_check.gd               # loads every script: parse/type errors
@@ -215,7 +216,7 @@ box). Don't name test methods after `SceneTree` methods.
 
 ## 6. Architecture
 
-### Autoloads (`game_jam/autoload/`, in load order)
+### Autoloads (`autoload/`, in load order)
 | Autoload | Owns |
 | --- | --- |
 | `EventBus` | ~52 signals, no logic. Each signal has `@warning_ignore("unused_signal")` (per line, for 4.3 compatibility) |
@@ -329,7 +330,7 @@ games: `seen_reveal` (the reveal is skippable only after one full viewing) and
   (INTERACTABLE / ROOM), cooldown, duration, handler script.
 
 **Data generators:** `tools/datagen/gen_lib.py` plus `gen_ch1.py`, `gen_ch2.py`,
-`gen_ch3.py` write whole chapters, `gen_cutscenes.py` the cutscenes. Run them from `game_jam/`
+`gen_ch3.py` write whole chapters, `gen_cutscenes.py` the cutscenes. Run them from the repo root
 (`python3 tools/datagen/gen_ch3.py .`). They **overwrite** that chapter's
 `.tres` files, so edit the generator rather than the `.tres` (or stop using the
 generator for that chapter). `tests/` and `tools/` are excluded from the export.

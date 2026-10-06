@@ -1,6 +1,6 @@
 extends SceneTree
 ## Intro and ending pages (dev test, not exported): screenshots each page of
-## the New Game intro and of the epilogue. Run from game_jam/:
+## the New Game intro and of the epilogue. Run from the repo root:
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/cinematics_check.gd
 
 var bus

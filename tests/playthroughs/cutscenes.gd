@@ -1,7 +1,7 @@
 extends SceneTree
 ## Cutscene test (dev, not exported). Plays every cutscene, screenshots each
 ## beat, then checks the triggers, skipping, "seen" saving and that Restart
-## Chapter never replays one. Run from game_jam/:
+## Chapter never replays one. Run from the repo root:
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/cutscenes.gd
 
 var gs

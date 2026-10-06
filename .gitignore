@@ -1,1 +1,8 @@
 .DS_Store
+.godot/
+/build/
+*.tmp
+# Local tools, not part of the game
+godot-mcp-toolkit/
+.mcp.json
+.claude/

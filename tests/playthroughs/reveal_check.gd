@@ -1,7 +1,7 @@
 extends SceneTree
 ## Reveal test (dev, not exported): starts in the Ink Heart with the robbed
 ## words held, steals ERASE, screenshots each caption beat, then checks the
-## return phase and the goal line. Run from game_jam/:
+## return phase and the goal line. Run from the repo root:
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/reveal_check.gd
 
 var gs

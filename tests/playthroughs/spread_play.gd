@@ -1,5 +1,5 @@
 extends SceneTree
-## Page spread playthrough (dev test, not exported). Run from game_jam/:
+## Page spread playthrough (dev test, not exported). Run from the repo root:
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/spread_play.gd
 
 var gs

@@ -4,7 +4,7 @@ extends SceneTree
 ## cellar scare's build-up (music and ambience near silent, the recorded cry
 ## growing, the light out, then the face), that a menu calls the build off and
 ## it tries again, spacing, chases, and that nothing repeats (also not after
-## Restart Chapter). Run from game_jam/:
+## Restart Chapter). Run from the repo root:
 ##   godot --path . --resolution 1280x720 --script res://tests/playthroughs/scare_check.gd
 
 var gs
